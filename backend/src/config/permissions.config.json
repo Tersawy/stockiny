@@ -1,0 +1,34 @@
+{
+	"modules": [
+		"brands",
+		"categories",
+		"currencies",
+		"customers",
+		"products",
+		"suppliers",
+		"units",
+		"users",
+		"warehouses",
+		"expenseCategories",
+		"expenses",
+		"sales",
+		"salesPayments",
+		"salesReturn",
+		"salesReturnPayments",
+		"purchases",
+		"purchasesPayments",
+		"purchasesReturn",
+		"purchasesReturnPayments",
+		"transfers",
+		"adjustments",
+		"quotations"
+	],
+	"actions": ["create", "read", "show", "edit", "delete", "trash", "restore", "forceDelete"],
+	"additionalPermissions": ["read:reports", "print:reports", "read:settings", "edit:settings", "active:users"],
+	"additionalPermissionsForModules": {
+		"purchases": ["readStatus", "editStatus", "deleteStatus", "changeEffectedStatus", "print"],
+		"purchasesReturn": ["readStatus", "editStatus", "deleteStatus", "changeEffectedStatus", "print"],
+		"sales": ["readStatus", "editStatus", "deleteStatus", "changeEffectedStatus", "print"],
+		"salesReturn": ["readStatus", "editStatus", "deleteStatus", "changeEffectedStatus", "print"]
+	}
+}

@@ -1,0 +1,38 @@
+{
+	"name": "stockiny",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"start": "export NODE_ENV=production && node index.js",
+		"dev": "export NODE_ENV=development && nodemon index.js",
+		"watch-tests": "jest --watchAll --verbose --coverage",
+		"setup": "node src/scripts/setup.js",
+		"seed": "node src/database/seeder",
+		"seed:fresh": "npm run seed -- --fresh",
+		"seed:refresh": "npm run seed -- --refresh",
+		"seed:up": "npm run seed -- --up",
+		"seed:down": "npm run seed -- --down"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"bcrypt": "^5.0.1",
+		"cors": "^2.8.5",
+		"crypto": "^1.0.1",
+		"express": "^4.17.2",
+		"express-async-errors": "^3.1.1",
+		"express-fileupload": "^1.2.1",
+		"express-validator": "^6.14.0",
+		"jsonwebtoken": "^8.5.1",
+		"minimist": "^1.2.5",
+		"mongoose": "^6.1.2"
+	},
+	"devDependencies": {
+		"@types/jest": "^27.4.0",
+		"dotenv": "^10.0.0",
+		"jest": "^27.4.7",
+		"nodemon": "^2.0.15"
+	}
+}

@@ -1,0 +1,6 @@
+[
+	{
+		"name": "admin",
+		"permissions": ["create:*", "read:*", "show:*", "edit:*", "trash:*"]
+	}
+]

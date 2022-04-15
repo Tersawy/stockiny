@@ -1,0 +1,40 @@
+import {
+	TAX_EXCLUSIVE,
+	TAX_INCLUSIVE,
+	TAX_METHODS_STR,
+	DISCOUNT_FIXED,
+	DISCOUNT_PERCENT,
+	DISCOUNT_METHODS_STR,
+	PAYMENT_CASH,
+	PAYMENT_CHEQUE,
+	PAYMENT_CREDIT_CARD,
+	PAYMENT_WESTREN_UNION,
+	PAYMENT_BANK_TRANSFER,
+	PAYMENT_METHODS_STR
+} from "@/helpers/constants";
+
+const state = {
+	successMsg: "",
+	successDismissSecs: 0,
+	errorMsg: "",
+	errorDismissSecs: 0,
+	errors: {},
+	sidebarOpen: false,
+	taxMethods: [
+		{ text: TAX_METHODS_STR[TAX_EXCLUSIVE], value: TAX_EXCLUSIVE },
+		{ text: TAX_METHODS_STR[TAX_INCLUSIVE], value: TAX_INCLUSIVE }
+	],
+	discountMethods: [
+		{ text: DISCOUNT_METHODS_STR[DISCOUNT_FIXED], value: DISCOUNT_FIXED },
+		{ text: DISCOUNT_METHODS_STR[DISCOUNT_PERCENT], value: DISCOUNT_PERCENT }
+	],
+	paymentMethods: [
+		{ text: PAYMENT_METHODS_STR[PAYMENT_CASH], value: PAYMENT_CASH },
+		{ text: PAYMENT_METHODS_STR[PAYMENT_CHEQUE], value: PAYMENT_CHEQUE },
+		{ text: PAYMENT_METHODS_STR[PAYMENT_CREDIT_CARD], value: PAYMENT_CREDIT_CARD },
+		{ text: PAYMENT_METHODS_STR[PAYMENT_WESTREN_UNION], value: PAYMENT_WESTREN_UNION },
+		{ text: PAYMENT_METHODS_STR[PAYMENT_BANK_TRANSFER], value: PAYMENT_BANK_TRANSFER }
+	]
+};
+
+export default state;

@@ -1,0 +1,214 @@
+// @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap");
+// @import url("https://fonts.googleapis.com/css?family=Poppins:200,300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap");
+
+$font-size-base: 0.8125rem; // Assumes the browser default, typically `16px`
+$font-size-lg: $font-size-base * 1.25;
+$font-size-sm: $font-size-base * 0.8;
+// $font-family-base: "Open Sans", sans-serif;
+$font-family-base: "Poppins", sans-serif;
+
+$input-btn-focus-width: 0.06rem;
+$btn-focus-box-shadow: none !important;
+$btn-box-shadow: none;
+$btn-active-box-shadow: none;
+
+$secondary: #003147 !default;
+$primary: #03a9f4 !default;
+
+@import "~bootstrap/scss/bootstrap.scss";
+@import "~bootstrap-vue/src/index.scss";
+
+body {
+	background-color: #ebeef0;
+}
+
+.font-sm {
+	font-size: 10px !important;
+}
+
+.font-md {
+	font-size: 14px !important;
+}
+
+.font-default {
+	font-size: 16px !important;
+}
+
+.c-pointer {
+	cursor: pointer;
+}
+
+.outline-0,
+.b-icon.bi:focus {
+	outline: none;
+}
+
+$fontWeightSizes: 100, 200, 300, 400, 500, 600, 700, 800, 900;
+
+@each $size in $fontWeightSizes {
+	.font-weight-#{$size} {
+		font-weight: $size !important;
+	}
+}
+
+$marginSizes: 10, 20, 30, 40, 50, 60;
+
+@each $size in $marginSizes {
+	.m-#{$size}px {
+		margin: $size + px;
+	}
+	.mr-#{$size}px,
+	.mx-#{$size}px {
+		margin-right: $size + px;
+	}
+	.ml-#{$size}px,
+	.mx-#{$size}px {
+		margin-left: $size + px;
+	}
+	.mt-#{$size}px,
+	.my-#{$size}px {
+		margin-top: $size + px;
+	}
+	.mb-#{$size}px,
+	.my-#{$size}px {
+		margin-bottom: $size + px;
+	}
+}
+
+$paddingSizes: 10, 20, 30, 40, 50, 60;
+
+@each $size in $paddingSizes {
+	.p-#{$size}px {
+		padding: $size + px;
+	}
+	.pr-#{$size}px,
+	.px-#{$size}px {
+		padding-right: $size + px;
+	}
+	.pl-#{$size}px,
+	.px-#{$size}px {
+		padding-left: $size + px;
+	}
+	.pt-#{$size}px,
+	.py-#{$size}px {
+		padding-top: $size + px;
+	}
+	.pb-#{$size}px,
+	.py-#{$size}px {
+		padding-bottom: $size + px;
+	}
+}
+
+.badge {
+	font-weight: 500;
+}
+
+[class*="badge-outline-"] {
+	background: unset;
+	border-style: solid;
+	border-width: 1px;
+	font-size: 85%;
+}
+
+.badge-outline-primary {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+
+.badge-outline-secondary {
+	border-color: var(--secondary);
+	color: var(--secondary);
+}
+
+.badge-outline-success {
+	border-color: var(--success);
+	color: var(--success);
+}
+
+.badge-outline-danger {
+	border-color: var(--danger);
+	color: var(--danger);
+}
+
+.badge-outline-warning {
+	border-color: var(--warning);
+	color: var(--warning);
+}
+
+.badge-outline-info {
+	border-color: var(--info);
+	color: var(--info);
+}
+
+// @each $breakpoint in map-keys($grid-breakpoints) {
+//   @include media-breakpoint-up($breakpoint) {
+//     $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+//     .bg#{$infix}-lighten   { background-color: $light; }
+// 		.bg#{$infix}-none   { background-color: transparent; }
+//   }
+// }
+
+.table {
+	&.b-table.b-table-stacked-md > tbody > tr {
+		border: 0;
+		border-radius: 0.3rem;
+		transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+		&:hover {
+			color: #212529;
+			background-color: var(--white);
+			box-shadow: 0 0.125rem 0.25rem #00000013 !important;
+		}
+		@media (min-width: 768px) {
+			&:hover {
+				background-color: rgba(0, 0, 0, 0.075) !important;
+				box-shadow: none !important;
+			}
+		}
+		&:not(:last-child) {
+			margin-bottom: 20px;
+		}
+		@media (max-width: 767.98px) {
+			& :first-child {
+				border-top: 0;
+			}
+		}
+		& > [data-label]::before {
+			text-align: left;
+			padding-left: 0.25rem;
+		}
+	}
+	
+	tr {
+		background-color: var(--white);
+		&.border-0 {
+			th {
+				border: none;
+			}
+		}
+	}
+	th {
+		font-weight: 500;
+	}
+	td {
+		font-weight: 300;
+		vertical-align: middle;
+	}
+	&.b-table[aria-busy="true"] {
+		opacity: 0.4;
+		user-select: none;
+	}
+}
+
+.input-error {
+	font-size: 80%;
+	margin-top: 4px;
+	color: var(--danger);
+}
+
+.custom-menu {
+	min-width: 17rem
+}
+svg.vue-barcode-element {
+	width: 100%;
+}

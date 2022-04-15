@@ -1,0 +1,112 @@
+<template>
+	<main-content class="purchases-list" :breads="breads">
+		<TableHeaderControls
+			:controls="tableControls"
+			@btnCreateClicked="btnCreateClicked"
+			@btnImportClicked="btnImportClicked"
+			@btnExcelClicked="btnExcelClicked"
+			@btnPdfClicked="btnPdfClicked"
+		/>
+
+		<b-table
+			show-empty
+			stacked="lg"
+			hover
+			sort-icon-left
+			:busy="tableIsBusy"
+			:items="items"
+			:fields="fields"
+			:current-page="1"
+			:per-page="perPage"
+			:sort-by.sync="sortBy"
+			:sort-desc.sync="sortDesc"
+			@context-changed="contextChanged"
+			:filter="search"
+			:filter-function="() => items"
+			class="mb-0"
+		>
+			<template #cell(actions)="row">
+				<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" />
+			</template>
+
+			<template #cell(date)="row">
+				<span> {{ row.value | simpleDate }} </span>
+			</template>
+			<template #cell(supplier)="row">
+				<span> {{ row.value | relation }} </span>
+			</template>
+			<template #cell(warehouse)="row">
+				<span> {{ row.value | relation }} </span>
+			</template>
+			<template #cell(total)="row">
+				<span class="text-primary font-weight-500">$ {{ row.value | floating }} </span>
+			</template>
+			<template #cell(paid)="row">
+				<span>$ {{ row.value | floating }} </span>
+			</template>
+			<template #cell(due)="{ item }">
+				<span>$ {{ due(item) | floating }} </span>
+			</template>
+			<template #cell(paymentStatus)="row">
+				<span v-payment-status="row.value"> </span>
+			</template>
+			<template #cell(status)="{ value }">
+				<InvoiceStatus :status="value" />
+			</template>
+		</b-table>
+
+		<TableFooterControls :controls="tableControls" />
+
+		<PaymentForm :namespace="namespace" />
+
+		<Payments :namespace="namespace" />
+	</main-content>
+</template>
+
+<script>
+	import dataTableMixin from "@/mixins/dataTableMixin";
+
+	import invoicePaymentsMixin from "@/mixins/invoicePaymentsMixin";
+
+	const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+
+	export default {
+		name: "Purchases",
+
+		components: { InvoiceStatus },
+
+		mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
+
+		data: () => ({
+			namespace: "Purchases",
+
+			components: { InvoiceStatus },
+
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases" }],
+
+			fields: [
+				{ key: "date", label: "Date", sortable: true },
+				{ key: "reference", label: "Reference", sortable: true },
+				{ key: "supplier", label: "Supplier", sortable: true },
+				{ key: "warehouse", label: "Warehouse", sortable: true },
+				{ key: "status", label: "Status", sortable: true },
+				{ key: "total", label: "Total", sortable: true },
+				{ key: "paid", label: "Paid", sortable: true },
+				{ key: "due", label: "Due", sortable: true },
+				{ key: "paymentStatus", label: "Payment Status", sortable: true },
+				{ key: "actions", label: "Actions" }
+			],
+			filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
+			searchIn: { reference: true, date: false }
+		}),
+		methods: {
+			// override the default method from dataTableMixin
+			btnCreateClicked() {
+				this.$router.push({ name: "PurchaseCreate" });
+			},
+			due(invoice) {
+				return +invoice.total - +invoice.paid || 0;
+			}
+		}
+	};
+</script>
