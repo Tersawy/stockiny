@@ -445,6 +445,10 @@ let create = {
 				let status = invoice.statuses.find((status) => status._id.toString() === value.toString());
 
 				req.body.statusDoc = status;
+
+				req.body.statuses = invoice.statuses;
+
+				return true;
 			},
 		},
 	},
