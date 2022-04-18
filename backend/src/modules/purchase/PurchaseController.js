@@ -104,7 +104,7 @@ exports.getEdit = async (req, res) => {
 
 	let select = "_id date warehouse supplier shipping tax discount discountMethod status reference details notes";
 
-	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images code name image");
+	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image");
 
 	let details = [];
 
@@ -131,6 +131,10 @@ exports.getEdit = async (req, res) => {
 			if (variant) {
 				_detail.variantName = variant.name;
 				_detail.image = variant.defaultImage || detail.product.image;
+
+				let stock = variant.getStock(purchase.warehouse);
+
+				_detail.stock = stock ? stock.quantity : 0;
 			}
 		}
 
