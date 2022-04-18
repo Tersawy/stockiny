@@ -10,20 +10,20 @@
 <!-- eslint-disable -->
 
 <script>
-	export default {
-		props: {
-			width: {
-				type: String,
-				default: "1.2em"
-			},
-			height: {
-				type: String,
-				default: "1.2em"
-			},
-			color: {
-				type: String,
-				default: "#fff"
-			}
+export default {
+	props: {
+		width: {
+			type: String,
+			default: "19.2px"
+		},
+		height: {
+			type: String,
+			default: "19.2px"
+		},
+		color: {
+			type: String,
+			default: "#fff"
 		}
-	};
+	}
+};
 </script>

@@ -71,11 +71,11 @@
 		props: {
 			width: {
 				type: String,
-				default: "0.9rem"
+				default: "14px"
 			},
 			height: {
 				type: String,
-				default: "0.9rem"
+				default: "14px"
 			},
 			color: {
 				type: String,

@@ -23,20 +23,20 @@
 <!-- eslint-disable -->
 
 <script>
-	export default {
-		props: {
-			width: {
-				type: String,
-				default: "40px"
-			},
-			height: {
-				type: String,
-				default: "40px"
-			},
-			color: {
-				type: String,
-				default: "#fff"
-			}
+export default {
+	props: {
+		width: {
+			type: String,
+			default: "40px"
+		},
+		height: {
+			type: String,
+			default: "40px"
+		},
+		color: {
+			type: String,
+			default: "#fff"
 		}
-	};
+	}
+};
 </script>

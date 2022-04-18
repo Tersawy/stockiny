@@ -78,20 +78,20 @@
 <!-- eslint-disable -->
 
 <script>
-	export default {
-		props: {
-			width: {
-				type: String,
-				default: "2.2em"
-			},
-			height: {
-				type: String,
-				default: "2.2em"
-			},
-			color: {
-				type: String,
-				default: "#fff"
-			}
+export default {
+	props: {
+		width: {
+			type: String,
+			default: "35.2px"
+		},
+		height: {
+			type: String,
+			default: "35.2px"
+		},
+		color: {
+			type: String,
+			default: "#fff"
 		}
-	};
+	}
+};
 </script>

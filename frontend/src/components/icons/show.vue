@@ -18,11 +18,11 @@
 		props: {
 			width: {
 				type: String,
-				default: "1.7rem"
+				default: "27px"
 			},
 			height: {
 				type: String,
-				default: "1.7rem"
+				default: "27px"
 			},
 			color: {
 				type: String,

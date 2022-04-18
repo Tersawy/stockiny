@@ -56,11 +56,11 @@
 		props: {
 			width: {
 				type: String,
-				default: "1.2rem"
+				default: "20px"
 			},
 			height: {
 				type: String,
-				default: "1.2rem"
+				default: "20px"
 			},
 			color: {
 				type: String,

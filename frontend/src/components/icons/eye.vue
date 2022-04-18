@@ -24,11 +24,11 @@
 		props: {
 			width: {
 				type: String,
-				default: "1.3rem"
+				default: "21px"
 			},
 			height: {
 				type: String,
-				default: "1.3rem"
+				default: "21px"
 			},
 			color: {
 				type: String,
