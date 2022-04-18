@@ -238,7 +238,7 @@ export default (storeNamespace, amountType) => {
 					taxMethod: selected.taxMethod,
 					discount: selected.discount,
 					discountMethod: selected.discountMethod,
-					product: selected._id,
+					product: selected.product,
 					variant: selected.variantId,
 					subUnit: selected.subUnit
 				}));
