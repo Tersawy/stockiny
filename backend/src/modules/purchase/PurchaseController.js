@@ -102,9 +102,42 @@ exports.createPurchase = async (req, res) => {
 exports.getEdit = async (req, res) => {
 	let { id } = req.params;
 
-	let purchase = await Purchase.findById(id).populate("details.product", "warehouse variants");
+	let select = "_id date warehouse supplier shipping tax discount discountMethod status reference details notes";
 
-	res.json({ doc: purchase });
+	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images code name image");
+
+	let details = [];
+
+	purchase.details.forEach(detail => {
+		let _detail = {
+			amount: detail.amount,
+			quantity: detail.quantity,
+			tax: detail.tax,
+			taxMethod: detail.taxMethod,
+			discount: detail.discount,
+			discountMethod: detail.discountMethod,
+			unit: detail.unit,
+			subUnit: detail.subUnit,
+			variantId: detail.variant
+		};
+
+		if (detail.product) {
+			_detail.product = detail.product._id;
+			_detail.name = detail.product.name;
+			_detail.code = detail.product.code;
+
+			let variant = detail.product.getVariantById(detail.variant);
+
+			if (variant) {
+				_detail.variantName = variant.name;
+				_detail.image = variant.defaultImage || detail.product.image;
+			}
+		}
+
+		details.push(_detail);
+	});
+
+	res.json({ doc: { ...purchase._doc, details } });
 };
 
 let throwIfNotValidDetail = (detail, products) => {
