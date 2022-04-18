@@ -1,1 +1,5 @@
 node_modules
+.env
+*.key
+*.key.pub
+package-lock.json
