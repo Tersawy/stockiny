@@ -26,6 +26,7 @@
 		y="0px"
 		viewBox="0 0 256 256"
 		xml:space="preserve"
+		:style="{ transform: `scale(${scale})` }"
 	>
 		<path
 			:fill="color"
@@ -40,20 +41,24 @@
 <!-- eslint-disable -->
 
 <script>
-	export default {
-		props: {
-			width: {
-				type: String,
-				default: "14px"
-			},
-			height: {
-				type: String,
-				default: "14px"
-			},
-			color: {
-				type: String,
-				default: "#333"
-			}
+export default {
+	props: {
+		width: {
+			type: String,
+			default: "14px"
+		},
+		height: {
+			type: String,
+			default: "14px"
+		},
+		color: {
+			type: String,
+			default: "#333"
+		},
+		scale: {
+			type: [String, Number],
+			default: "1"
 		}
-	};
+	}
+};
 </script>
