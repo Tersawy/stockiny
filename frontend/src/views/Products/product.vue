@@ -16,7 +16,7 @@
 							<span>Product Details</span>
 							<div class="d-flex align-items-center">
 								<router-link :to="{ name: 'ProductEdit', params: { productId } }" class="btn btn-sm btn-outline-success d-flex align-items-center">
-									<EditIcon width="0.6rem" />
+									<EditIcon width="10px" />
 									<span style="margin-top: 1px" class="d-none d-sm-inline ml-2">Edit</span>
 								</router-link>
 
@@ -48,12 +48,15 @@
 									<strong>{{ field | toSentenceCase }}: </strong>
 								</b-col>
 								<b-col>
-									<span> {{ productData[field] }} </span>
-									<template v-if="field == 'barcodeType' && showBarcodeTypeFlatBtn">
+									<DateStr v-if="['createdAt', 'updatedAt'].includes(field)" :date="productData[field]" />
+
+									<template v-else-if="field == 'barcodeType' && showBarcodeTypeFlatBtn">
 										<b-btn size="sm" variant="outline-success" class="py-0 px-1 ml-4" @click="barcodeTypeFlat = !barcodeTypeFlat">
 											{{ barcodeTypeFlat ? "Guard bars" : "Flat" }}
 										</b-btn>
 									</template>
+
+									<span v-else> {{ productData[field] }} </span>
 								</b-col>
 							</b-row>
 						</b-col>
@@ -125,7 +128,7 @@
 									</div>
 									<div class="d-flex align-items-center">
 										<b-btn variant="outline-success" size="sm" class="d-flex align-items-center mx-2" @click="openVariantForm(variant)">
-											<EditIcon width="0.6rem" />
+											<EditIcon width="10px" />
 											<span style="margin-top: 1px" class="d-none d-sm-inline ml-2">Edit</span>
 										</b-btn>
 										<b-btn variant="outline-primary" size="sm" class="gallery-btn d-flex align-items-center" @click="openVariantGallery(variant)">
@@ -149,7 +152,9 @@
 										<b-col class="py-2 product-field">
 											<b-row no-gutters>
 												<b-col cols="4" class="font-weight-bold"> Created At: </b-col>
-												<b-col> {{ variant.createdAt | date }} </b-col>
+												<b-col>
+													<DateStr :date="variant.createdAt" />
+												</b-col>
 											</b-row>
 										</b-col>
 										<b-col class="py-2 product-field striped striped-md-none">
@@ -170,7 +175,7 @@
 										<b-col class="py-2 product-field striped-md" v-if="variant.updatedAt">
 											<b-row no-gutters>
 												<b-col cols="4" class="font-weight-bold"> Updated At: </b-col>
-												<b-col> {{ variant.updatedAt | date }} </b-col>
+												<DateStr :date="variant.createdAt" />
 											</b-row>
 										</b-col>
 										<b-col class="py-2 product-field d-flex striped-md" :class="{ striped: variant.updatedAt }">
@@ -265,6 +270,8 @@
 
 	import EyeIcon from "@/components/icons/eye.vue";
 
+	const DateStr = () => import ("@/components/DateStr.vue");
+
 	const VuePerfectScrollbar = () => import("vue-perfect-scrollbar");
 
 	const GalleryModal = () => import("@/components/Gallery");
@@ -274,7 +281,7 @@
 	const Barcode = () => import("vue-barcode");
 
 	export default {
-		components: { Barcode, GalleryModal, VariantFormModal, VuePerfectScrollbar, EditIcon, GalleryIcon, VariantIcon, EyeIcon },
+		components: { Barcode, GalleryModal, VariantFormModal, VuePerfectScrollbar, DateStr, EditIcon, GalleryIcon, VariantIcon, EyeIcon },
 
 		data() {
 			return {
@@ -478,6 +485,8 @@
 			},
 
 			getDate(date) {
+				if (!date) return "*- - -";
+
 				date = new Date(date);
 
 				let dateString = date.toLocaleDateString();
