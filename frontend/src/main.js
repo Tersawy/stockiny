@@ -1,6 +1,7 @@
 import Vue from "vue";
 import App from "@/App";
 import router from "@/router";
+import jsCookie from "js-cookie";
 
 import "@fortawesome/fontawesome-free/js/all";
 import "@fortawesome/fontawesome-free/css/all.css";
@@ -38,7 +39,7 @@ router.afterEach((to) => {
 router.beforeEach(async (to, _from, next) => {
 	let me = store.state.Auth.me;
 
-	me = me || sessionStorage.getItem("me") || {};
+	me = me || jsCookie.get("me") || {};
 
 	me = typeof me === "object" ? me : JSON.parse(me);
 

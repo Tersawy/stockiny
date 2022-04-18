@@ -1,37 +1,39 @@
 import router from "@/router";
 
+import jsCookie from "js-cookie";
+
 export default {
 	login(state, data) {
 		state.me = data.me;
 		state.token = data.token;
-		sessionStorage.setItem("me", JSON.stringify(data.me));
-		sessionStorage.setItem("token", data.token);
+		jsCookie.set("me", JSON.stringify(data.me));
+		jsCookie.set("token", data.token);
 
 		return router.push({ name: "Dashboard" });
 	},
 
 	me(state, me) {
 		state.me = me;
-		sessionStorage.setItem("me", JSON.stringify(me));
+		jsCookie.set("me", JSON.stringify(me));
 	},
 
 	setAuth(state) {
-		state.token = sessionStorage.getItem("token");
-		state.me = sessionStorage.getItem("me") ? JSON.parse(sessionStorage.getItem("me")) : {};
+		state.token = jsCookie.get("token");
+		state.me = jsCookie.get("me") ? JSON.parse(jsCookie.get("me")) : {};
 	},
 
 	unAuth(state) {
 		state.me = {};
 		state.token = null;
-		sessionStorage.removeItem("me");
-		sessionStorage.removeItem("token");
+		jsCookie.remove("me");
+		jsCookie.remove("token");
 	},
 
 	logout(state) {
 		state.me = {};
 		state.token = null;
-		sessionStorage.removeItem("me");
-		sessionStorage.removeItem("token");
+		jsCookie.remove("me");
+		jsCookie.remove("token");
 		router.push("/login");
 	},
 
