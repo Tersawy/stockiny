@@ -81,17 +81,17 @@
 </template>
 
 <script>
-	import { invoiceMixin } from "@/mixins";
+import { invoiceMixin } from "@/mixins";
 
-	export default {
-		mixins: [invoiceMixin("Purchases", "Cost")],
+export default {
+	mixins: [invoiceMixin("Purchases", "Cost")],
 
-		data() {
-			let isEdit = this.$route.params.invoiceId;
+	data() {
+		let isEdit = this.$route.params.id;
 
-			return {
-				breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases", link: "/purchases" }, { title: isEdit ? "Edit" : "Create" }]
-			};
-		}
-	};
+		return {
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases", link: "/purchases" }, { title: isEdit ? "Edit" : "Create" }]
+		};
+	}
+};
 </script>

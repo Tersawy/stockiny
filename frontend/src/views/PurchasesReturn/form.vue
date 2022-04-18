@@ -102,7 +102,7 @@
 				];
 
 				if (this.isUpdate) {
-					breads = [...breads, { title: this.oldInvoice.reference, link: `/purchases-return/${this.invoiceId}` }, { title: "Edit" }];
+					breads = [...breads, { title: this.oldInvoice.reference, link: `/purchases-return/${this.id}` }, { title: "Edit" }];
 				} else {
 					breads.push({ title: "Create" });
 				}

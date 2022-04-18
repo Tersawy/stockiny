@@ -110,7 +110,13 @@ export default (storeNamespace, amountType) => {
 			}
 
 			if (this.isUpdate) {
-				await this.getInvoice(this.invoiceId);
+				await this.getInvoice(this.id);
+
+				let breads = this.breads.splice(0, this.breads.length - 1); // remove last bread
+
+				breads.push({ title: this.oldInvoice.reference, link: { name: "id", params: { id: this.id } } });
+
+				this.breads = [...breads, { title: "Edit" }];
 
 				this.invoice.date = getDate(this.invoice.date);
 				this.invoice.customer = this.oldInvoice.customer;
@@ -168,12 +174,12 @@ export default (storeNamespace, amountType) => {
 				return amountType == "Price";
 			},
 
-			invoiceId() {
-				return this.$route.params.invoiceId;
+			id() {
+				return this.$route.params.id;
 			},
 
 			isUpdate() {
-				return !!this.invoiceId;
+				return !!this.id;
 			},
 
 			productOptions() {

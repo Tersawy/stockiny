@@ -83,7 +83,7 @@ const routes = [
 		meta: { auth: true, permissions: ["create:sales"] }
 	},
 	{
-		path: "/sales/:invoiceId/edit",
+		path: "/sales/:id/edit",
 		name: "SaleEdit",
 		component: () => /* webpackChunkName: "SaleEdit" */ import("@/views/Sales/form"),
 		meta: { auth: true, permissions: ["edit:sales"] }
@@ -101,7 +101,7 @@ const routes = [
 		meta: { auth: true, permissions: ["create:salesReturn"] }
 	},
 	{
-		path: "/sales-return/:invoiceId/edit",
+		path: "/sales-return/:id/edit",
 		name: "SaleReturnEdit",
 		component: () => /* webpackChunkName: "SaleReturnEdit" */ import("@/views/SalesReturn/form"),
 		meta: { auth: true, permissions: ["edit:salesReturn"] }
@@ -119,7 +119,7 @@ const routes = [
 		meta: { auth: true, permissions: ["create:purchases"] }
 	},
 	{
-		path: "/purchases/:invoiceId/edit",
+		path: "/purchases/:id/edit",
 		name: "PurchaseEdit",
 		component: () => /* webpackChunkName: "PurchaseEdit" */ import("@/views/Purchases/purchaseForm"),
 		meta: { auth: true, permissions: ["edit:purchases"] }
@@ -137,7 +137,7 @@ const routes = [
 		meta: { auth: true, permissions: ["create:purchasesReturn"] }
 	},
 	{
-		path: "/purchases-return/:invoiceId/edit",
+		path: "/purchases-return/:id/edit",
 		name: "PurchaseReturnEdit",
 		component: () => /* webpackChunkName: "PurchaseReturnEdit" */ import("@/views/PurchasesReturn/form"),
 		meta: { auth: true, permissions: ["edit:purchasesReturn"] }

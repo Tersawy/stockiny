@@ -86,29 +86,29 @@
 </template>
 
 <script>
-	import { invoiceMixin } from "@/mixins";
-	export default {
-		mixins: [invoiceMixin],
+import { invoiceMixin } from "@/mixins";
+export default {
+	mixins: [invoiceMixin],
 
-		data() {
-			return { namespace: "Sales", amountType: "price" };
-		},
+	data() {
+		return { namespace: "Sales", amountType: "price" };
+	},
 
-		computed: {
-			breads() {
-				let breads = [
-					{ title: "Dashboard", link: "/" },
-					{ title: "Sales", link: "/sales" }
-				];
+	computed: {
+		breads() {
+			let breads = [
+				{ title: "Dashboard", link: "/" },
+				{ title: "Sales", link: "/sales" }
+			];
 
-				if (this.isUpdate) {
-					breads = [...breads, { title: this.oldInvoice.reference, link: `/sales/${this.invoiceId}` }, { title: "Edit" }];
-				} else {
-					breads.push({ title: "Create" });
-				}
-
-				return breads;
+			if (this.isUpdate) {
+				breads = [...breads, { title: this.oldInvoice.reference, link: `/sales/${this.id}` }, { title: "Edit" }];
+			} else {
+				breads.push({ title: "Create" });
 			}
+
+			return breads;
 		}
-	};
+	}
+};
 </script>

@@ -1,8 +1,8 @@
 import axios from "@/plugins/axios";
 
 export default {
-	async getEdit({ commit, state }, invoiceId) {
-		let data = await axios.get(`${state.prefix}/${invoiceId}/edit`);
+	async getEdit({ commit, state }, id) {
+		let data = await axios.get(`${state.prefix}/${id}/edit`);
 
 		commit("setOne", data.doc);
 

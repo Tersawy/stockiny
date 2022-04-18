@@ -88,7 +88,7 @@
 		mixins: [invoiceMixin("Purchases", "Cost")],
 
 		data() {
-			let isEdit = this.$route.params.invoiceId;
+			let isEdit = this.$route.params.id;
 
 			return {
 				breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases", link: "/purchases" }, { title: isEdit ? "Edit" : "Create" }],
