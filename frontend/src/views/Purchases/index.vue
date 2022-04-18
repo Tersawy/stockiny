@@ -30,7 +30,7 @@
 			</template>
 
 			<template #cell(date)="row">
-				<span> {{ row.value | simpleDate }} </span>
+				<DateStr :date="row.value" />
 			</template>
 			<template #cell(supplier)="row">
 				<span> {{ row.value | relation }} </span>
@@ -64,49 +64,51 @@
 </template>
 
 <script>
-	import dataTableMixin from "@/mixins/dataTableMixin";
+import dataTableMixin from "@/mixins/dataTableMixin";
 
-	import invoicePaymentsMixin from "@/mixins/invoicePaymentsMixin";
+import invoicePaymentsMixin from "@/mixins/invoicePaymentsMixin";
 
-	const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const DateStr = () => import("@/components/DateStr");
 
-	export default {
-		name: "Purchases",
+const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+
+export default {
+	name: "Purchases",
+
+	components: { InvoiceStatus, DateStr },
+
+	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
+
+	data: () => ({
+		namespace: "Purchases",
 
 		components: { InvoiceStatus },
 
-		mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
+		breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases" }],
 
-		data: () => ({
-			namespace: "Purchases",
-
-			components: { InvoiceStatus },
-
-			breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases" }],
-
-			fields: [
-				{ key: "date", label: "Date", sortable: true },
-				{ key: "reference", label: "Reference", sortable: true },
-				{ key: "supplier", label: "Supplier", sortable: true },
-				{ key: "warehouse", label: "Warehouse", sortable: true },
-				{ key: "status", label: "Status", sortable: true },
-				{ key: "total", label: "Total", sortable: true },
-				{ key: "paid", label: "Paid", sortable: true },
-				{ key: "due", label: "Due", sortable: true },
-				{ key: "paymentStatus", label: "Payment Status", sortable: true },
-				{ key: "actions", label: "Actions" }
-			],
-			filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
-			searchIn: { reference: true, date: false }
-		}),
-		methods: {
-			// override the default method from dataTableMixin
-			btnCreateClicked() {
-				this.$router.push({ name: "PurchaseCreate" });
-			},
-			due(invoice) {
-				return +invoice.total - +invoice.paid || 0;
-			}
+		fields: [
+			{ key: "date", label: "Date", sortable: true },
+			{ key: "reference", label: "Reference", sortable: true },
+			{ key: "supplier", label: "Supplier", sortable: true },
+			{ key: "warehouse", label: "Warehouse", sortable: true },
+			{ key: "status", label: "Status", sortable: true },
+			{ key: "total", label: "Total", sortable: true },
+			{ key: "paid", label: "Paid", sortable: true },
+			{ key: "due", label: "Due", sortable: true },
+			{ key: "paymentStatus", label: "Payment Status", sortable: true },
+			{ key: "actions", label: "Actions" }
+		],
+		filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
+		searchIn: { reference: true, date: false }
+	}),
+	methods: {
+		// override the default method from dataTableMixin
+		btnCreateClicked() {
+			this.$router.push({ name: "PurchaseCreate" });
+		},
+		due(invoice) {
+			return +invoice.total - +invoice.paid || 0;
 		}
-	};
+	}
+};
 </script>
