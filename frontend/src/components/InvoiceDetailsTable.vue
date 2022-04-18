@@ -164,7 +164,7 @@
 							oldDetail[key] = detail[key];
 						}
 					}
-					return detail;
+					return oldDetail;
 				});
 			},
 
