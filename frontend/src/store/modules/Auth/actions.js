@@ -1,5 +1,6 @@
 import axios from "@/plugins/axios";
-import router from "../../../router";
+
+import router from "@/router";
 
 export default {
 	async login({ commit }, payload) {
