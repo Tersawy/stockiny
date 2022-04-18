@@ -72,6 +72,14 @@ class Product extends Model {
 
 		variant.addToStock({ quantity, warehouse });
 	}
+
+	subtractFromStock({ warehouse, variant, quantity }) {
+		variant = this.getVariantById(variant);
+
+		if (!variant) return;
+
+		variant.subtractFromStock({ quantity, warehouse });
+	}
 }
 
 productSchema.loadClass(Product);

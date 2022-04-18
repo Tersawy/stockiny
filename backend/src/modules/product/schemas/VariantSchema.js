@@ -61,6 +61,16 @@ class Variant {
 
 		return this;
 	}
+
+	subtractFromStock({ warehouse, quantity }) {
+		let oldStock = this.getStock(warehouse);
+
+		if (oldStock) {
+			oldStock.quantity -= quantity;
+		}
+
+		return this;
+	}
 }
 
 variantSchema.loadClass(Variant);
