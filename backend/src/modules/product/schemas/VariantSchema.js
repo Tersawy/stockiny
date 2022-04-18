@@ -26,6 +26,10 @@ class Variant {
 		return this.stock.reduce((total, curr) => total + +curr.quantity, 0);
 	}
 
+	get defaultImage() {
+		return this.images.find(image => !!image.default);
+	}
+
 	setDefaultImage(name) {
 		if (this.images.length > 0) {
 			this.images.forEach((image) => {
