@@ -14,7 +14,7 @@ const { checkSchema } = require("express-validator");
 
 let isFloat = (v) => /^\d+$|^\d+\.\d+$/.test(v); // eg. 1, 1.1, 0.1
 
-let create = {
+let createPurchase = {
 	date: {
 		in: "body",
 
@@ -491,6 +491,10 @@ let checkId = {
 	},
 };
 
-exports.create = checkSchema(create);
+let updatePurchase = { ...createPurchase, id: checkId };
 
-exports.getEdit = checkSchema({ id: checkId });
+exports.createPurchase = checkSchema(createPurchase);
+
+exports.getEditPurchase = checkSchema({ id: checkId });
+
+exports.updatePurchase = checkSchema(updatePurchase);
