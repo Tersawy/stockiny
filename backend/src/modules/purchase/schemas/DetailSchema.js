@@ -62,9 +62,13 @@ class Detail {
 	}
 
 	get amountAfterDiscountAndTax() {
-		return this.amount - this.discountAmount + this.taxAmount;
+		return this.amountAfterDiscount + this.taxAmount;
 	}
 
+	/* 
+		* Before accessing the stock, we need to populate the subUnit field first
+		@return stock depends on the amountUnit (e.g. purchaseUnit, saleUnit) of the product and the subUnit of the detail
+	*/
 	get stock() {
 		let isMultiple = this.subUnit.operator === "*";
 
