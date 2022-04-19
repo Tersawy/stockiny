@@ -1,16 +1,10 @@
 const mongoose = require("mongoose");
-const ErrorHandler = require("../../errors/ErrorHandler");
 
-const { createError } = require("../../errors/ErrorHandler");
-const errorHandler = require("../../middlewares/errorHandler");
-
-const { handleQueries } = require("../../utils/functions");
+const { createError, notFound } = require("../../errors/ErrorHandler");
 
 const Invoice = require("../invoice/Invoice");
 
 const Product = require("../product/Product");
-
-const Unit = require("../unit/Unit");
 
 const Purchase = require("./Purchase");
 
@@ -22,8 +16,7 @@ exports.getPurchases = async (req, res) => {
 	let query = Purchase.find({}, select)
 		.withPagination(req.query)
 		.withSearch(req.query)
-		.populate("supplier warehouse", "name")
-		.populate("status", "name color");
+		.populate("supplier warehouse", "name");
 
 	let counts = Purchase.count().withSearch(req.query);
 
@@ -40,16 +33,6 @@ exports.getPurchases = async (req, res) => {
 	res.json({ docs, total });
 };
 
-/* 
-	details: [{
-		product: {
-			_id,
-			variants: [{ _id, availableForPurchase, stock: { warehouse, quantity } }],
-			unit: { _id, value, operator },
-		},
-		subUnit: { _id, value, operator, base },
-	}]
-*/
 exports.createPurchase = async (req, res) => {
 	let { details, warehouse, statusDoc } = req.body;
 
@@ -90,16 +73,17 @@ exports.createPurchase = async (req, res) => {
 
 		await session.commitTransaction();
 
-		res.json({ doc: purchase });
+		res.json({});
 	} catch (error) {
 		await session.abortTransaction();
+
 		throw error;
 	} finally {
 		session.endSession();
 	}
 };
 
-exports.getEdit = async (req, res) => {
+exports.getEditPurchase = async (req, res) => {
 	let { id } = req.params;
 
 	let select = "_id date warehouse supplier shipping tax discount discountMethod status reference details notes";
@@ -142,6 +126,85 @@ exports.getEdit = async (req, res) => {
 	});
 
 	res.json({ doc: { ...purchase._doc, details } });
+};
+
+exports.updatePurchase = async (req, res) => {
+	let { details, warehouse, statusDoc, statuses } = req.body;
+
+	// get product in detail to update stock if status effected
+	let purchaseQuery = Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock");
+
+	let productIds = details.map((detail) => detail.product);
+
+	// get products for new details
+	let productsQuery = Product.find({ _id: { $in: productIds } }, "_id availableForPurchase unit variants._id variants.availableForPurchase variants.stock");
+
+	let [purchase, products] = await Promise.all([purchaseQuery, productsQuery]);
+
+	if (!purchase) throw notFound();
+
+	let oldStatus = statuses.find((s) => s._id.toString() === purchase.status._id.toString());
+
+	let productsUpdated = [];
+
+	// if purchase status effected, update stock
+	if (oldStatus.effected) {
+		for (let detail of purchase.details) {
+			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
+			let productUpdated = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+
+			let product = productUpdated || detail.product;
+
+			product.subtractFromStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
+
+			if (!productUpdated) productsUpdated.push(product);
+		}
+	}
+
+	// update purchase and details
+	purchase.fill(req.body).addDetails(details);
+
+	// // get subUnits for new details and check units and variants
+	await purchase.populate("details.subUnit", "_id operator value base");
+
+	for (let detail of purchase.details) {
+		throwIfNotValidDetail(detail, products);
+	}
+
+	// if purchase status effected, update stock
+	if (statusDoc.effected) {
+		for (let detail of purchase.details) {
+			let product = products.find((p) => p._id.toString() === detail.product.toString());
+
+			let updatedProduct = productsUpdated.find((p) => p._id.toString() === product._id.toString());
+
+			product = updatedProduct || product;
+
+			let quantity = detail.stock; // detail.stock is the new quantity to add to stock getted from detail schema (not from request)
+
+			product.addToStock({ warehouse, quantity, variant: detail.variant });
+
+			if (!updatedProduct) productsUpdated.push(product);
+		}
+	}
+
+	let session = await mongoose.startSession();
+
+	session.startTransaction();
+
+	try {
+		await Promise.all([purchase.save(), ...productsUpdated.map((p) => p.save())]);
+
+		await session.commitTransaction();
+
+		res.json({});
+	} catch (error) {
+		await session.abortTransaction();
+
+		throw error;
+	} finally {
+		session.endSession();
+	}
 };
 
 let throwIfNotValidDetail = (detail, products) => {
