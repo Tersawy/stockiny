@@ -9,16 +9,6 @@ class Purchase extends Model {
 		return ["date", "supplier", "warehouse", "tax", "discount", "discountMethod", "shipping", "status", "notes"];
 	}
 
-	by(userId) {
-		if (this.isNew) {
-			this.createdBy = userId;
-		} else {
-			this.updatedBy = userId;
-		}
-
-		return this;
-	}
-
 	get detailsTotalAmount() {
 		return this.details.reduce((total, detail) => total + detail.total, 0);
 	}
@@ -39,17 +29,6 @@ class Purchase extends Model {
 		return this.detailsTotalAmount - this.discountAmount;
 	}
 
-	calculateTotal() {
-		this.total = this.totalAfterDiscount + this.taxAmount + this.shipping;
-
-		return this;
-	}
-
-	calculatePaid() {
-		this.paid = this.payments.reduce((total, payment) => total + payment.amount, 0);
-		return this;
-	}
-
 	get paymentStatus() {
 		if (this.paid === 0) {
 			return "unpaid";
@@ -60,6 +39,28 @@ class Purchase extends Model {
 		}
 
 		return "partial";
+	}
+
+	by(userId) {
+		if (this.isNew) {
+			this.createdBy = userId;
+		} else {
+			this.updatedBy = userId;
+		}
+
+		return this;
+	}
+
+	calculateTotal() {
+		this.total = this.totalAfterDiscount + this.taxAmount + this.shipping;
+
+		return this;
+	}
+
+	calculatePaid() {
+		this.paid = this.payments.reduce((total, payment) => total + payment.amount, 0);
+
+		return this;
 	}
 
 	fill(data) {
