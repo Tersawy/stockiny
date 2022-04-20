@@ -19,4 +19,19 @@ const removePayment = (state, id) => {
 	}
 };
 
-export default { payments, setOldPayment, removePayment };
+export default {
+	setAll(state, data) {
+		state.all.docs = data.docs.map(doc => {
+			if (typeof doc.status == "string") {
+				doc.status = { _id: doc.status };
+			}
+
+			doc.status.loading = false;
+
+			return doc;
+		})
+
+		state.all.total = data.total;
+	},
+	payments, setOldPayment, removePayment
+};
