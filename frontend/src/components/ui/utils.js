@@ -14,9 +14,9 @@ export const showToast = (message, variant = "success") => {
 	});
 };
 
-import CheckCircleIcon from "@/components/icons/check-circle-outline.vue";
+import CheckCircleIcon from "@/components/icons/checkCircleOutline";
 
-import CloseCircleIcon from "@/components/icons/close-circle-outline.vue";
+import CloseCircleIcon from "@/components/icons/closeCircleOutline";
 
 import i18n from "@/plugins/i18n";
 
