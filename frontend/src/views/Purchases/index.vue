@@ -50,8 +50,39 @@
 			<template #cell(paymentStatus)="row">
 				<span v-payment-status="row.value"> </span>
 			</template>
-			<template #cell(status)="{ value }">
-				<InvoiceStatus :status="value" />
+			<template #cell(status)="{ item }">
+				<div class="w-100 d-flex justify-content-lg-between align-items-center">
+					<InvoiceStatus :status="item.status" />
+
+					<b-dropdown
+						right
+						variant="outline-danger"
+						size="sm"
+						toggle-class="text-decoration-none px-1 ml-4 ml-lg-2"
+						:toggle-attrs="{ style: 'padding-top:2px;padding-bottom:2px;' }"
+						no-caret
+						menu-class="py-0 shadow-sm"
+					>
+						<template #button-content>
+							<ChangeIcon scale="1" v-b-tooltip title="Change Status" />
+						</template>
+						<b-overlay :show="item.status.loading" spinner-variant="secondary" spinner-small>
+							<div class="d-flex justify-content-between px-3 py-2 border-bottom" v-for="statusOption in statusesOptions" :key="statusOption._id">
+								<div class="d-flex align-items-center">
+									<InvoiceStatus :status="statusOption" />
+									<CheckCircleOutlineIcon v-if="statusOption.effected" scale="0.7" class="ml-1" />
+								</div>
+								<b-form-checkbox
+									switch
+									class="ml-4"
+									:disabled="item.status._id == statusOption._id"
+									v-model="status(item.status, statusOption).effected"
+									@change="changeStatus(item, statusOption)"
+								></b-form-checkbox>
+							</div>
+						</b-overlay>
+					</b-dropdown>
+				</div>
 			</template>
 		</b-table>
 
@@ -68,6 +99,10 @@ import dataTableMixin from "@/mixins/dataTableMixin";
 
 import invoicePaymentsMixin from "@/mixins/invoicePaymentsMixin";
 
+import CheckCircleOutlineIcon from "@/components/icons/checkCircleOutline";
+
+import ChangeIcon from "@/components/icons/change";
+
 const DateStr = () => import("@/components/DateStr");
 
 const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
@@ -75,7 +110,7 @@ const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
 export default {
 	name: "Purchases",
 
-	components: { InvoiceStatus, DateStr },
+	components: { InvoiceStatus, DateStr, ChangeIcon, CheckCircleOutlineIcon },
 
 	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
 
@@ -101,11 +136,47 @@ export default {
 		filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
 		searchIn: { reference: true, date: false }
 	}),
+
+	async mounted() {
+		await this.getStatusesOptions();
+	},
+
+	computed: {
+		statusesOptions() {
+			return this.$store.state.Invoices.statuses.purchases /* [this.invoiceName] */;
+		}
+	},
+
 	methods: {
+		getStatusesOptions() {
+			return this.$store.dispatch("Invoices/getStatusOptions", "purchases" /* this.invoiceName */);
+		},
+
+		status(status, statusOption) {
+			return { effected: status._id == statusOption._id };
+		},
+
+		async changeStatus(item, statusOption) {
+			item.status.loading = true;
+
+			try {
+				await this.$store.dispatch("Purchases/changeStatus", { invoiceId: item._id, statusId: statusOption._id });
+
+				item.status = { ...statusOption, loading: false };
+
+				this.$store.commit("showMessage");
+			} catch (e) {
+				this.$store.commit("showMessage", { error: true });
+			} finally {
+				item.status.loading = false;
+			}
+		},
+
 		// override the default method from dataTableMixin
 		btnCreateClicked() {
 			this.$router.push({ name: "PurchaseCreate" });
 		},
+
 		due(invoice) {
 			return +invoice.total - +invoice.paid || 0;
 		}
