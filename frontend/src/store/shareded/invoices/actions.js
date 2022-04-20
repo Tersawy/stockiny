@@ -9,6 +9,10 @@ export default {
 		return data;
 	},
 
+	async changeStatus({ state }, { invoiceId, statusId }) {
+		return axios.post(`${state.prefix}/${invoiceId}/change-status`, { statusId });
+	},
+
 	async payments({ commit, state }) {
 		let data = await axios.get(`${state.prefix}/${state.one._id}/payments`);
 		commit("payments", data);
