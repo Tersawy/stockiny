@@ -207,6 +207,57 @@ exports.updatePurchase = async (req, res) => {
 	}
 };
 
+exports.changePurchaseStatus = async (req, res) => {
+	const { statusDoc, statuses } = req.body;
+
+	// get product in detail to update stock
+	let purchase = await Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock");
+
+	if (!purchase) throw notFound();
+
+	let oldStatus = purchase.status._id && statuses.find((s) => s._id.toString() === purchase.status._id.toString());
+
+	// this is fix thius error ------> ** Can't save() the same doc multiple times in parallel.
+	// because maybe the same product is in the details array more than one time with different variant
+	let productsUpdated = [];
+
+	for (let detail of purchase.details) {
+		let product = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+
+		let updatedProduct = product || detail.product;
+
+		if (oldStatus && oldStatus.effected) {
+			detail.product.subtractFromStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
+		}
+
+		if (statusDoc.effected) {
+			detail.product.addToStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
+		}
+
+		if (!product) productsUpdated.push(updatedProduct);
+	}
+
+	purchase.status = statusDoc._id;
+
+	let session = await mongoose.startSession();
+
+	session.startTransaction();
+
+	try {
+		await Promise.all([purchase.save(), ...productsUpdated.map((p) => p.save())]);
+
+		await session.commitTransaction();
+
+		res.json({});
+	} catch (error) {
+		await session.abortTransaction();
+
+		throw error;
+	} finally {
+		session.endSession();
+	}
+};
+
 let throwIfNotValidDetail = (detail, products) => {
 	let { product, variant, subUnit, unit } = detail;
 
