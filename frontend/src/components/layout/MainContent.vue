@@ -3,7 +3,7 @@
 		<b-container fluid class="px-3 px-md-4">
 			<b-card class="mb-4 rounded shadow-sm" no-body>
 				<div class="d-flex align-items-center justify-content-between flex-column flex-sm-row pr-3">
-					<b-breadcrumb class="mb-0 bg-transparent mr-0 mr-sm-auto" v-if="isAuth">
+					<b-breadcrumb class="mb-0 bg-transparent mr-0 mr-sm-auto pr-0 pr-md-3" v-if="isAuth">
 						<b-breadcrumb-item v-for="(bread, i) in breads" :key="i" :active="true">
 							<HomeIcon v-if="breads.length === 1" color="#6c757d" class="mr-1 mb-1" />
 							<span v-if="!bread.link">{{ bread.title }}</span>
@@ -24,19 +24,19 @@
 </template>
 
 <script>
-	import HomeIcon from "@/components/icons/home.vue";
+import HomeIcon from "@/components/icons/home.vue";
 
-	export default {
-		components: { HomeIcon },
+export default {
+	components: { HomeIcon },
 
-		props: {
-			breads: { type: Array, default: () => [] }
-		},
+	props: {
+		breads: { type: Array, default: () => [] }
+	},
 
-		computed: {
-			hasEndBreadsSlot() {
-				return !!this.$slots["end-breads"];
-			}
+	computed: {
+		hasEndBreadsSlot() {
+			return !!this.$slots["end-breads"];
 		}
-	};
+	}
+};
 </script>
