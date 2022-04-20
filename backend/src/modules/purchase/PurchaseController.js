@@ -143,12 +143,12 @@ exports.updatePurchase = async (req, res) => {
 
 	if (!purchase) throw notFound();
 
-	let oldStatus = statuses.find((s) => s._id.toString() === purchase.status._id.toString());
+	let oldStatus = purchase.status._id && statuses.find((s) => s._id.toString() === purchase.status._id.toString());
 
 	let productsUpdated = [];
 
 	// if purchase status effected, update stock
-	if (oldStatus.effected) {
+	if (oldStatus && oldStatus.effected) {
 		for (let detail of purchase.details) {
 			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
 			let productUpdated = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
