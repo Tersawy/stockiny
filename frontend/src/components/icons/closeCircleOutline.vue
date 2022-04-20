@@ -1,6 +1,15 @@
 <!-- eslint-disable -->
 <template>
-	<svg version="1.1" :width="width" :height="height" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" :fill="color">
+	<svg
+		version="1.1"
+		:width="width"
+		:height="height"
+		v-on="$listeners"
+		viewBox="0 0 16 16"
+		:style="{ transform: `scale(${scale})` }"
+		xmlns="http://www.w3.org/2000/svg"
+		:fill="color"
+	>
 		<path
 			fill-rule="evenodd"
 			clip-rule="evenodd"
@@ -13,18 +22,13 @@
 <script>
 export default {
 	props: {
-		width: {
-			type: String,
-			default: "23.2px"
-		},
-		height: {
-			type: String,
-			default: "23.2px"
-		},
-		color: {
-			type: String,
-			default: "#ff5555"
-		}
+		width: { type: String, default: "23.2px" },
+
+		height: { type: String, default: "23.2px" },
+
+		color: { type: String, default: "#ff5555" },
+
+		scale: { type: [String, Number], default: "1" }
 	}
 };
 </script>

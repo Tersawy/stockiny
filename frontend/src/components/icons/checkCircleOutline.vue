@@ -4,6 +4,8 @@
 		version="1.1"
 		:width="width"
 		:height="height"
+		:style="{ transform: `scale(${scale})` }"
+		v-on="$listeners"
 		xmlns="http://www.w3.org/2000/svg"
 		xmlns:xlink="http://www.w3.org/1999/xlink"
 		x="0px"
@@ -46,20 +48,15 @@
 <!-- eslint-disable -->
 
 <script>
-	export default {
-		props: {
-			width: {
-				type: String,
-				default: "20px"
-			},
-			height: {
-				type: String,
-				default: "20px"
-			},
-			color: {
-				type: String,
-				default: "#28a745"
-			}
-		}
-	};
+export default {
+	props: {
+		width: { type: String, default: "20px" },
+
+		height: { type: String, default: "20px" },
+
+		color: { type: String, default: "#28a745" },
+
+		scale: { type: [String, Number], default: "1" }
+	}
+};
 </script>
