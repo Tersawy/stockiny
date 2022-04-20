@@ -498,3 +498,47 @@ exports.createPurchase = checkSchema(createPurchase);
 exports.getEditPurchase = checkSchema({ id: checkId });
 
 exports.updatePurchase = checkSchema(updatePurchase);
+
+exports.changePurchaseStatus = checkSchema({
+	id: checkId,
+
+	statusId: {
+		in: "body",
+
+		exists: {
+			errorMessage: { type: "required" },
+		},
+
+		notEmpty: {
+			errorMessage: { type: "required" },
+		},
+
+		isMongoId: {
+			errorMessage: { type: "mongoId" },
+		},
+
+		customSanitizer: {
+			options: (v) => {
+				return mongoose.Types.ObjectId.isValid(v) ? v : null;
+			}
+		},
+
+		custom: {
+			options: async (value, { req }) => {
+				if (!value) throw { type: "mongoId", value: "Status" };
+
+				let invoice = await Invoice.isStatusExist("purchases", value, "statuses._id statuses.effected");
+
+				if (!invoice) throw { type: "notFound", value: "Status" };
+
+				let status = invoice.statuses.find((status) => status._id.toString() === value.toString());
+
+				req.body.statusDoc = status;
+
+				req.body.statuses = invoice.statuses;
+
+				return true;
+			}
+		},
+	}
+});
