@@ -72,306 +72,324 @@
 </template>
 
 <script>
-	import { mapActions, mapMutations, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 
-	import { required, minLength, maxLength } from "vuelidate/lib/validators";
+import { required, minLength, maxLength } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/ui/DefaultInput");
 
-	export default {
-		name: "Roles",
+export default {
+	name: "Roles",
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		components: { DefaultInput },
+	components: { DefaultInput },
 
-		data() {
-			let isEdit = this.$route.params.roleId;
+	data() {
+		let isEdit = this.$route.params.roleId;
 
-			return {
-				breads: [{ title: "Dashboard", link: "/" }, { title: "Roles", link: "/roles" }, { title: isEdit ? "Edit" : "Create" }],
+		return {
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Roles", link: "/roles" }, { title: isEdit ? "Edit" : "Create" }],
 
-				role: { name: "", permissions: [] },
+			role: { name: "", permissions: [] },
 
-				bulkActions: {
-					read: false,
-					show: false,
-					create: false,
-					edit: false,
-					delete: false,
-					print: false
-				},
+			bulkActions: {
+				read: false,
+				show: false,
+				create: false,
+				edit: false,
+				delete: false,
+				print: false
+			},
 
-				roleLoading: false,
+			roleLoading: false,
 
-				isStayHere: false
-			};
-		},
+			isStayHere: false
+		};
+	},
 
-		validations: {
-			role: {
-				name: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				permissions: { required, minLength: minLength(1) }
-			}
-		},
+	validations: {
+		role: {
+			name: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			permissions: { required, minLength: minLength(1) }
+		}
+	},
 
-		async mounted() {
-			this.setOne({});
+	async mounted() {
+		this.setOne({});
 
-			this.getPermissions();
+		this.getPermissions();
 
-			if (this.roleId) {
-				await this.getRole(this.roleId);
+		if (this.roleId) {
+			await this.getRole(this.roleId);
 
-				if (this.oldRole._id) {
-					for (const key in this.role) {
-						this.role[key] = typeof this.oldRole[key] === "undefined" ? "" : this.oldRole[key];
-					}
+			if (this.oldRole._id) {
+				for (const key in this.role) {
+					this.role[key] = typeof this.oldRole[key] === "undefined" ? "" : this.oldRole[key];
 				}
-			}
-		},
-
-		computed: {
-			...mapState({
-				oldRole: (state) => state.Roles.one,
-				permissions: (state) => state.Permissions.all.docs
-			}),
-
-			roleId() {
-				return this.$route.params.roleId;
-			},
-
-			isUpdate() {
-				return !!this.oldRole._id;
-			},
-
-			showResetBtn() {
-				return !!this.role.name || !!this.role.permissions.length;
-			},
-
-			showResetOriginalBtn() {
-				if (!this.isUpdate) return false;
-
-				let rolesAreEqual = this.oldRole.name == this.role.name;
-
-				let permissionsAreEqual = this.oldRole.permissions.length == this.role.permissions.length;
-
-				if (permissionsAreEqual) {
-					permissionsAreEqual = this.oldRole.permissions.every((permission) => this.role.permissions.includes(permission));
-				}
-
-				return !rolesAreEqual || !permissionsAreEqual;
-			},
-
-			// this fix the same value in watch issue https://github.com/vuejs/vue/issues/2164 #2164
-			computedBulkedActions() {
-				return Object.assign({}, this.bulkActions);
-			},
-
-			sortedPermissionsByModule() {
-				let permissions = [...this.permissions];
-
-				let actions = ["read", "show", "create", "active", "edit", "delete", "print"];
-
-				permissions.sort((a, b) => {
-					a = a.toLowerCase();
-
-					b = b.toLowerCase();
-
-					let [aAction, aModule] = a.split(":");
-
-					let [bAction, bModule] = b.split(":");
-
-					if (aModule == bModule) {
-						if (actions.indexOf(aAction) > actions.indexOf(bAction)) {
-							return 1;
-						}
-
-						if (actions.indexOf(aAction) < actions.indexOf(bAction)) {
-							return -1;
-						}
-
-						return 0;
-					}
-
-					return aModule > bModule ? 1 : -1;
-				});
-
-				return permissions;
-			},
-
-			modulesOptions() {
-				let permissions = this.sortedPermissionsByModule;
-
-				// group permissions by module
-				permissions = permissions.reduce((lastPermissions, permission) => {
-					let module = permission.split(":")[1];
-
-					if (!lastPermissions[module]) {
-						return { ...lastPermissions, [module]: [permission] };
-					}
-
-					return { ...lastPermissions, [module]: [...lastPermissions[module], permission] };
-				}, {});
-
-				// sort modules by permissions length
-				let sortedModulesByPermissionLength = Object.keys(permissions).sort((a, b) => {
-					return permissions[b].length - permissions[a].length;
-				});
-
-				// make modules object with permissions
-				return sortedModulesByPermissionLength.reduce((lastPermissions, module) => {
-					return { ...lastPermissions, [module]: permissions[module] };
-				}, {});
-			}
-		},
-
-		watch: {
-			"role.permissions": {
-				handler() {
-					for (let action in this.bulkActions) {
-						this.bulkActions[action] = this.ArePermissionsEqualByAction(action);
-					}
-				},
-				deep: true
-			},
-
-			// watch computedBulkedActions instead of bulkedActions to fix the same value in watch issue
-			computedBulkedActions: {
-				handler(value, oldValue) {
-					let thisAction = "";
-
-					for (let action in value) {
-						if (value[action] != oldValue[action]) {
-							// if action is false and permissions are not equals that means all permissions with this action maybe checked except one
-							if (!value[action] && !this.ArePermissionsEqualByAction(action)) return;
-
-							thisAction = action;
-
-							break;
-						}
-					}
-
-					let permissionsAction = this.permissions.filter((permission) => {
-						let [action] = permission.split(":");
-
-						return action == thisAction;
-					});
-
-					if (value[thisAction]) {
-						let newPermissions = new Set([...permissionsAction, ...this.role.permissions]); // merge permissions by Set to avoid duplicates
-
-						this.role.permissions = [...newPermissions];
-					} else {
-						this.role.permissions = this.role.permissions.filter((permission) => !permissionsAction.includes(permission));
-					}
-				},
-				deep: true
-			}
-		},
-
-		methods: {
-			...mapActions({
-				getRole: "Roles/getOne",
-				create: "Roles/create",
-				update: "Roles/update",
-				getOptions: "Roles/getOptions",
-				getPermissions: "Permissions/getAll"
-			}),
-
-			...mapMutations("Roles", ["setOne", "setError", "resetErrorByField", "resetError"]),
-
-			async handleSave() {
-				this.$v.$touch();
-
-				if (this.$v.$invalid) {
-					if (this.$v.role.permissions.$invalid) {
-						let message = this.$t("validation.minValue", { field: "Permissions", min: 1 });
-						this.$store.commit("showToast", { variant: "danger", message });
-					}
-					return;
-				}
-
-				this.isBusy = true;
-
-				let action = this.isUpdate ? this.update : this.create;
-
-				try {
-					let res = await action(this.role);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					message = this.$t(message, { module: this.role.name });
-
-					this.$store.commit("showToast", message);
-
-					this.getOptions();
-
-					this.resetForm();
-
-					if (!this.isUpdate && this.isStayHere) return;
-
-					this.$router.push({ name: "Roles" });
-				} catch (err) {
-					this.setError(err);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			handleCancel() {
-				this.resetForm();
-
-				this.$router.push({ name: "Roles" });
-			},
-
-			/*
-			 * check if app permissions are equals to this user permissions by action
-			 * @param {String} action - action name e.g. "read", "create", "edit", "delete" etc.
-			 * @returns {Boolean}
-			 */
-			ArePermissionsEqualByAction(action) {
-				let permissionsCount = this.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
-
-				let rolePermissionsCount = this.role.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
-
-				return permissionsCount === rolePermissionsCount;
-			},
-
-			resetBulkActions() {
-				for (let action in this.bulkActions) {
-					this.bulkActions[action] = false;
-				}
-			},
-
-			resetRoleAndPermissions() {
-				this.role = { name: "", permissions: [] };
-				this.resetBulkActions();
-			},
-
-			resetOriginalRoleAndPermissions() {
-				this.role = { ...this.oldRole };
-			},
-
-			resetForm() {
-				this.resetBulkActions();
-
-				this.role = { name: "", permissions: [] };
-
-				this.resetError();
-
-				this.setOne({});
-
-				this.$store.commit("Roles/setOne", {});
-
-				this.$nextTick(this.$v.$reset);
 			}
 		}
-	};
+	},
+
+	computed: {
+		...mapState({
+			oldRole: (state) => state.Roles.one,
+			permissions: (state) => state.Permissions.all.docs
+		}),
+
+		roleId() {
+			return this.$route.params.roleId;
+		},
+
+		isUpdate() {
+			return !!this.oldRole._id;
+		},
+
+		showResetBtn() {
+			return !!this.role.name || !!this.role.permissions.length;
+		},
+
+		showResetOriginalBtn() {
+			if (!this.isUpdate) return false;
+
+			let rolesAreEqual = this.oldRole.name == this.role.name;
+
+			let permissionsAreEqual = this.oldRole.permissions.length == this.role.permissions.length;
+
+			if (permissionsAreEqual) {
+				permissionsAreEqual = this.oldRole.permissions.every((permission) => this.role.permissions.includes(permission));
+			}
+
+			return !rolesAreEqual || !permissionsAreEqual;
+		},
+
+		// this fix the same value in watch issue https://github.com/vuejs/vue/issues/2164 #2164
+		computedBulkedActions() {
+			return Object.assign({}, this.bulkActions);
+		},
+
+		sortedPermissionsByModule() {
+			let permissions = [...this.permissions];
+
+			let actions = [
+				"read",
+				"show",
+				"create",
+				"active",
+				"edit",
+				"delete",
+				"changestatus",
+				"showpayment",
+				"createpayment",
+				"editpayment",
+				"deletepayment",
+				"readstatus",
+				"createstatus",
+				"editstatus",
+				"changeeffectedstatus",
+				"deletestatus",
+				"print"
+			];
+
+			permissions.sort((a, b) => {
+				a = a.toLowerCase();
+
+				b = b.toLowerCase();
+
+				let [aAction, aModule] = a.split(":");
+
+				let [bAction, bModule] = b.split(":");
+
+				if (aModule == bModule) {
+					if (actions.indexOf(aAction) > actions.indexOf(bAction)) {
+						return 1;
+					}
+
+					if (actions.indexOf(aAction) < actions.indexOf(bAction)) {
+						return -1;
+					}
+
+					return 0;
+				}
+
+				return aModule > bModule ? 1 : -1;
+			});
+
+			return permissions;
+		},
+
+		modulesOptions() {
+			let permissions = this.sortedPermissionsByModule;
+
+			// group permissions by module
+			permissions = permissions.reduce((lastPermissions, permission) => {
+				let module = permission.split(":")[1];
+
+				if (!lastPermissions[module]) {
+					return { ...lastPermissions, [module]: [permission] };
+				}
+
+				return { ...lastPermissions, [module]: [...lastPermissions[module], permission] };
+			}, {});
+
+			// sort modules by permissions length
+			let sortedModulesByPermissionLength = Object.keys(permissions).sort((a, b) => {
+				return permissions[b].length - permissions[a].length;
+			});
+
+			// make modules object with permissions
+			return sortedModulesByPermissionLength.reduce((lastPermissions, module) => {
+				return { ...lastPermissions, [module]: permissions[module] };
+			}, {});
+		}
+	},
+
+	watch: {
+		"role.permissions": {
+			handler() {
+				for (let action in this.bulkActions) {
+					this.bulkActions[action] = this.ArePermissionsEqualByAction(action);
+				}
+			},
+			deep: true
+		},
+
+		// watch computedBulkedActions instead of bulkedActions to fix the same value in watch issue
+		computedBulkedActions: {
+			handler(value, oldValue) {
+				let thisAction = "";
+
+				for (let action in value) {
+					if (value[action] != oldValue[action]) {
+						// if action is false and permissions are not equals that means all permissions with this action maybe checked except one
+						if (!value[action] && !this.ArePermissionsEqualByAction(action)) return;
+
+						thisAction = action;
+
+						break;
+					}
+				}
+
+				let permissionsAction = this.permissions.filter((permission) => {
+					let [action] = permission.split(":");
+
+					return action == thisAction;
+				});
+
+				if (value[thisAction]) {
+					let newPermissions = new Set([...permissionsAction, ...this.role.permissions]); // merge permissions by Set to avoid duplicates
+
+					this.role.permissions = [...newPermissions];
+				} else {
+					this.role.permissions = this.role.permissions.filter((permission) => !permissionsAction.includes(permission));
+				}
+			},
+			deep: true
+		}
+	},
+
+	methods: {
+		...mapActions({
+			getRole: "Roles/getOne",
+			create: "Roles/create",
+			update: "Roles/update",
+			getOptions: "Roles/getOptions",
+			getPermissions: "Permissions/getAll"
+		}),
+
+		...mapMutations("Roles", ["setOne", "setError", "resetErrorByField", "resetError"]),
+
+		async handleSave() {
+			this.$v.$touch();
+
+			if (this.$v.$invalid) {
+				if (this.$v.role.permissions.$invalid) {
+					let message = this.$t("validation.minValue", { field: "Permissions", min: 1 });
+					this.$store.commit("showToast", { variant: "danger", message });
+				}
+				return;
+			}
+
+			this.isBusy = true;
+
+			let action = this.isUpdate ? this.update : this.create;
+
+			try {
+				let res = await action(this.role);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				message = this.$t(message, { module: this.role.name });
+
+				this.$store.commit("showToast", message);
+
+				this.getOptions();
+
+				this.resetForm();
+
+				if (!this.isUpdate && this.isStayHere) return;
+
+				this.$router.push({ name: "Roles" });
+			} catch (err) {
+				this.setError(err);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		handleCancel() {
+			this.resetForm();
+
+			this.$router.push({ name: "Roles" });
+		},
+
+		/*
+		 * check if app permissions are equals to this user permissions by action
+		 * @param {String} action - action name e.g. "read", "create", "edit", "delete" etc.
+		 * @returns {Boolean}
+		 */
+		ArePermissionsEqualByAction(action) {
+			let permissionsCount = this.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
+
+			let rolePermissionsCount = this.role.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
+
+			return permissionsCount === rolePermissionsCount;
+		},
+
+		resetBulkActions() {
+			for (let action in this.bulkActions) {
+				this.bulkActions[action] = false;
+			}
+		},
+
+		resetRoleAndPermissions() {
+			this.role = { name: "", permissions: [] };
+			this.resetBulkActions();
+		},
+
+		resetOriginalRoleAndPermissions() {
+			this.role = { ...this.oldRole };
+		},
+
+		resetForm() {
+			this.resetBulkActions();
+
+			this.role = { name: "", permissions: [] };
+
+			this.resetError();
+
+			this.setOne({});
+
+			this.$store.commit("Roles/setOne", {});
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>
