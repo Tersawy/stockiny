@@ -80,7 +80,7 @@
 					<b-card header="User Permissions" body-class="p-0">
 						<b-overlay :show="roleLoading" rounded="sm" spinner-variant="primary">
 							<div class="p-4">
-								<b-row align-v="between" align-h="between">
+								<b-row class="justify-content-between" align-h="between">
 									<!-- Role Input -->
 									<b-col cols="12" sm="10" md="9" lg="6">
 										<b-row align-v="center">
