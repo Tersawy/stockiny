@@ -80,11 +80,11 @@
 					<b-card header="User Permissions" body-class="p-0">
 						<b-overlay :show="roleLoading" rounded="sm" spinner-variant="primary">
 							<div class="p-4">
-								<b-row align-v="center">
+								<b-row align-v="between" align-h="between">
 									<!-- Role Input -->
-									<b-col cols="6">
+									<b-col cols="12" sm="10" md="9" lg="6">
 										<b-row align-v="center">
-											<b-col cols="6">
+											<b-col cols="8" sm="6">
 												<default-select label="Role" field="role" :options="roleOptions" :vuelidate="$v.user" namespace="Users" />
 											</b-col>
 											<b-col>
@@ -92,8 +92,8 @@
 											</b-col>
 										</b-row>
 									</b-col>
-									<b-col class="mt-3">
-										<div class="d-flex justify-content-end">
+									<b-col class="mt-3" cols="12" sm="2" md="3">
+										<div class="d-flex justify-content-end align-items-center h-100">
 											<!-- Bulk Actions DropDown -->
 											<b-dropdown text="Bulk Actions" right variant="outline-primary" v-if="!user.role">
 												<b-dropdown-form>
