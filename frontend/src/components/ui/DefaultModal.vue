@@ -3,7 +3,9 @@
 		<template #modal-header="{ close, ok }">
 			<div class="d-flex align-items-center justify-content-between w-100">
 				<div class="d-flex align-items-center">
-					<span class="mb-0 font-default">{{ title }}</span>
+					<span class="mb-0 font-default">
+						<slot name="title"> {{ title }} </slot>
+					</span>
 				</div>
 				<b-form-checkbox v-if="settings.showStayOpenBtn" v-model="settings.stayOpen" switch> Stay open </b-form-checkbox>
 				<div class="d-flex align-items-center">
@@ -22,53 +24,53 @@
 </template>
 
 <script>
-	export default {
-		props: {
-			id: {
-				type: String,
-				default: "formModal"
-			},
-			title: {
-				type: String,
-				default: "Form"
-			},
-			isBusy: {
-				type: Boolean,
-				default: false
-			},
-			settings: {
-				type: Object,
-				default: () => ({
-					stayOpen: false,
-					showStayOpenBtn: true
-				})
-			},
-			modalProps: {
-				type: Object,
-				default: () => {}
-			}
+export default {
+	props: {
+		id: {
+			type: String,
+			default: "formModal"
 		},
-
-		computed: {
-			mProps() {
-				let defaultProps = { size: "lg" };
-
-				return { ...defaultProps, ...this.modalProps };
-			}
+		title: {
+			type: String,
+			default: "Form"
 		},
-
-		methods: {
-			onHidden(e) {
-				this.$emit("hidden", e);
-			},
-
-			onOk(e) {
-				this.$emit("ok", e);
-			},
-
-			onShow(e) {
-				this.$emit("show", e);
-			}
+		isBusy: {
+			type: Boolean,
+			default: false
+		},
+		settings: {
+			type: Object,
+			default: () => ({
+				stayOpen: false,
+				showStayOpenBtn: true
+			})
+		},
+		modalProps: {
+			type: Object,
+			default: () => {}
 		}
-	};
+	},
+
+	computed: {
+		mProps() {
+			let defaultProps = { size: "lg" };
+
+			return { ...defaultProps, ...this.modalProps };
+		}
+	},
+
+	methods: {
+		onHidden(e) {
+			this.$emit("hidden", e);
+		},
+
+		onOk(e) {
+			this.$emit("ok", e);
+		},
+
+		onShow(e) {
+			this.$emit("show", e);
+		}
+	}
+};
 </script>
