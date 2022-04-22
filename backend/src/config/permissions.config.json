@@ -44,6 +44,7 @@
 			"deleteStatus",
 			"changeStatus",
 			"changeEffectedStatus",
+			"showPayment",
 			"createPayment",
 			"editPayment",
 			"deletePayment",
