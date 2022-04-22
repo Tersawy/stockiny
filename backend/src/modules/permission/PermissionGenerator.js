@@ -10,33 +10,22 @@ let generate = async () => {
 	try {
 		let permissionData = readFileSync(join(__dirname, "../../config/permissions.config.json"), "utf8");
 
-		let permissions = JSON.parse(permissionData);
+		permissionData = JSON.parse(permissionData);
 
-		let generatePermission = (module) => permissions.actions.map((action) => `${action}:${module}`);
+		let permissions = [];
 
-		let additionalPermissionsForModules = permissions.additionalPermissionsForModules;
-
-		additionalPermissionsForModules = Object.keys(additionalPermissionsForModules).reduce((curr, module) => {
-			let actions = additionalPermissionsForModules[module];
-			let perms = actions.map((action) => `${action}:${module}`);
-
-			return [...curr, ...perms];
-		}, []);
-
-		let mergePermissions = (oldPermissions, module) => [...oldPermissions, ...generatePermission(module)];
-
-		permissions = permissions.modules.reduce(mergePermissions, [
-			...permissions.additionalPermissions,
-			...additionalPermissionsForModules,
-		]);
-
-		permissions = permissions.map((permission) => ({ _id: permission }));
+		for (let permission of permissionData) {
+			for (let module of permission.modules) {
+				for (let action of permission.actions) {
+					permissions.push({ _id: `${action}:${module}` });
+				}
+			}
+		}
 
 		await Permission.deleteMany({});
 
 		await Permission.insertMany(permissions);
 
-		// console.log("\x1b[32;1m%s\x1b[0m", "** Permissions generated successfully √ **");
 		consoleColors("green", "** Permissions generated successfully √ **");
 	} catch (error) {
 		console.log(error);
