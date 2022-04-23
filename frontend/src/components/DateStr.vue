@@ -1,10 +1,10 @@
 <template>
 	<div>
 		<template v-if="isValid">
-			<div v-if="full"> {{ fullDate }} </div>
+			<div v-if="full">{{ fullDate }}</div>
 			<div v-else v-b-tooltip.hover :title="fullDate">{{ getDate }}</div>
 		</template>
-		<div v-else> {{ invalidText }} </div>
+		<div v-else>{{ invalidText }}</div>
 	</div>
 </template>
 
@@ -36,7 +36,7 @@ export default {
 		},
 
 		simpleDate() {
-			return this.day + "-" + this.month + "-" + this.year;
+			return this.year + "-" + this.month + "-" + this.day;
 		},
 
 		year() {
