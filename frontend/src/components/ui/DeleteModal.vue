@@ -28,23 +28,14 @@ let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export default {
 	components: { TrashIcon },
 
-	props: {
-		id: {
-			type: String,
-			default: "deleteModal"
-		},
-		field: {
-			type: String,
-			default: "field"
-		}
-	},
+	props: { field: { type: String, default: "field" } },
 
 	data() {
-		return {
-			isBusy: false,
-			bridge: null,
-			forceCloseModal: false
-		};
+		return { id: "deleteModal_", isBusy: false, bridge: null };
+	},
+
+	created() {
+		this.id = this.id + this._uid;
 	},
 
 	methods: {
@@ -53,8 +44,11 @@ export default {
 
 			this.$nextTick(async () => {
 				this.$bvModal.show(this.id);
+
 				await sleep(50);
+
 				this.popUpAnimation();
+
 				this.$refs.cancelBtn.focus();
 			});
 		},
@@ -64,10 +58,7 @@ export default {
 
 			this.setBusy(false);
 
-			this.$nextTick(() => {
-				this.$bvModal.hide(this.id);
-				this.forceCloseModal = false;
-			});
+			this.$nextTick(() => this.$bvModal.hide(this.id));
 		},
 
 		cancel() {
