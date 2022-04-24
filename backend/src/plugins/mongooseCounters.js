@@ -9,7 +9,7 @@ let counterSchema = new mongoose.Schema({
 let Counter = mongoose.model("Counter", counterSchema);
 
 module.exports = (schema) => {
-	let defaultOptions = { field: "", prefix: "", disable: false };
+	let defaultOptions = { field: "", prefix: "", disable: false, name: "" };
 
 	let options = Object.assign(defaultOptions, schema.options.counters || {});
 
@@ -24,7 +24,7 @@ module.exports = (schema) => {
 	schema.pre("save", async function (next) {
 		if (!this.isNew) return next();
 
-		let modelName = this.constructor.modelName;
+		let modelName = options.name || this.constructor.modelName;
 
 		if (field) {
 			let counter = await Counter.findOneAndUpdate(
