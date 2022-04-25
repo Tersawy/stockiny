@@ -12,7 +12,7 @@
 					<b-button size="sm" variant="outline-danger" :disabled="isBusy" class="mx-2" @click="close"> Close </b-button>
 					<!-- <b-button v-if="!isBusy" type="submit" variant="outline-primary"> Save </b-button> -->
 					<b-button size="sm" variant="outline-primary" :disabled="isBusy" class="d-flex align-items-center" @click="ok">
-						Save
+						<slot name="ok">Save</slot>
 						<b-spinner v-if="isBusy" small class="mx-1"></b-spinner>
 					</b-button>
 				</div>
