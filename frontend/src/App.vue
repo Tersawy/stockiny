@@ -232,42 +232,50 @@ export default {
 @keyframes toRight {
 	from {
 		transform: translateX(0);
+		opacity: 1;
 	}
 	to {
-		transform: translateX(100%);
+		transform: translateX(80%);
+		opacity: 0;
 	}
 }
 
 @keyframes fromLeft {
 	from {
-		transform: translateX(-100%);
+		transform: translateX(-80%);
+		opacity: 0;
 	}
 	to {
 		transform: translateX(0);
+		opacity: 1;
 	}
 }
 
 @keyframes toLeft {
 	from {
 		transform: translateX(0);
+		opacity: 1;
 	}
 	to {
-		transform: translateX(-100%);
+		transform: translateX(-80%);
+		opacity: 0;
 	}
 }
 
 @keyframes fromRight {
 	from {
-		transform: translateX(100%);
+		transform: translateX(80%);
+		opacity: 0;
 	}
 	to {
 		transform: translateX(0);
+		opacity: 1;
 	}
 }
 
 @keyframes fromTop {
 	from {
-		transform: translateY(-100%);
+		transform: translateY(-80%);
 		opacity: 0;
 	}
 	to {
@@ -282,7 +290,7 @@ export default {
 		opacity: 1;
 	}
 	to {
-		transform: translateY(100%);
+		transform: translateY(80%);
 		opacity: 0;
 	}
 }
