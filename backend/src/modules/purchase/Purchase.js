@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const purchaseSchema = require("./schemas/PurchaseSchema");
 
 const Model = require("../../plugins/Model");
+const { notFound } = require("../../errors/ErrorHandler");
 
 class Purchase extends Model {
 	get fillable() {
@@ -81,6 +82,48 @@ class Purchase extends Model {
 		}
 
 		this.calculateTotal();
+
+		return this;
+	}
+
+	addPayment(payment) {
+		payment = { date: payment.date, amount: payment.amount, paymentType: payment.paymentType, notes: payment.notes, createdBy: payment.createdBy };
+
+		this.payments.push(payment);
+
+		this.calculatePaid();
+
+		return this;
+	}
+
+	getPayment(paymentId) {
+		return this.payments.find((payment) => payment._id.toString() === paymentId.toString());
+	}
+
+	editPayment(paymentId, payment) {
+		let oldPayment = this.getPayment(paymentId);
+
+		if (!oldPayment) throw notFound("paymentId");
+
+		oldPayment.date = payment.date;
+		oldPayment.amount = payment.amount;
+		oldPayment.paymentType = payment.paymentType;
+		oldPayment.notes = payment.notes;
+		oldPayment.updatedBy = payment.updatedBy;
+
+		this.calculatePaid();
+
+		return this;
+	}
+
+	deletePayment(paymentId) {
+		let index = this.payments.findIndex((payment) => payment._id.toString() === paymentId.toString());
+
+		if (index === -1) throw notFound("paymentId");
+
+		this.payments.splice(index, 1);
+
+		this.calculatePaid();
 
 		return this;
 	}
