@@ -114,7 +114,6 @@ export default {
 		min-height: 100vh;
 		background: #ebeef0;
 		overflow-x: hidden;
-		padding-bottom: 60px;
 		.main-content {
 			position: relative;
 			min-height: calc(100vh - 60px - 1.5rem);
@@ -153,6 +152,7 @@ export default {
 			width: calc(100% - 60px);
 			left: 60px;
 			top: 60px;
+			padding-bottom: 60px;
 		}
 		@media (max-width: 576px) {
 			.main-content,
