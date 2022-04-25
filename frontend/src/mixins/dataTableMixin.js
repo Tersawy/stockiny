@@ -10,6 +10,8 @@ import EditIcon from "@/components/icons/edit.vue";
 
 import TrashIcon from "@/components/icons/trash.vue";
 
+import axios from "@/plugins/axios";
+
 export default function dataTableMixin(namespace) {
 	return {
 		components: { TableHeaderControls, TableFooterControls, EditIcon, TrashIcon },
@@ -24,8 +26,17 @@ export default function dataTableMixin(namespace) {
 			search: ""
 		}),
 
+		async beforeRouteEnter(to, from, next) {
+			// transform namespace from camelCase to kebab-case
+			let routename = namespace.replace(/\B([A-Z])/g, "-$1").toLowerCase();
+
+			let response = await axios.get(`/${routename}`);
+
+			next(vm => vm.$store.commit(`${namespace}/setAll`, response))
+		},
+
 		mounted() {
-			this.getAll(this.queries);
+			// this.getAll(this.queries);
 			if (this.formId) {
 				// open modal when press alt+c
 				document.onkeydown = (e) => {
