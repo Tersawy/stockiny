@@ -6,7 +6,7 @@
 					<!-- Amount Input -->
 					<b-col>
 						<default-input
-							ref="inputAmount"
+							ref="amountInput"
 							label="Amount"
 							placeholder="Enter Expense Amount"
 							field="amount"
@@ -39,148 +39,146 @@
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 
-	import { required, maxLength, minValue, numeric } from "vuelidate/lib/validators";
+import { required, maxLength, minValue, numeric } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	import { getDate } from "@/helpers";
+import { getDate } from "@/helpers";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/ui/DefaultInput");
 
-	const DefaultSelect = () => import("@/components/ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/ui/DefaultSelect");
 
-	const DefaultDatePickerInput = () => import("@/components/ui/DefaultDatePickerInput");
+const DefaultDatePickerInput = () => import("@/components/ui/DefaultDatePickerInput");
 
-	const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/ui/DefaultModal");
 
-	export default {
-		components: { DefaultModal, DefaultInput, DefaultSelect, DefaultDatePickerInput, DefaultTextArea },
+export default {
+	components: { DefaultModal, DefaultInput, DefaultSelect, DefaultDatePickerInput, DefaultTextArea },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		data: () => ({
-			expense: { amount: "", date: "", category: null, warehouse: null, details: "" },
+	data: () => ({
+		expense: { amount: "", date: "", category: null, warehouse: null, details: "" },
 
-			isBusy: false,
+		isBusy: false,
 
-			modalSettings: { stayOpen: false, showStayOpenBtn: true }
+		modalSettings: { stayOpen: false, showStayOpenBtn: true }
+	}),
+
+	validations: {
+		expense: {
+			amount: { required, numeric, minValue: minValue(1) },
+			date: { required },
+			category: { required },
+			warehouse: { required },
+			details: { maxLength: maxLength(254) }
+		}
+	},
+
+	mounted() {
+		this.getExpenseCategoriesOptions();
+		this.getWarehouseOptions();
+	},
+
+	computed: {
+		...mapState({
+			oldExpense: (state) => state.Expenses.one,
+			expenseCategoriesOptions: (state) => state.ExpenseCategories.options,
+			warehouseOptions: (state) => state.Warehouses.options
 		}),
 
-		validations: {
-			expense: {
-				amount: { required, numeric, minValue: minValue(1) },
-				date: { required },
-				category: { required },
-				warehouse: { required },
-				details: { maxLength: maxLength(254) }
-			}
+		isUpdate() {
+			return !!this.oldExpense._id;
 		},
 
-		mounted() {
-			this.getExpenseCategoriesOptions();
-			this.getWarehouseOptions();
-		},
-
-		computed: {
-			...mapState({
-				oldExpense: (state) => state.Expenses.one,
-				expenseCategoriesOptions: (state) => state.ExpenseCategories.options,
-				warehouseOptions: (state) => state.Warehouses.options
-			}),
-
-			isUpdate() {
-				return !!this.oldExpense._id;
-			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Expense" : "Create Expense";
-			}
-		},
-
-		methods: {
-			...mapActions({
-				create: "Expenses/create",
-				update: "Expenses/update",
-				getExpenseCategoriesOptions: "ExpenseCategories/getOptions",
-				getWarehouseOptions: "Warehouses/getOptions"
-			}),
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.expense) {
-						if ((key == "category" || key == "warehouse") && this.oldExpense[key]) {
-							this.expense[key] = this.oldExpense[key]._id || null;
-							continue;
-						} else if (key == "date") {
-							this.expense[key] = getDate(this.oldExpense[key]);
-							continue;
-						}
-
-						this.expense[key] = this.oldExpense[key];
-					}
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputAmount?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.expense.$invalid) return;
-
-				this.isBusy = true;
-
-				try {
-					let action = this.isUpdate ? this.update : this.create;
-
-					let res = await action(this.expense);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					message = this.$t(message, { module: "Expense" });
-
-					this.$store.commit("showToast", message);
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("expenseFormModal");
-					}
-
-					this.resetForm();
-
-					this.$refs?.inputAmount?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Expenses/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				this.expense = { amount: "", date: "", category: null, warehouse: null, details: "" };
-
-				this.$store.commit("Expenses/resetError");
-
-				this.$store.commit("Expenses/setOne", {});
-
-				this.$nextTick(this.$v.$reset);
-			}
+		formTitle() {
+			return this.isUpdate ? "Edit Expense" : "Create Expense";
 		}
-	};
+	},
+
+	methods: {
+		...mapActions({
+			create: "Expenses/create",
+			update: "Expenses/update",
+			getExpenseCategoriesOptions: "ExpenseCategories/getOptions",
+			getWarehouseOptions: "Warehouses/getOptions"
+		}),
+
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.expense) {
+					if ((key == "category" || key == "warehouse") && this.oldExpense[key]) {
+						this.expense[key] = this.oldExpense[key]._id || null;
+						continue;
+					} else if (key == "date") {
+						this.expense[key] = getDate(this.oldExpense[key]);
+						continue;
+					}
+
+					this.expense[key] = this.oldExpense[key];
+				}
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => this.$refs?.amountInput?.$children[0]?.$children[0]?.focus(), 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.expense.$invalid) return;
+
+			this.isBusy = true;
+
+			try {
+				let action = this.isUpdate ? this.update : this.create;
+
+				let res = await action(this.expense);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				message = this.$t(message, { module: "Expense" });
+
+				this.$store.commit("showToast", message);
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("expenseFormModal");
+				}
+
+				this.resetForm();
+
+				this.$refs?.amountInput?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Expenses/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			this.expense = { amount: "", date: "", category: null, warehouse: null, details: "" };
+
+			this.$store.commit("Expenses/resetError");
+
+			this.$store.commit("Expenses/setOne", {});
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>
