@@ -51,55 +51,55 @@
 </template>
 
 <script>
-	export default {
-		props: ["invoice", "namespace", "invoiceName"],
+export default {
+	props: ["invoice", "namespace", "invoiceName"],
 
-		methods: {
-			async showPayments(invoice) {
-				this.setOne({ ...invoice, payments: [] }); // payments: [] to shown in Payments Component when data will render
+	methods: {
+		async showPayments(invoice) {
+			this.setOne({ ...invoice, payments: [] }); // payments: [] to shown in Payments Component when data will render
 
-				try {
-					await this.$store.dispatch(`${this.namespace}/payments`);
-					this.$bvModal.show("payments");
-				} catch (err) {
-					console.log(err);
-				}
-			},
-
-			setOne(data) {
-				this.$store.commit(`${this.namespace}/setOne`, data);
-			},
-
-			moveToTrash(item) {
-				return this.$store.dispatch(`${this.namespace}/moveToTrash`, item);
+			try {
+				await this.$store.dispatch(`${this.namespace}/getPayments`);
+				this.$bvModal.show("payments");
+			} catch (err) {
+				console.log(err);
 			}
+		},
+
+		setOne(data) {
+			this.$store.commit(`${this.namespace}/setOne`, data);
+		},
+
+		moveToTrash(item) {
+			return this.$store.dispatch(`${this.namespace}/moveToTrash`, item);
 		}
-	};
+	}
+};
 </script>
 
 <style lang="scss">
-	.dropdown-invoice-options {
-		& > button {
-			visibility: hidden;
-			padding: 0;
+.dropdown-invoice-options {
+	& > button {
+		visibility: hidden;
+		padding: 0;
+	}
+	.svg-inline--fa.fa-fw {
+		width: 1.2em;
+	}
+	a {
+		&,
+		&:hover,
+		&:focus,
+		&:focus-visible,
+		&:-webkit-any-link:focus-visible {
+			color: #212529;
+			text-decoration: none;
+			outline-offset: 0;
+			outline: 0;
 		}
-		.svg-inline--fa.fa-fw {
-			width: 1.2em;
-		}
-		a {
-			&,
-			&:hover,
-			&:focus,
-			&:focus-visible,
-			&:-webkit-any-link:focus-visible {
-				color: #212529;
-				text-decoration: none;
-				outline-offset: 0;
-				outline: 0;
-			}
-			&:active {
-				background: #e9ecef;
-			}
+		&:active {
+			background: #e9ecef;
 		}
 	}
+}
 </style>
