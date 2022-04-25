@@ -10,9 +10,11 @@ const schema = require("./schemas/PurchaseSchema").obj;
 
 const detailSchema = require("./schemas/DetailSchema").obj;
 
+const paymentSchema = require("./schemas/PaymentSchema").obj;
+
 const { checkSchema } = require("express-validator");
 
-let isFloat = (v) => /^\d+$|^\d+\.\d+$/.test(v); // eg. 1, 1.1, 0.1
+let isFloat = (num) => /^\d+$|^\d+\.\d+$|^\.\d+$/.test(num) && num > 0; // eg. 1, 1.1, 0.1
 
 let createPurchase = {
 	date: {
@@ -542,3 +544,98 @@ exports.changePurchaseStatus = checkSchema({
 		},
 	}
 });
+
+exports.getPayments = checkSchema({ id: checkId });
+
+const createPayment = {
+	id: checkId,
+
+	date: {
+		in: "body",
+
+		exists: {
+			errorMessage: { type: "required" },
+		},
+
+		notEmpty: {
+			errorMessage: { type: "required" },
+		},
+
+		isDate: {
+			errorMessage: { type: "date" },
+		},
+	},
+
+	amount: {
+		in: "body",
+
+		exists: {
+			errorMessage: { type: "required" },
+		},
+
+		notEmpty: {
+			errorMessage: { type: "required" },
+		},
+
+		isFloat: {
+			errorMessage: { type: "float" },
+		},
+
+		custom: {
+			options: async (value) => {
+				if (value <= 0) throw { type: "invalid", value: "Amount" };
+
+				return isFloat(value);
+			}
+		},
+	},
+
+	paymentType: {
+		in: "body",
+
+		exists: {
+			errorMessage: { type: "required" },
+		},
+
+		notEmpty: {
+			errorMessage: { type: "required" },
+		},
+
+		toLowerCase: paymentSchema.paymentType.lowercase,
+
+		trim: paymentSchema.paymentType.trim,
+
+		custom: {
+			options: (value) => {
+				if (!value || !paymentSchema.paymentType.enum.includes(value)) throw { type: "invalid", value: "Payment Type" };
+
+				return true;
+			}
+		},
+	},
+
+	notes: {
+		in: "body",
+
+		isString: {
+			errorMessage: { type: "string" },
+		},
+
+		toLowerCase: paymentSchema.notes.lowercase,
+
+		trim: paymentSchema.notes.trim,
+
+		optional: { options: { nullable: true } },
+
+		isLength: {
+			options: { max: paymentSchema.notes.maxlength },
+			errorMessage: { type: "max", max: paymentSchema.notes.maxlength },
+		},
+	},
+};
+
+exports.createPayment = checkSchema(createPayment);
+
+exports.updatePayment = checkSchema({ ...createPayment, paymentId: checkId });
+
+exports.deletePayment = checkSchema({ paymentId: checkId, id: checkId });
