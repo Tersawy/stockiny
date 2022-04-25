@@ -23,4 +23,12 @@ router.post("/:id/change-status", authFor("edit:purchases"), validation.changePu
 
 // router.delete("/:id", authFor("delete:purchases"), validation.delete, validationHandler, Controller.delete);
 
+router.get("/:id/payments", authFor("showPayment:purchases"), validation.getPayments, validationHandler, Controller.getPayments);
+
+router.post("/:id/payments", authFor("createPayment:purchases"), validation.createPayment, validationHandler, Controller.createPayment);
+
+router.put("/:id/payments/:paymentId", authFor("editPayment:purchases"), validation.updatePayment, validationHandler, Controller.updatePayment);
+
+router.delete("/:id/payments/:paymentId", authFor("deletePayment:purchases"), validation.deletePayment, validationHandler, Controller.deletePayment);
+
 module.exports = router;
