@@ -1,24 +1,3 @@
-const payments = (state, res) => {
-	let invoice = state.all.docs.find((invoice) => state.one._id == invoice._id);
-
-	if (invoice) {
-		invoice.payments = res.data;
-		state.one = invoice;
-	}
-};
-
-const setOldPayment = (state, payment) => (state.oldPayment = payment);
-
-const removePayment = (state, id) => {
-	let invoice = state.all.docs.find((invoice) => state.one._id == invoice._id);
-
-	if (invoice) {
-		invoice.payments = invoice.payments.filter((payment) => payment._id != id);
-
-		state.one = invoice;
-	}
-};
-
 export default {
 	setAll(state, data) {
 		state.all.docs = data.docs.map(doc => {
@@ -33,5 +12,18 @@ export default {
 
 		state.all.total = data.total;
 	},
-	payments, setOldPayment, removePayment
+
+	payments(state, res) {
+		let invoice = state.all.docs.find((invoice) => state.one._id == invoice._id);
+
+		if (invoice) {
+			invoice.payments = res.payments;
+		}
+
+		if (state.one._id == res.invoiceId) {
+			state.one = { ...state.one, payments: res.payments };
+		}
+	},
+
+	setOldPayment(state, payment) { state.oldPayment = payment }
 };

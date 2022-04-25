@@ -13,33 +13,43 @@ export default {
 		return axios.post(`${state.prefix}/${invoiceId}/change-status`, { statusId });
 	},
 
-	async payments({ commit, state }) {
-		let data = await axios.get(`${state.prefix}/${state.one._id}/payments`);
-		commit("payments", data);
+	async getPayments({ commit, state }) {
+		let res = await axios.get(`${state.prefix}/${state.one._id}/payments`);
+
+		res.invoiceId = state.one._id;
+
+		commit("payments", res);
+
+		return res;
+	},
+
+	async createPayment({ state, dispatch }, payload) {
+		let data = await axios.post(`${state.prefix}/${state.one._id}/payments`, payload);
+
+		dispatch("getAll");
+
+		await dispatch("getPayments");
+
 		return data;
 	},
 
-	async createPayment({ state, commit, dispatch }, payload) {
-		let data = await axios.post(`${state.prefix}/${state.one._id}/payments/create`, payload);
-		commit("payments", data);
-		dispatch("all");
-		dispatch("payments");
-		return data;
-	},
-
-	async updatePayment({ state, commit, dispatch }, payload) {
+	async updatePayment({ state, dispatch }, payload) {
 		let data = await axios.put(`${state.prefix}/${state.one._id}/payments/${payload._id}`, payload);
-		commit("payments", data);
-		dispatch("all");
-		dispatch("payments");
+
+		dispatch("getAll");
+
+		await dispatch("getPayments");
+
 		return data;
 	},
 
-	async removePayment({ state, commit, dispatch }, item) {
-		let data = await axios.post(`${state.prefix}/${state.one._id}/payments/${item._id}`);
-		commit("payments", data);
-		dispatch("all");
-		dispatch("payments");
+	async removePayment({ state, dispatch }, item) {
+		let data = await axios.delete(`${state.prefix}/${state.one._id}/payments/${item._id}`);
+
+		dispatch("getAll");
+
+		await dispatch("getPayments");
+
 		return data;
 	}
 };
