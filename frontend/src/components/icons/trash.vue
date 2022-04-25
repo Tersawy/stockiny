@@ -66,6 +66,7 @@
 		v-on="$listeners"
 		xmlns="http://www.w3.org/2000/svg"
 		style="display: inline-block; overflow: visible; vertical-align: -0.15rem; outline: none; cursor: pointer"
+		:style="{ transform: `scale(${scale})` }"
 	>
 		<g transform="translate(8 8) scale(1.5 1.5) translate(-8 -8)">
 			<path
@@ -94,6 +95,10 @@ export default {
 		color: {
 			type: String,
 			default: "currentColor"
+		},
+		scale: {
+			type: [String, Number],
+			default: "1"
 		}
 	}
 };
