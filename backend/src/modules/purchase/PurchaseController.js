@@ -258,6 +258,50 @@ exports.changePurchaseStatus = async (req, res) => {
 	}
 };
 
+exports.getPayments = async (req, res) => {
+	let purchase = await Purchase.findById(req.params.id, "payments");
+
+	if (!purchase) throw notFound();
+
+	res.json({ payments: purchase.payments });
+};
+
+exports.createPayment = async (req, res) => {
+	let purchase = await Purchase.findById(req.params.id);
+
+	if (!purchase) throw notFound();
+
+	purchase.addPayment({ ...req.body, createdBy: req.me._id });
+
+	await purchase.save();
+
+	res.json({});
+}
+
+exports.updatePayment = async (req, res) => {
+	let purchase = await Purchase.findById(req.params.id);
+
+	if (!purchase) throw notFound();
+
+	purchase.editPayment(req.params.paymentId, { ...req.body, updatedBy: req.me._id });
+
+	await purchase.save();
+
+	res.json({});
+}
+
+exports.deletePayment = async (req, res) => {
+	let purchase = await Purchase.findById(req.params.id);
+
+	if (!purchase) throw notFound();
+
+	purchase.deletePayment(req.params.paymentId);
+
+	await purchase.save();
+
+	res.json({});
+}
+
 let throwIfNotValidDetail = (detail, products) => {
 	let { product, variant, subUnit, unit } = detail;
 
