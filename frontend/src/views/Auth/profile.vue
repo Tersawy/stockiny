@@ -1,10 +1,8 @@
 <template>
 	<main-content :breads="breads">
 		<template #end-breads>
-			<div class="d-flex align-items-center">
-				<!-- Save Button -->
-				<b-button variant="outline-primary" size="sm" @click="handleSave" class="mr-3" :disabled="!userDataChanged"> Save </b-button>
-			</div>
+			<!-- Save Button -->
+			<b-button variant="outline-primary" size="sm" @click="handleSave" :disabled="!userDataChanged"> Save </b-button>
 		</template>
 		<b-form @submit.prevent="handleSave">
 			<b-row>
@@ -80,143 +78,143 @@
 </template>
 
 <script>
-	import { mapActions, mapMutations } from "vuex";
+import { mapActions, mapMutations } from "vuex";
 
-	import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
+import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/ui/DefaultInput");
 
-	const InputError = () => import("@/components/ui/InputError");
+const InputError = () => import("@/components/ui/InputError");
 
-	const DragAndDropImage = () => import("@/components/ui/DragAndDropImage");
+const DragAndDropImage = () => import("@/components/ui/DragAndDropImage");
 
-	export default {
-		name: "Profile",
+export default {
+	name: "Profile",
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		components: { DefaultInput, DragAndDropImage, InputError },
+	components: { DefaultInput, DragAndDropImage, InputError },
 
-		data() {
-			let me = this.$store.state.Auth.me;
+	data() {
+		let me = this.$store.state.Auth.me;
 
-			return {
-				breads: [{ title: "Dashboard", link: "/" }, { title: "Profile" }],
+		return {
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Profile" }],
 
-				user: {
-					username: me.username,
-					fullname: me.fullname || "",
-					phone: me.phone || "",
-					email: me.email || "",
-					country: me.country || "",
-					city: me.city || "",
-					address: me.address || "",
-					zipCode: me.zipCode || "",
-					password: "",
-					newPassword: "",
-					image: me.image ? `${process.env.VUE_APP_BASE_URL}/images/users/${me.image}` : ""
-				}
-			};
-		},
-
-		validations: {
 			user: {
-				username: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				fullname: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
-				email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
-				country: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				city: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				address: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) },
-				password: { required, minLength: minLength(8), maxLength: maxLength(20) },
-				newPassword: { minLength: minLength(8), maxLength: maxLength(20) },
-				image: {}
+				username: me.username,
+				fullname: me.fullname || "",
+				phone: me.phone || "",
+				email: me.email || "",
+				country: me.country || "",
+				city: me.city || "",
+				address: me.address || "",
+				zipCode: me.zipCode || "",
+				password: "",
+				newPassword: "",
+				image: me.image ? `${process.env.VUE_APP_BASE_URL}/images/users/${me.image}` : ""
 			}
-		},
+		};
+	},
 
-		computed: {
-			userDataChanged() {
-				let dataWatched = ["username", "fullname", "phone", "email", "country", "city", "address", "zipCode"];
-
-				let show = !dataWatched.every((key) => this.user[key] === this.me[key]);
-
-				let userImage = this.me.image ? `${process.env.VUE_APP_BASE_URL}/images/users/${this.me.image}` : "";
-
-				let imagesChanged = this.user.image !== userImage;
-
-				return show || imagesChanged || !!this.user.newPassword;
-			}
-		},
-
-		methods: {
-			...mapActions({ updateProfile: "Auth/updateProfile" }),
-
-			...mapMutations("Auth", ["setError", "resetErrorByField", "resetError"]),
-
-			beforeUploadImage(err) {
-				if (err) {
-					this.setError({ field: "image", message: err });
-				} else {
-					this.resetErrorByField("image");
-				}
-			},
-
-			async handleSave() {
-				this.$v.$touch();
-
-				if (this.$v.$invalid) return;
-
-				this.isBusy = true;
-
-				let data = this.user;
-
-				if (this.user.image && this.user.image instanceof File) {
-					data = new FormData();
-
-					for (let field in this.user) {
-						data.set(field, this.user[field]);
-					}
-
-					data = [data, { headers: { "Content-Type": "multipart/formdata" } }];
-				}
-
-				try {
-					let res = await this.updateProfile(data);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					message = this.$t(message, { module: "Profile" });
-
-					this.$store.commit("showToast", message);
-
-					this.resetForm();
-				} catch (err) {
-					this.setError(err);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			handleCancel() {
-				this.resetForm();
-			},
-
-			resetForm() {
-				this.resetError();
-
-				this.user.password = "";
-
-				this.user.newPassword = "";
-
-				this.$nextTick(this.$v.$reset);
-			}
+	validations: {
+		user: {
+			username: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			fullname: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
+			email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
+			country: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			city: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			address: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) },
+			password: { required, minLength: minLength(8), maxLength: maxLength(20) },
+			newPassword: { minLength: minLength(8), maxLength: maxLength(20) },
+			image: {}
 		}
-	};
+	},
+
+	computed: {
+		userDataChanged() {
+			let dataWatched = ["username", "fullname", "phone", "email", "country", "city", "address", "zipCode"];
+
+			let show = !dataWatched.every((key) => this.user[key] === this.me[key]);
+
+			let userImage = this.me.image ? `${process.env.VUE_APP_BASE_URL}/images/users/${this.me.image}` : "";
+
+			let imagesChanged = this.user.image !== userImage;
+
+			return show || imagesChanged || !!this.user.newPassword;
+		}
+	},
+
+	methods: {
+		...mapActions({ updateProfile: "Auth/updateProfile" }),
+
+		...mapMutations("Auth", ["setError", "resetErrorByField", "resetError"]),
+
+		beforeUploadImage(err) {
+			if (err) {
+				this.setError({ field: "image", message: err });
+			} else {
+				this.resetErrorByField("image");
+			}
+		},
+
+		async handleSave() {
+			this.$v.$touch();
+
+			if (this.$v.$invalid) return;
+
+			this.isBusy = true;
+
+			let data = this.user;
+
+			if (this.user.image && this.user.image instanceof File) {
+				data = new FormData();
+
+				for (let field in this.user) {
+					data.set(field, this.user[field]);
+				}
+
+				data = [data, { headers: { "Content-Type": "multipart/formdata" } }];
+			}
+
+			try {
+				let res = await this.updateProfile(data);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				message = this.$t(message, { module: "Profile" });
+
+				this.$store.commit("showToast", message);
+
+				this.resetForm();
+			} catch (err) {
+				this.setError(err);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		handleCancel() {
+			this.resetForm();
+		},
+
+		resetForm() {
+			this.resetError();
+
+			this.user.password = "";
+
+			this.user.newPassword = "";
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>
