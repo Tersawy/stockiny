@@ -1,6 +1,11 @@
 export default {
 	setAll(state, data) {
 		state.all.docs = data.docs.map(doc => {
+			if (!doc.status) {
+				doc.status = { name: "Draft", color: "grey", loading: false };
+				return doc;
+			}
+
 			if (typeof doc.status == "string") {
 				doc.status = { _id: doc.status };
 			}
