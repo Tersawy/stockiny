@@ -259,3 +259,17 @@ svg.vue-barcode-element {
 		}
 	}
 }
+
+@media print {
+	@page {
+		// size: A4 portrait;
+		size: auto;
+		margin: 0;
+	}
+
+	.main-content {
+		top: 0 !important;
+		left: 0 !important;
+		width: 100% !important;
+	}
+}

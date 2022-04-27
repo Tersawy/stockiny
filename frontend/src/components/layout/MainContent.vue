@@ -1,7 +1,7 @@
 <template>
 	<div class="main-content py-4" @click="$store.commit('setSidebar', false)">
 		<b-container fluid class="px-3 px-md-4">
-			<b-card class="mb-4 rounded shadow-sm" no-body>
+			<b-card class="mb-4 rounded shadow-sm d-print-none" no-body>
 				<div class="d-flex align-items-center justify-content-between flex-column flex-sm-row pr-3">
 					<b-breadcrumb class="mb-0 bg-transparent mr-0 mr-sm-auto pr-0 pr-md-3" v-if="isAuth">
 						<b-breadcrumb-item v-for="(bread, i) in breads" :key="i" :active="true">

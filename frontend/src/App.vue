@@ -1,8 +1,8 @@
 <template>
 	<div id="app" :class="{ 'sidebar-active': sidebarOpen, 'sidebar-signed': isAuth }">
-		<Sidebar v-if="isAuth" />
+		<Sidebar v-if="isAuth" class="d-print-none" />
 		<div class="main">
-			<Navbar v-if="isAuth" />
+			<Navbar v-if="isAuth" class="d-print-none" />
 			<transition :name="transitionName" mode="out-in" :duration="duration">
 				<router-view />
 			</transition>
