@@ -68,7 +68,7 @@ exports.createPurchase = async (req, res) => {
 
 		await session.commitTransaction();
 
-		res.json({});
+		res.json({ _id: purchase._id });
 	} catch (error) {
 		await session.abortTransaction();
 
@@ -190,7 +190,7 @@ exports.updatePurchase = async (req, res) => {
 
 		await session.commitTransaction();
 
-		res.json({});
+		res.json({ _id: purchase._id });
 	} catch (error) {
 		await session.abortTransaction();
 
