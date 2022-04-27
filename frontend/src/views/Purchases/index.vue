@@ -67,7 +67,7 @@
 							<ChangeIcon scale="1" v-b-tooltip title="Change Status" />
 						</template>
 						<b-overlay :show="item.status.loading" spinner-variant="secondary" spinner-small>
-							<div class="d-flex justify-content-between px-3 py-2 border-bottom" v-for="statusOption in statusesOptions" :key="statusOption._id">
+							<div class="d-flex justify-content-between px-3 py-2 border-bottom" v-for="statusOption in statuses" :key="statusOption._id">
 								<div class="d-flex align-items-center">
 									<InvoiceStatus :status="statusOption" />
 									<CheckCircleOutlineIcon v-if="statusOption.effected" scale="0.7" class="ml-1" />
@@ -138,18 +138,18 @@ export default {
 	}),
 
 	async mounted() {
-		await this.getStatusesOptions();
+		await this.getStatuses();
 	},
 
 	computed: {
-		statusesOptions() {
-			return this.$store.state.Invoices.statuses.purchases /* [this.invoiceName] */;
+		statuses() {
+			return this.$store.state.Purchases.statuses;
 		}
 	},
 
 	methods: {
-		getStatusesOptions() {
-			return this.$store.dispatch("Invoices/getStatusOptions", "purchases" /* this.invoiceName */);
+		getStatuses() {
+			return this.$store.dispatch("Purchases/getStatuses");
 		},
 
 		status(status, statusOption) {
