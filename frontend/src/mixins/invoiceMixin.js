@@ -26,6 +26,8 @@ import { required, numeric, minLength, maxLength, minValue } from "vuelidate/lib
 
 import { validationMixin } from "vuelidate";
 
+import { showMessage } from "@/components/ui/utils";
+
 export default (storeNamespace, amountType) => {
 	return {
 		components: {
@@ -44,22 +46,24 @@ export default (storeNamespace, amountType) => {
 		mixins: [validationMixin],
 
 		data() {
-			let invoice = {
-				customer: null,
-				supplier: null,
-				warehouse: null,
-				tax: 0,
-				discount: 0,
-				discountMethod: "fixed",
-				status: 0,
-				shipping: 0,
-				notes: null,
-				date: getDate(null, true),
-				totalAmount: 0,
-				details: []
-			};
+			return {
+				invoice: {
+					customer: null,
+					supplier: null,
+					warehouse: null,
+					tax: 0,
+					discount: 0,
+					discountMethod: "fixed",
+					status: 0,
+					shipping: 0,
+					notes: null,
+					date: getDate(null, true),
+					totalAmount: 0,
+					details: []
+				},
 
-			return { invoice };
+				isBusy: false
+			};
 		},
 
 		validations() {
@@ -114,7 +118,7 @@ export default (storeNamespace, amountType) => {
 
 				let breads = this.breads.splice(0, this.breads.length - 1); // remove last bread
 
-				breads.push({ title: this.oldInvoice.reference, link: { name: "id", params: { id: this.id } } });
+				breads.push({ title: this.oldInvoice.reference, link: { name: storeNamespace.replace(/s(?=[A-Z])|s\b/g, ""), params: { id: this.id } } });
 
 				this.breads = [...breads, { title: "Edit" }];
 
@@ -132,15 +136,7 @@ export default (storeNamespace, amountType) => {
 
 				await sleep(300);
 
-				this.oldInvoice.details.forEach((product) => {
-					this.$refs.invoiceDetailsTable.addDetail(product);
-					// return {
-					// 	...product,
-					// 	decrementBtn: "primary",
-					// 	incrementBtn: "primary",
-					// 	instockVariant: "outline-success"
-					// };
-				});
+				this.oldInvoice.details.forEach((product) => this.$refs.invoiceDetailsTable.addDetail(product));
 			}
 		},
 
@@ -220,6 +216,8 @@ export default (storeNamespace, amountType) => {
 
 				if (this.$v.$invalid) return;
 
+				this.isBusy = true;
+
 				let invoice = {
 					warehouse: this.invoice.warehouse,
 					tax: this.invoice.tax,
@@ -252,15 +250,19 @@ export default (storeNamespace, amountType) => {
 				let action = this.isUpdate ? this.update : this.create;
 
 				try {
-					let res = await action(invoice);
+					let data = await action(invoice);
 
-					console.log(res);
+					let singleInvoiceName = storeNamespace.replace(/s(?=[A-Z])|s\b/g, "")
 
-					// this.$router.push({ name: storeNamespace });
+					this.$router.push({ name: singleInvoiceName, params: { id: data._id } });
+
+					let message = this.isUpdate ? "messages.updated" : "messages.created";
+
+					showMessage({ message: this.$t(message) });
 				} catch (err) {
-					console.log(err);
+					this.$store.commit(`${storeNamespace}/setError`, err);
 				} finally {
-					//
+					this.isBusy = false;
 				}
 			},
 
