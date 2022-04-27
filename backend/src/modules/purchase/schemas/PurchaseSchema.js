@@ -30,7 +30,7 @@ const purchaseSchema = new Schema(
 
 		payments: { type: [paymentSchema], default: [] },
 
-		status: { type: Schema.Types.ObjectId, required: true },
+		status: { type: Schema.Types.ObjectId, ref: "Status", required: true },
 
 		notes: { type: String, trim: true, maxlength: 254, default: "" },
 
