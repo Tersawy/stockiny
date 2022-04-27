@@ -63,7 +63,7 @@
 					<!-- -------------Invoice Details------------- -->
 					<b-card header="Purchase Total">
 						<!-- -------------Status------------- -->
-						<invoice-status-input :vuelidate="$v.invoice" invoiceName="purchases" namespace="Purchases" @mounted="setEffectedStatus" />
+						<invoice-status-input :vuelidate="$v.invoice" namespace="Purchases" @mounted="setEffectedStatus" />
 
 						<invoice-total :invoice="invoice" amount-type="Cost" />
 					</b-card>

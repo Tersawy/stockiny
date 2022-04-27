@@ -16,17 +16,14 @@ exports.getPurchases = async (req, res) => {
 	let query = Purchase.find({}, select)
 		.withPagination(req.query)
 		.withSearch(req.query)
-		.populate("supplier warehouse", "name");
+		.populate("supplier warehouse", "name")
+		.populate("status", "name color");
 
 	let counts = Purchase.count().withSearch(req.query);
 
-	let invoiceQuery = Invoice.findOne({ name: "purchases" }, "-_id statuses._id statuses.name statuses.color");
-
-	let [docs, total, invoice] = await Promise.all([query, counts, invoiceQuery]);
+	let [docs, total] = await Promise.all([query, counts]);
 
 	docs.forEach((doc) => {
-		doc._doc.status = invoice.statuses.find((s) => s._id.toString() === doc.status._id.toString());
-
 		doc._doc.paymentStatus = doc.paymentStatus;
 	});
 
@@ -34,7 +31,7 @@ exports.getPurchases = async (req, res) => {
 };
 
 exports.createPurchase = async (req, res) => {
-	let { details, warehouse, statusDoc } = req.body;
+	let { details, warehouse, status } = req.body;
 
 	let purchaseDoc = new Purchase().fill(req.body).addDetails(details).by(req.me._id);
 
@@ -52,24 +49,22 @@ exports.createPurchase = async (req, res) => {
 
 	session.startTransaction();
 
+	let updates = [purchase.save()];
+
 	for (let detail of purchase.details) {
 		let product = throwIfNotValidDetail(detail, products);
 
-		if (statusDoc.effected) {
+		if (status.effected) {
 			let quantity = detail.stock;
 
 			product.addToStock({ warehouse, quantity, variant: detail.variant });
+
+			updates.push(product.save());
 		}
 	}
 
-	let updates = [];
-
-	if (statusDoc.effected) {
-		updates = products.map((p) => p.save());
-	}
-
 	try {
-		await Promise.all([purchase.save(), ...updates]);
+		await Promise.all(updates);
 
 		await session.commitTransaction();
 
@@ -129,10 +124,10 @@ exports.getEditPurchase = async (req, res) => {
 };
 
 exports.updatePurchase = async (req, res) => {
-	let { details, warehouse, statusDoc, statuses } = req.body;
+	let { details, warehouse, status } = req.body;
 
 	// get product in detail to update stock if status effected
-	let purchaseQuery = Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock");
+	let purchaseQuery = Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock").populate("status", "effected");
 
 	let productIds = details.map((detail) => detail.product);
 
@@ -143,12 +138,10 @@ exports.updatePurchase = async (req, res) => {
 
 	if (!purchase) throw notFound();
 
-	let oldStatus = purchase.status._id && statuses.find((s) => s._id.toString() === purchase.status._id.toString());
-
 	let productsUpdated = [];
 
 	// if purchase status effected, update stock
-	if (oldStatus && oldStatus.effected) {
+	if (purchase.status && purchase.status.effected) {
 		for (let detail of purchase.details) {
 			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
 			let productUpdated = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
@@ -172,7 +165,7 @@ exports.updatePurchase = async (req, res) => {
 	}
 
 	// if purchase status effected, update stock
-	if (statusDoc.effected) {
+	if (status.effected) {
 		for (let detail of purchase.details) {
 			let product = products.find((p) => p._id.toString() === detail.product.toString());
 
@@ -193,7 +186,7 @@ exports.updatePurchase = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		await Promise.all([purchase.save(), ...productsUpdated.map((p) => p.save())]);
+		await Promise.all([purchase.save(), ...productsUpdated.map((product) => product.save())]);
 
 		await session.commitTransaction();
 
@@ -208,43 +201,41 @@ exports.updatePurchase = async (req, res) => {
 };
 
 exports.changePurchaseStatus = async (req, res) => {
-	const { statusDoc, statuses } = req.body;
+	const { status } = req.body;
 
 	// get product in detail to update stock
-	let purchase = await Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock");
+	let purchase = await Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock").populate("status", "effected");
 
 	if (!purchase) throw notFound();
 
-	let oldStatus = purchase.status._id && statuses.find((s) => s._id.toString() === purchase.status._id.toString());
-
 	// this is fix thius error ------> ** Can't save() the same doc multiple times in parallel.
 	// because maybe the same product is in the details array more than one time with different variant
-	let productsUpdated = [];
+	let updates = [];
 
 	for (let detail of purchase.details) {
-		let product = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+		let product = updates.find((p) => p._id.toString() === detail.product._id.toString());
 
 		let updatedProduct = product || detail.product;
 
-		if (oldStatus && oldStatus.effected) {
+		if (purchase.status && purchase.status.effected) {
 			detail.product.subtractFromStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
 		}
 
-		if (statusDoc.effected) {
+		if (status.effected) {
 			detail.product.addToStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
 		}
 
-		if (!product) productsUpdated.push(updatedProduct);
+		if (!product) updates.push(updatedProduct);
 	}
 
-	purchase.status = statusDoc._id;
+	purchase.status = status._id;
 
 	let session = await mongoose.startSession();
 
 	session.startTransaction();
 
 	try {
-		await Promise.all([purchase.save(), ...productsUpdated.map((p) => p.save())]);
+		await Promise.all([purchase.save(), ...updates.map((p) => p.save())]);
 
 		await session.commitTransaction();
 

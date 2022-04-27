@@ -1,6 +1,46 @@
 import axios from "@/plugins/axios";
 
 export default {
+	async getStatuses({ commit, state }) {
+		let data = await axios.get(`${state.prefix}/statuses`);
+
+		commit("setStatuses", data);
+
+		return data;
+	},
+
+	async createStatus({ dispatch, state }, payload) {
+		let data = await axios.post(`${state.prefix}/statuses`, payload);
+
+		await dispatch("getStatuses");
+
+		return data;
+	},
+
+	async updateStatus({ dispatch, state }, payload) {
+		let data = await axios.put(`${state.prefix}/statuses/${payload._id}`, payload);
+
+		await dispatch("getStatuses");
+
+		return data;
+	},
+
+	async deleteStatus({ commit, state }, payload) {
+		let data = await axios.delete(`${state.prefix}/statuses/${payload._id}`);
+
+		commit("deleteStatus", payload);
+
+		return data;
+	},
+
+	async changeEffectedStatus({ dispatch, state }, payload) {
+		let data = await axios.post(`${state.prefix}/statuses/${payload._id}/change-effected`);
+
+		await dispatch("getStatuses");
+
+		return data;
+	},
+
 	async getEdit({ commit, state }, id) {
 		let data = await axios.get(`${state.prefix}/${id}/edit`);
 

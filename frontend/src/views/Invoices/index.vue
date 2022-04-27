@@ -9,7 +9,7 @@
 
 					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
 						<h6 class="text-muted mb-0">Statuses</h6>
-						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm('purchases')">
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createPurchaseStatus)">
 							<IconPlus color="var(--primary)" />
 							<span class="mx-1">add</span>
 						</b-btn>
@@ -19,9 +19,9 @@
 						striped
 						stacked="sm"
 						hover
-						v-if="purchases.statuses && purchases.statuses.length"
+						v-if="purchaseStatuses && purchaseStatuses.length"
 						:fields="fields"
-						:items="purchases.statuses"
+						:items="purchaseStatuses"
 						small
 						class="status-table m-0"
 					>
@@ -30,16 +30,16 @@
 						</template>
 
 						<template #cell(effected)="{ item }">
-							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus('purchases', item)" switch :disabled="item.effected" />
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changePurchaseStatusEffected, item)" switch :disabled="item.effected" />
 						</template>
 
 						<template #cell(actions)="{ item }">
 							<div class="d-flex align-items-center">
-								<a @click="openStatusForm('purchases', item)" class="text-success">
+								<a @click="openStatusForm(updatePurchaseStatus, item)" class="text-success">
 									<EditIcon />
 								</a>
 
-								<a v-if="!item.effected" @click="openDeleteStatusModal('purchases', item)" class="text-danger ml-3">
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deletePurchaseStatus, item)" class="text-danger ml-3">
 									<TrashIcon />
 								</a>
 							</div>
@@ -55,7 +55,7 @@
 
 					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
 						<h6 class="text-muted mb-0">Statuses</h6>
-						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm('purchases-return')">
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createPurchaseReturnStatus)">
 							<IconPlus color="var(--primary)" />
 							<span class="mx-1">add</span>
 						</b-btn>
@@ -65,9 +65,9 @@
 						striped
 						stacked="sm"
 						hover
-						v-if="purchasesReturn.statuses && purchasesReturn.statuses.length"
+						v-if="purchaseReturnStatuses && purchaseReturnStatuses.length"
 						:fields="fields"
-						:items="purchasesReturn.statuses"
+						:items="purchaseReturnStatuses"
 						small
 						class="status-table m-0"
 					>
@@ -76,16 +76,16 @@
 						</template>
 
 						<template #cell(effected)="{ item }">
-							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus('purchases-return', item)" switch :disabled="item.effected" />
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changePurchaseReturnStatusEffected, item)" switch :disabled="item.effected" />
 						</template>
 
 						<template #cell(actions)="{ item }">
 							<div class="d-flex align-items-center">
-								<a @click="openStatusForm('purchases-return', item)" class="text-success">
+								<a @click="openStatusForm(updatePurchaseReturnStatus, item)" class="text-success">
 									<EditIcon />
 								</a>
 
-								<a v-if="!item.effected" @click="openDeleteStatusModal('purchases-return', item)" class="text-danger ml-3">
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deletePurchaseReturnStatus, item)" class="text-danger ml-3">
 									<TrashIcon />
 								</a>
 							</div>
@@ -101,28 +101,28 @@
 
 					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
 						<h6 class="text-muted mb-0">Statuses</h6>
-						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm('sales')">
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createSaleStatus)">
 							<IconPlus color="var(--primary)" />
 							<span class="mx-1">add</span>
 						</b-btn>
 					</div>
 
-					<b-table striped stacked="sm" hover v-if="sales.statuses && sales.statuses.length" :fields="fields" :items="sales.statuses" small class="status-table m-0">
+					<b-table striped stacked="sm" hover v-if="saleStatuses && saleStatuses.length" :fields="fields" :items="saleStatuses" small class="status-table m-0">
 						<template #cell(name)="{ item }">
 							<InvoiceStatus :status="item" />
 						</template>
 
 						<template #cell(effected)="{ item }">
-							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus('sales', item)" switch :disabled="item.effected" />
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changeSaleStatusEffected, item)" switch :disabled="item.effected" />
 						</template>
 
 						<template #cell(actions)="{ item }">
 							<div class="d-flex align-items-center">
-								<a @click="openStatusForm('sales', item)" class="text-success">
+								<a @click="openStatusForm(updateSaleStatus, item)" class="text-success">
 									<EditIcon />
 								</a>
 
-								<a v-if="!item.effected" @click="openDeleteStatusModal('sales', item)" class="text-danger ml-3">
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deleteSaleStatus, item)" class="text-danger ml-3">
 									<TrashIcon />
 								</a>
 							</div>
@@ -138,7 +138,7 @@
 
 					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
 						<h6 class="text-muted mb-0">Statuses</h6>
-						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm('sales-return')">
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createSaleReturnStatus)">
 							<IconPlus color="var(--primary)" />
 							<span class="mx-1">add</span>
 						</b-btn>
@@ -148,9 +148,9 @@
 						striped
 						stacked="sm"
 						hover
-						v-if="salesReturn.statuses && salesReturn.statuses.length"
+						v-if="saleReturnStatuses && saleReturnStatuses.length"
 						:fields="fields"
-						:items="salesReturn.statuses"
+						:items="saleReturnStatuses"
 						small
 						class="status-table m-0"
 					>
@@ -159,16 +159,16 @@
 						</template>
 
 						<template #cell(effected)="{ item }">
-							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus('sales-return', item)" switch :disabled="item.effected" />
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changeSaleReturnStatusEffected, item)" switch :disabled="item.effected" />
 						</template>
 
 						<template #cell(actions)="{ item }">
 							<div class="d-flex align-items-center">
-								<a @click="openStatusForm('sales-return', item)" class="text-success">
+								<a @click="openStatusForm(updateSaleReturnStatus, item)" class="text-success">
 									<EditIcon />
 								</a>
 
-								<a v-if="!item.effected" @click="openDeleteStatusModal('sales-return', item)" class="text-danger ml-3">
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deleteSaleReturnStatus, item)" class="text-danger ml-3">
 									<TrashIcon />
 								</a>
 							</div>
@@ -178,200 +178,236 @@
 			</b-col>
 		</b-row>
 
-		<StatusForm :invoiceName="invoiceName" :oldStatus="invoiceStatus" />
+		<StatusForm :statusHandler="statusHandler" :oldStatus="status" />
 		<DeleteModal ref="deleteModal" field="Status" @ok="handleDeleteStatus" />
 	</main-content>
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 
-	import IconPlus from "@/components/icons/plus";
+import IconPlus from "@/components/icons/plus";
 
-	import EditIcon from "@/components/icons/edit";
+import EditIcon from "@/components/icons/edit";
 
-	import TrashIcon from "@/components/icons/trash";
+import TrashIcon from "@/components/icons/trash";
 
-	const StatusForm = () => import("@/components/forms/StatusForm");
+const StatusForm = () => import("@/components/forms/StatusForm");
 
-	const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
 
-	const DeleteModal = () => import("@/components/ui/DeleteModal");
+const DeleteModal = () => import("@/components/ui/DeleteModal");
 
-	export default {
-		components: { StatusForm, InvoiceStatus, DeleteModal, IconPlus, TrashIcon, EditIcon },
+export default {
+	components: { StatusForm, InvoiceStatus, DeleteModal, IconPlus, TrashIcon, EditIcon },
 
-		data() {
-			return {
-				breads: [{ title: "Dashboard", link: "/" }, { title: "Invoices Settings" }],
+	data() {
+		return {
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Invoices Settings" }],
 
-				fields: ["name", "description", "effected", "actions"],
+			fields: ["name", "description", "effected", "actions"],
 
-				invoiceStatus: null,
+			status: null,
 
-				invoiceName: null
-			};
+			statusHandler: null
+		};
+	},
+
+	async mounted() {
+		await this.getAllStatuses();
+	},
+
+	computed: {
+		// ...mapState("Invoices", ["all"]),
+
+		// purchases() {
+		// 	return this.all?.docs?.find((doc) => doc.name == "purchases") || {};
+		// },
+
+		// purchasesReturn() {
+		// 	return this.all?.docs?.find((doc) => doc.name == "purchases-return") || {};
+		// },
+
+		// sales() {
+		// 	return this.all?.docs?.find((doc) => doc.name == "sales") || {};
+		// },
+
+		// salesReturn() {
+		// 	return this.all?.docs?.find((doc) => doc.name == "sales-return") || {};
+		// }
+
+		...mapState({
+			purchaseStatuses: (state) => state.Purchases.statuses,
+			purchaseReturnStatuses: (state) => state.PurchasesReturn.statuses,
+			saleStatuses: (state) => state.Sales.statuses,
+			saleReturnStatuses: (state) => state.SalesReturn.statuses
+		})
+	},
+
+	methods: {
+		// ...mapActions("Invoices", ["getAll", "changeEffectedStatus", "deleteStatus"]),
+		...mapActions({
+			getPurchaseStatuses: "Purchases/getStatuses",
+			getPurchaseReturnStatuses: "PurchasesReturn/getStatuses",
+
+			createPurchaseStatus: "Purchases/createStatus",
+			createPurchaseReturnStatus: "PurchasesReturn/createStatus",
+
+			updatePurchaseStatus: "Purchases/updateStatus",
+			updatePurchaseReturnStatus: "PurchasesReturn/updateStatus",
+
+			changePurchaseStatusEffected: "Purchases/changeEffectedStatus",
+			changePurchaseReturnStatusEffected: "PurchasesReturn/changeEffectedStatus",
+
+			deletePurchaseStatus: "Purchases/deleteStatus",
+			deletePurchaseReturnStatus: "PurchasesReturn/deleteStatus",
+
+			getSaleStatuses: "Sales/getStatuses",
+			getSaleReturnStatuses: "SalesReturn/getStatuses",
+
+			createSaleStatus: "Sales/createStatus",
+			createSaleReturnStatus: "SalesReturn/createStatus",
+
+			updateSaleStatus: "Sales/updateStatus",
+			updateSaleReturnStatus: "SalesReturn/updateStatus",
+
+			changeSaleStatusEffected: "Sales/changeEffectedStatus",
+			changeSaleReturnStatusEffected: "SalesReturn/changeEffectedStatus",
+
+			deleteSaleStatus: "Sales/deleteStatus",
+			deleteSaleReturnStatus: "SalesReturn/deleteStatus"
+		}),
+
+		getAllStatuses() {
+			return Promise.all([this.getPurchaseStatuses(), this.getPurchaseReturnStatuses(), this.getSaleStatuses(), this.getSaleReturnStatuses()]);
 		},
 
-		async mounted() {
-			await this.getAll();
+		openStatusForm(statusHandler, status) {
+			this.statusHandler = statusHandler;
+
+			this.status = status ? { ...status } : null;
+
+			this.$nextTick(() => this.$bvModal.show("statusFormModal"));
 		},
 
-		computed: {
-			...mapState("Invoices", ["all"]),
+		openDeleteStatusModal(statusHandler, status) {
+			this.$refs.deleteModal.open({ status, statusHandler });
+		},
 
-			purchases() {
-				return this.all?.docs?.find((doc) => doc.name == "purchases") || {};
-			},
+		async handleDeleteStatus({ statusHandler, status }) {
+			this.$refs.deleteModal.setBusy(true);
 
-			purchasesReturn() {
-				return this.all?.docs?.find((doc) => doc.name == "purchases-return") || {};
-			},
+			try {
+				await statusHandler(status);
 
-			sales() {
-				return this.all?.docs?.find((doc) => doc.name == "sales") || {};
-			},
-
-			salesReturn() {
-				return this.all?.docs?.find((doc) => doc.name == "sales-return") || {};
+				this.$store.commit("showMessage", { message: this.$t("messages.deleted") });
+			} catch (error) {
+				console.log(error);
+				this.$store.commit("showMessage", { error: true });
+			} finally {
+				this.$refs.deleteModal.close();
 			}
 		},
 
-		methods: {
-			...mapActions("Invoices", ["getAll", "changeEffectedStatus", "deleteStatus"]),
+		async setEffectedStatus(statusHandler, status) {
+			try {
+				await statusHandler(status);
 
-			openStatusForm(invoiceName, status) {
-				this.invoiceName = invoiceName;
-
-				this.invoiceStatus = status ? { ...status } : null;
-
-				this.$nextTick(() => {
-					this.$bvModal.show("statusFormModal");
-				});
-			},
-
-			openDeleteStatusModal(invoiceName, status) {
-				this.$refs.deleteModal.open({ ...status, invoiceName });
-			},
-
-			async handleDeleteStatus(data) {
-				this.$refs.deleteModal.setBusy(true);
-
-				try {
-					await this.deleteStatus(data);
-
-					this.$store.commit("showMessage", { message: this.$t("messages.deleted") });
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				} finally {
-					this.$refs.deleteModal.close();
-				}
-			},
-
-			handleCancelStatus(data) {
-				console.log(JSON.stringify(data));
-			},
-
-			async setEffectedStatus(invoiceName, status) {
-				try {
-					await this.changeEffectedStatus({ ...status, invoiceName });
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					this.$store.commit("showMessage", { error: true });
-				}
+				this.$store.commit("showMessage");
+			} catch (error) {
+				this.$store.commit("showMessage", { error: true });
 			}
 		}
-	};
+	}
+};
 </script>
 
 <style lang="scss">
-	.add-status-btn {
-		display: flex;
-		align-items: center;
-		&:hover {
-			svg {
-				&,
-				& path {
-					fill: var(--white) !important;
-					transition: inherit;
-				}
+.add-status-btn {
+	display: flex;
+	align-items: center;
+	&:hover {
+		svg {
+			&,
+			& path {
+				fill: var(--white) !important;
+				transition: inherit;
 			}
 		}
 	}
+}
 
-	.status-table {
-		thead {
-			border: 1px solid #dee2e6;
-			border-radius: 15px;
-			th {
-				border-top: 0;
-				border: 0;
-				color: var(--gray);
-				font-size: 0.75rem;
-				padding-left: 1rem;
-				border-right: 1px solid #dee2e6;
-			}
-		}
-
-		tbody {
-			td {
-				padding-left: 1rem;
-			}
-			@media (max-width: 575.98px) {
-				td {
-					padding-left: 0.75rem;
-					padding-top: 10px;
-					padding-bottom: 10px;
-				}
-			}
-		}
-	}
-	@media (max-width: 575.98px) {
-		.invoice-card {
-			background-color: transparent;
-			border: none;
-			.card-header {
-				border: 1px solid rgba(0, 0, 0, 0.125);
-				background-color: var(--primary);
-				color: #fff;
-			}
-			.card-body {
-				padding-left: 0;
-				padding-right: 0;
-			}
-		}
-		.table.b-table.b-table-stacked-sm {
-			& > tbody {
-				padding: 6px 3px;
-				max-height: 550px;
-				overflow-y: auto;
-				& > tr {
-					& > [data-label]::before {
-						text-align: left;
-					}
-					& > :first-child {
-						border: 0;
-					}
-				}
-			}
-		}
-		.table-striped tbody tr {
+.status-table {
+	thead {
+		border: 1px solid #dee2e6;
+		border-radius: 15px;
+		th {
+			border-top: 0;
 			border: 0;
-			border-radius: 0.3rem;
-			transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-			&:nth-of-type(odd) {
-				background-color: var(--white);
-			}
-			&:hover {
-				color: #212529;
-				background-color: var(--white);
-				box-shadow: 0 0.125rem 0.25rem #00000013 !important;
-			}
-			&:not(:last-child) {
-				margin-bottom: 10px;
+			color: var(--gray);
+			font-size: 0.75rem;
+			padding-left: 1rem;
+			border-right: 1px solid #dee2e6;
+		}
+	}
+
+	tbody {
+		td {
+			padding-left: 1rem;
+		}
+		@media (max-width: 575.98px) {
+			td {
+				padding-left: 0.75rem;
+				padding-top: 10px;
+				padding-bottom: 10px;
 			}
 		}
 	}
+}
+@media (max-width: 575.98px) {
+	.invoice-card {
+		background-color: transparent;
+		border: none;
+		.card-header {
+			border: 1px solid rgba(0, 0, 0, 0.125);
+			background-color: var(--primary);
+			color: #fff;
+		}
+		.card-body {
+			padding-left: 0;
+			padding-right: 0;
+		}
+	}
+	.table.b-table.b-table-stacked-sm {
+		& > tbody {
+			padding: 6px 3px;
+			max-height: 550px;
+			overflow-y: auto;
+			& > tr {
+				& > [data-label]::before {
+					text-align: left;
+				}
+				& > :first-child {
+					border: 0;
+				}
+			}
+		}
+	}
+	.table-striped tbody tr {
+		border: 0;
+		border-radius: 0.3rem;
+		transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+		&:nth-of-type(odd) {
+			background-color: var(--white);
+		}
+		&:hover {
+			color: #212529;
+			background-color: var(--white);
+			box-shadow: 0 0.125rem 0.25rem #00000013 !important;
+		}
+		&:not(:last-child) {
+			margin-bottom: 10px;
+		}
+	}
+}
 </style>

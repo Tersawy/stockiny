@@ -23,118 +23,112 @@
 </template>
 
 <script>
-	import { mapActions } from "vuex";
+import { required, maxLength, minLength } from "vuelidate/lib/validators";
 
-	import { required, maxLength, minLength } from "vuelidate/lib/validators";
+import { validationMixin } from "vuelidate";
 
-	import { validationMixin } from "vuelidate";
+const DefaultInput = () => import("@/components/ui/DefaultInput");
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
 
-	const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultModal = () => import("@/components/ui/DefaultModal");
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+export default {
+	components: { DefaultModal, DefaultInput, DefaultTextArea },
 
-	export default {
-		components: { DefaultModal, DefaultInput, DefaultTextArea },
+	props: {
+		oldStatus: { type: Object, default: () => ({}) },
 
-		props: {
-			oldStatus: { type: Object, default: () => ({}) },
+		statusHandler: { type: Function }
+	},
 
-			invoiceName: { type: String }
-		},
+	mixins: [validationMixin],
 
-		mixins: [validationMixin],
+	data: () => ({
+		status: { name: "", color: "#12ba34", description: "", _id: "" },
 
-		data: () => ({
-			status: { name: "", color: "#12ba34", description: "", _id: "" },
+		isBusy: false,
 
-			isBusy: false,
+		modalSettings: { stayOpen: false, showStayOpenBtn: true }
+	}),
 
-			modalSettings: { stayOpen: false, showStayOpenBtn: true }
-		}),
-
-		validations: {
-			status: {
-				name: { required, minValue: minLength(3), maxLength: maxLength(54) },
-				description: { maxLength: maxLength(254) },
-				color: {}
-			}
-		},
-
-		computed: {
-			isUpdate() {
-				return !!this.oldStatus?._id;
-			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Status" : "Create Status";
-			}
-		},
-
-		methods: {
-			...mapActions("Invoices", ["createStatus", "updateStatus"]),
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.status) {
-						this.status[key] = this.oldStatus[key];
-					}
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.status.$invalid) return;
-
-				this.isBusy = true;
-
-				let action = this.isUpdate ? this.updateStatus : this.createStatus;
-
-				let data = { ...this.status, invoiceName: this.invoiceName };
-
-				try {
-					let { status } = await action(data);
-
-					let message = status == 200 ? "messages.updated" : "messages.created";
-
-					message = this.$t(message);
-
-					this.$store.commit("showMessage", { message });
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("statusFormModal");
-					}
-
-					this.resetForm();
-
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Invoices/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				this.status = { name: "", description: "", color: "#12ba34", _id: "" };
-
-				this.$store.commit("Invoices/resetError");
-
-				this.$nextTick(this.$v.$reset);
-			}
+	validations: {
+		status: {
+			name: { required, minValue: minLength(3), maxLength: maxLength(54) },
+			description: { maxLength: maxLength(254) },
+			color: {}
 		}
-	};
+	},
+
+	computed: {
+		isUpdate() {
+			return !!this.oldStatus?._id;
+		},
+
+		formTitle() {
+			return this.isUpdate ? "Edit Status" : "Create Status";
+		}
+	},
+
+	methods: {
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.status) {
+					this.status[key] = this.oldStatus[key];
+				}
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => {
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			}, 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.status.$invalid) return;
+
+			this.isBusy = true;
+
+			let data = { ...this.status, invoiceName: this.invoiceName };
+
+			try {
+				let { status } = await this.statusHandler(data);
+
+				let message = status == 200 ? "messages.updated" : "messages.created";
+
+				message = this.$t(message);
+
+				this.$store.commit("showMessage", { message });
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("statusFormModal");
+				}
+
+				this.resetForm();
+
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Invoices/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			this.status = { name: "", description: "", color: "#12ba34", _id: "" };
+
+			this.$store.commit("Invoices/resetError");
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>

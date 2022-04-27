@@ -4,7 +4,7 @@ const Supplier = require("../supplier/Supplier");
 
 const Warehouse = require("../warehouse/Warehouse");
 
-const Invoice = require("../invoice/Invoice");
+const Status = require("../status/Status");
 
 const schema = require("./schemas/PurchaseSchema").obj;
 
@@ -440,18 +440,14 @@ let createPurchase = {
 			options: async (value, { req }) => {
 				if (!value) throw { type: "mongoId", value: "Status" };
 
-				let invoice = await Invoice.isStatusExist("purchases", value, "statuses._id statuses.effected");
+				let status = await Status.findOne({ invoice: "purchases", _id: value });
 
-				if (!invoice) throw { type: "notFound", value: "Status" };
+				if (!status) throw { type: "notFound", value: "Status" };
 
-				let status = invoice.statuses.find((status) => status._id.toString() === value.toString());
-
-				req.body.statusDoc = status;
-
-				req.body.statuses = invoice.statuses;
+				req.body.status = status;
 
 				return true;
-			},
+			}
 		},
 	},
 
@@ -529,15 +525,11 @@ exports.changePurchaseStatus = checkSchema({
 			options: async (value, { req }) => {
 				if (!value) throw { type: "mongoId", value: "Status" };
 
-				let invoice = await Invoice.isStatusExist("purchases", value, "statuses._id statuses.effected");
+				let status = await findOne.find({ invoice: "purchases", _id: value });
 
-				if (!invoice) throw { type: "notFound", value: "Status" };
+				if (!status) throw { type: "notFound", value: "Status" };
 
-				let status = invoice.statuses.find((status) => status._id.toString() === value.toString());
-
-				req.body.statusDoc = status;
-
-				req.body.statuses = invoice.statuses;
+				req.body.status = status;
 
 				return true;
 			}

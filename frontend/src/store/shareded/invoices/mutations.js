@@ -13,6 +13,14 @@ export default {
 		state.all.total = data.total;
 	},
 
+	deleteStatus(state, payload) {
+		state.statuses = state.statuses.filter((status) => status._id != payload._id);
+	},
+
+	setStatuses(state, data) {
+		state.statuses = data.statuses;
+	},
+
 	payments(state, res) {
 		let invoice = state.all.docs.find((invoice) => state.one._id == invoice._id);
 

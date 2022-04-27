@@ -1,5 +1,5 @@
 <template>
-	<default-select ref="selectInput" label="Status" field="status" :options="options" :vuelidate="vuelidate" :namespace="namespace" />
+	<default-select ref="selectInput" label="Status" field="status" :options="statuses" :vuelidate="vuelidate" :namespace="namespace" />
 </template>
 
 <script>
@@ -8,24 +8,24 @@ const DefaultSelect = () => import("@/components/ui/DefaultSelect");
 export default {
 	components: { DefaultSelect },
 
-	props: ["vuelidate", "namespace", "invoiceName"],
+	props: ["vuelidate", "namespace"],
 
 	async mounted() {
-		let { options } = await this.getOptions();
+		let { statuses } = await this.getStatuses();
 
-		let effectedOption = options.find((option) => option.effected);
+		let effectedOption = statuses.find((option) => option.effected);
 
 		if (effectedOption) {
-			this.$emit("mounted", effectedOption, options);
+			this.$emit("mounted", effectedOption, statuses);
 		}
 
 		setTimeout(() => {
 			if (this.selectInput) {
 				let that = this;
-				this.selectInput.style.borderColor = that.selectedOption.color;
+				this.selectInput.style.borderColor = that.selectedStatus.color;
 
 				this.selectInput.onfocus = function () {
-					this.style.boxShadow = `0 0 0 0.06rem ${that.selectedOption.color}40`;
+					this.style.boxShadow = `0 0 0 0.06rem ${that.selectedStatus.color}40`;
 				};
 
 				this.selectInput.onblur = function () {
@@ -39,7 +39,7 @@ export default {
 		"vuelidate.status.$model": {
 			handler() {
 				if (this.selectInput) {
-					this.selectInput.style.borderColor = this.selectedOption.color;
+					this.selectInput.style.borderColor = this.selectedStatus.color;
 				}
 			},
 			deep: true
@@ -47,12 +47,12 @@ export default {
 	},
 
 	computed: {
-		options() {
-			return this.$store.state.Invoices.statuses[this.invoiceName];
+		statuses() {
+			return this.$store.state[this.namespace].statuses;
 		},
 
-		selectedOption() {
-			return this.options.find((option) => this.vuelidate.status.$model == option._id) || {};
+		selectedStatus() {
+			return this.statuses.find((option) => this.vuelidate.status.$model == option._id) || {};
 		},
 
 		selectInput() {
@@ -61,8 +61,8 @@ export default {
 	},
 
 	methods: {
-		getOptions() {
-			return this.$store.dispatch("Invoices/getStatusOptions", this.invoiceName);
+		getStatuses() {
+			return this.$store.dispatch(`${this.namespace}/getStatuses`);
 		}
 	}
 };
