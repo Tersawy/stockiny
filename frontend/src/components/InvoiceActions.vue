@@ -4,15 +4,15 @@
 
 		<b-dropdown size="sm" variant="link" class="dropdown-invoice-options" menu-class="py-0" no-caret :ref="invoice.reference" right>
 			<template #button-content> </template>
-			<b-dropdown-item link-class="py-2 d-flex align-items-center">
-				<!-- <router-link :to="{ name: `${invoiceName}Show`, params: { id: invoice._id } }"> -->
-				<b-icon icon="eye" scale="0.8"></b-icon>
-				<span class="mx-2 text-muted">Show Details</span>
-				<!-- </router-link> -->
+			<b-dropdown-item link-class="p-0">
+				<router-link :to="{ name: `${invoiceName}`, params: { id: invoice._id } }" class="py-2 px-4 d-flex align-items-center text-decoration-none">
+					<b-icon icon="eye" scale="0.8"></b-icon>
+					<span class="mx-2 text-muted">Show Details</span>
+				</router-link>
 			</b-dropdown-item>
 
 			<b-dropdown-item link-class="p-0">
-				<router-link :to="{ name: `${invoiceName}Edit`, params: { id: invoice._id } }" class="py-2 px-4 d-flex align-items-center">
+				<router-link :to="{ name: `${invoiceName}Edit`, params: { id: invoice._id } }" class="py-2 px-4 d-flex align-items-center text-decoration-none">
 					<b-icon icon="pencil-square" scale="0.8"></b-icon>
 					<span class="mx-2 text-muted">Edit {{ invoiceName }}</span>
 				</router-link>
