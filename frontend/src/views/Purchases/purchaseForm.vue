@@ -3,10 +3,13 @@
 		<template #end-breads>
 			<div class="d-flex align-items-center">
 				<!-- Save Button -->
-				<b-button variant="outline-primary" size="sm" @click="handleSave"> Save </b-button>
+				<b-button variant="outline-primary" size="sm" @click="handleSave" :disabled="isBusy">
+					Save
+					<b-spinner v-if="isBusy" small class="mx-1"></b-spinner>
+				</b-button>
 
 				<!-- Cancel Button -->
-				<b-button variant="outline-danger" size="sm" @click="handleCancel" class="ml-2"> Cancel </b-button>
+				<b-button variant="outline-danger" size="sm" @click="handleCancel" :disabled="isBusy" class="ml-2"> Cancel </b-button>
 			</div>
 		</template>
 
