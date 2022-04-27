@@ -2,15 +2,11 @@ const mongoose = require("mongoose");
 
 const { createError, notFound } = require("../../errors/ErrorHandler");
 
-const Invoice = require("../invoice/Invoice");
-
 const Product = require("../product/Product");
 
 const Purchase = require("./Purchase");
 
 exports.getPurchases = async (req, res) => {
-	// let { sort, skip, limit } = handleQueries(req, Purchase);
-
 	let select = "date reference supplier warehouse status total paid paymentStatus";
 
 	let query = Purchase.find({}, select)
