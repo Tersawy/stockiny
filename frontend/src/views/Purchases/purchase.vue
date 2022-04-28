@@ -67,19 +67,20 @@
 									<h6 class="fs-14 mb-0">Date:&nbsp;</h6>
 								</b-col>
 								<b-col class="mb-1">
-									<DateStr :date="purchase.date" />
+									<DateStr v-if="purchase.date" :date="purchase.date" />
 								</b-col>
 								<b-col class="mb-1 text-md-right">
 									<h6 class="fs-14 mb-0">Status:</h6>
 								</b-col>
 								<b-col class="mb-1">
-									<InvoiceStatus :status="purchase.status" />
+									<span v-if="!purchase.status || typeof purchase.status == 'string'"> - - -</span>
+									<InvoiceStatus v-else :status="purchase.status" />
 								</b-col>
 								<b-col class="mb-1 text-md-right">
 									<h6 class="fs-14 mb-0">Requested at:</h6>
 								</b-col>
 								<b-col class="mb-1">
-									<DateStr :date="purchase.createdAt" />
+									<DateStr v-if="purchase.createdAt" :date="purchase.createdAt" />
 								</b-col>
 								<b-col class="mb-1 text-md-right">
 									<h6 class="fs-14 mb-0">Requested by:</h6>
