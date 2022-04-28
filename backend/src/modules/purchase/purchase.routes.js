@@ -30,6 +30,8 @@ router.get("/", authFor("read:purchases"), Controller.getPurchases);
 
 router.post("/", authFor("create:purchases"), validation.createPurchase, validationHandler, Controller.createPurchase);
 
+router.get("/:id", authFor("show:purchases"), validation.getPurchase, validationHandler, Controller.getPurchase);
+
 /* Get Purchase To Edit */
 router.get("/:id/edit", authFor("edit:purchases"), validation.getEditPurchase, validationHandler, Controller.getEditPurchase);
 
