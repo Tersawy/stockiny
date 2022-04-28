@@ -125,6 +125,12 @@ const routes = [
 		meta: { auth: true, permissions: ["edit:purchases"] }
 	},
 	{
+		path: "/purchases/:id",
+		name: "Purchase",
+		component: () => /* webpackChunkName: "Purchase" */ import("@/views/Purchases/purchase"),
+		meta: { auth: true, permissions: ["show:purchases"] }
+	},
+	{
 		path: "/purchases-return",
 		name: "PurchaseReturn",
 		component: () => /* webpackChunkName: "PurchaseReturn" */ import("@/views/PurchasesReturn/index"),
