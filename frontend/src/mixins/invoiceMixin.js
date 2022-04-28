@@ -122,7 +122,7 @@ export default (storeNamespace, amountType) => {
 
 				this.breads = [...breads, { title: "Edit" }];
 
-				this.invoice.date = getDate(this.invoice.date);
+				this.invoice.date = getDate(this.oldInvoice.date);
 				this.invoice.customer = this.oldInvoice.customer;
 				this.invoice.supplier = this.oldInvoice.supplier;
 				this.invoice.warehouse = this.oldInvoice.warehouse;
