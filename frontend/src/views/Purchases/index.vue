@@ -1,5 +1,5 @@
 <template>
-	<main-content class="purchases-list" :breads="breads">
+	<main-content :breads="breads">
 		<TableHeaderControls
 			:controls="tableControls"
 			@btnCreateClicked="btnCreateClicked"
@@ -7,7 +7,6 @@
 			@btnExcelClicked="btnExcelClicked"
 			@btnPdfClicked="btnPdfClicked"
 		/>
-
 		<b-table
 			show-empty
 			stacked="lg"
@@ -23,7 +22,7 @@
 			@context-changed="contextChanged"
 			:filter="search"
 			:filter-function="() => items"
-			class="mb-0"
+			class="mb-0 text-nowrap"
 		>
 			<template #cell(actions)="row">
 				<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" />
@@ -32,24 +31,38 @@
 			<template #cell(date)="row">
 				<DateStr :date="row.value" />
 			</template>
+
+			<template #cell(reference)="row">
+				<router-link :to="{ name: 'Purchase', params: { id: row.item._id } }" class="d-print-none">
+					{{ row.value }}
+				</router-link>
+				<span class="d-none d-print-block">{{ row.value }}</span>
+			</template>
+
 			<template #cell(supplier)="row">
 				<span> {{ row.value | relation }} </span>
 			</template>
+
 			<template #cell(warehouse)="row">
 				<span> {{ row.value | relation }} </span>
 			</template>
+
 			<template #cell(total)="row">
 				<span class="text-primary font-weight-500">$ {{ row.value | floating }} </span>
 			</template>
+
 			<template #cell(paid)="row">
 				<span>$ {{ row.value | floating }} </span>
 			</template>
+
 			<template #cell(due)="{ item }">
 				<span>$ {{ due(item) | floating }} </span>
 			</template>
+
 			<template #cell(paymentStatus)="row">
 				<span v-payment-status="row.value"> </span>
 			</template>
+
 			<template #cell(status)="{ item }">
 				<div class="w-100 d-flex justify-content-lg-between align-items-center">
 					<InvoiceStatus :status="item.status" />
@@ -62,6 +75,7 @@
 						:toggle-attrs="{ style: 'padding-top:2px;padding-bottom:2px;' }"
 						no-caret
 						menu-class="py-0 shadow-sm"
+						class="d-print-none"
 					>
 						<template #button-content>
 							<ChangeIcon scale="1" v-b-tooltip title="Change Status" />
@@ -131,7 +145,7 @@ export default {
 			{ key: "paid", label: "Paid", sortable: true },
 			{ key: "due", label: "Due", sortable: true },
 			{ key: "paymentStatus", label: "Payment Status", sortable: true },
-			{ key: "actions", label: "Actions" }
+			{ key: "actions", label: "Actions", class: "d-print-none" }
 		],
 		filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
 		searchIn: { reference: true, date: false }

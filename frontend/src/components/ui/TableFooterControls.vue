@@ -1,5 +1,5 @@
 <template>
-	<b-row class="pt-3">
+	<b-row class="pt-3 d-print-none">
 		<b-col sm="6" md="6" lg="4">
 			<div class="d-flex align-items-center justify-content-center justify-content-sm-start">
 				<b-card body-class="d-flex align-items-center py-0 px-3" class="rounded-pill">
@@ -17,17 +17,17 @@
 </template>
 
 <script>
-	export default {
-		props: {
-			controls: {
-				type: Object,
-				default: () => ({
-					page: 1,
-					perPage: 10,
-					perPageOptions: [10, 20, 30, 40, 50],
-					docsCount: 0
-				})
-			}
+export default {
+	props: {
+		controls: {
+			type: Object,
+			default: () => ({
+				page: 1,
+				perPage: 10,
+				perPageOptions: [10, 20, 30, 40, 50],
+				docsCount: 0
+			})
 		}
-	};
+	}
+};
 </script>

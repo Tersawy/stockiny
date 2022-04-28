@@ -1,5 +1,5 @@
 <template>
-	<b-row>
+	<b-row class="d-print-none">
 		<b-col cols="12" lg="6" xl="4">
 			<b-form-group class="mb-0">
 				<b-input-group>
@@ -32,25 +32,28 @@
 </template>
 
 <script>
-	import PlusIcon from "@/components/icons/plus.vue";
-	import CloudIcon from "@/components/icons/cloud.vue";
-	import ExcelIcon from "@/components/icons/excel.vue";
-	import PdfIcon from "@/components/icons/pdf.vue";
+import PlusIcon from "@/components/icons/plus";
 
-	const ButtonSearchIn = () => import("@/components/ui/ButtonSearchIn");
+import CloudIcon from "@/components/icons/cloud";
 
-	export default {
-		components: { ButtonSearchIn, PlusIcon, CloudIcon, ExcelIcon, PdfIcon },
+import ExcelIcon from "@/components/icons/excel";
 
-		props: {
-			controls: {
-				type: Object,
-				default: () => ({
-					search: "",
-					searchIn: { name: true, reference: true }
-				})
-			},
-			inputSeachPlaceholder: { type: String, default: "Type to search" }
-		}
-	};
+import PdfIcon from "@/components/icons/pdf";
+
+const ButtonSearchIn = () => import("@/components/ui/ButtonSearchIn");
+
+export default {
+	components: { ButtonSearchIn, PlusIcon, CloudIcon, ExcelIcon, PdfIcon },
+
+	props: {
+		controls: {
+			type: Object,
+			default: () => ({
+				search: "",
+				searchIn: { name: true, reference: true }
+			})
+		},
+		inputSeachPlaceholder: { type: String, default: "Type to search" }
+	}
+};
 </script>

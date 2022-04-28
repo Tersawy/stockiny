@@ -262,7 +262,7 @@ svg.vue-barcode-element {
 
 @media print {
 	@page {
-		size: auto;
+		size: A4 portrait;
 		margin: 0;
 	}
 

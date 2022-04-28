@@ -25,8 +25,8 @@
 					<b-row>
 						<b-col cols="12" class="mb-4">
 							<div class="d-flex justify-content-between pb-3 border-bottom" style="border-width: 2px !important">
-								<h1 class="mb-0 d-none d-md-block">Locanos</h1>
-								<div class="text-right w-100 text-center text-md-right">
+								<h1 class="mb-0 d-none d-md-block d-print-block">Locanos</h1>
+								<div class="text-right w-100 text-center text-md-right text-print-right">
 									<h1 class="font-weight-light">Purchase Order</h1>
 									<h2 class="text-muted mb-1">Locanos</h2>
 									<span class="text-muted fs-14">United States</span>
@@ -34,8 +34,8 @@
 							</div>
 						</b-col>
 					</b-row>
-					<b-row cols-md="3">
-						<b-col cols="6">
+					<b-row cols="1" cols-md="2" cols-lg="3" class="order-info">
+						<b-col>
 							<h6 class="fs-14 text-muted mb-1">Supplier</h6>
 							<h6 class="fs-14 mb-1">{{ purchase.supplier.name | toSentenceCase }}</h6>
 							<div class="fs-14">{{ purchase.supplier.address }}</div>
@@ -44,8 +44,8 @@
 							<div class="fs-14">{{ purchase.supplier.phone }}</div>
 							<div class="fs-14">{{ purchase.supplier.email }}</div>
 						</b-col>
-						<hr style="width: 96%" class="d-sm-none" />
-						<b-col cols="6">
+						<hr style="width: 96%" class="d-md-none d-print-none" />
+						<b-col>
 							<h6 class="fs-14 text-muted mb-1">Warehouse</h6>
 							<h6 class="fs-14 mb-1">{{ purchase.warehouse.name | toSentenceCase }}</h6>
 							<div class="fs-14">{{ purchase.warehouse.address }}</div>
@@ -54,35 +54,35 @@
 							<div class="fs-14">{{ purchase.warehouse.phone }}</div>
 							<div class="fs-14">{{ purchase.warehouse.email }}</div>
 						</b-col>
-						<hr style="width: 96%" class="d-md-none" />
-						<b-col>
+						<hr class="col-11 col-md-11 d-lg-none d-print-none" />
+						<b-col cols="12" md="12">
 							<b-row cols="2" class="text-nowrap">
-								<b-col class="mb-1 text-md-right">
+								<b-col class="mb-1 text-lg-right">
 									<h6 class="fs-14 mb-0">#Reference:&nbsp;</h6>
 								</b-col>
 								<b-col class="mb-1">
 									<span>{{ purchase.reference }}</span>
 								</b-col>
-								<b-col class="mb-1 text-md-right">
+								<b-col class="mb-1 text-lg-right">
 									<h6 class="fs-14 mb-0">Date:&nbsp;</h6>
 								</b-col>
 								<b-col class="mb-1">
 									<DateStr v-if="purchase.date" :date="purchase.date" />
 								</b-col>
-								<b-col class="mb-1 text-md-right">
+								<b-col class="mb-1 text-lg-right">
 									<h6 class="fs-14 mb-0">Status:</h6>
 								</b-col>
 								<b-col class="mb-1">
 									<span v-if="!purchase.status || typeof purchase.status == 'string'"> - - -</span>
 									<InvoiceStatus v-else :status="purchase.status" />
 								</b-col>
-								<b-col class="mb-1 text-md-right">
+								<b-col class="mb-1 text-lg-right">
 									<h6 class="fs-14 mb-0">Requested at:</h6>
 								</b-col>
 								<b-col class="mb-1">
 									<DateStr v-if="purchase.createdAt" :date="purchase.createdAt" />
 								</b-col>
-								<b-col class="mb-1 text-md-right">
+								<b-col class="mb-1 text-lg-right">
 									<h6 class="fs-14 mb-0">Requested by:</h6>
 								</b-col>
 								<b-col class="mb-1">
@@ -132,46 +132,42 @@
 							</b-table>
 						</b-col>
 					</b-row>
-					<b-row>
-						<b-col>
-							<b-row class="justify-content-end mt-3">
-								<b-col cols="12" md="6" lg="4">
-									<table class="table table-striped mb-0 border shadow-sm">
-										<tbody>
-											<tr>
-												<td class="border-0 font-weight-400 pr-0">Order Tax</td>
-												<td class="border-0">
-													<span>$ {{ taxFixed | floating }} </span>
-													<span class="text-nowrap"> ( {{ purchase.tax | floating }}% ) </span>
-												</td>
-											</tr>
-											<tr>
-												<td class="font-weight-400 pr-0">Discount</td>
-												<td>
-													<span>$ {{ discountFixed | floating }} </span>
-													<span class="text-nowrap"> ( {{ discountPercent | floating }}% ) </span>
-												</td>
-											</tr>
-											<tr>
-												<td class="font-weight-400 pr-0">Shipping</td>
-												<td>$ {{ purchase.shipping | floating }}</td>
-											</tr>
-											<tr>
-												<td class="font-weight-600 pr-0">Order Total</td>
-												<td class="font-weight-600 text-primary">$ {{ orderTotal | floating }}</td>
-											</tr>
-											<tr>
-												<td class="font-weight-400 pr-0">Paid</td>
-												<td>$ {{ purchase.paid | floating }}</td>
-											</tr>
-											<tr>
-												<td class="font-weight-600 pr-0">Due</td>
-												<td class="font-weight-600 text-danger">$ {{ due | floating }}</td>
-											</tr>
-										</tbody>
-									</table>
-								</b-col>
-							</b-row>
+					<b-row class="order-total justify-content-end mt-3">
+						<b-col cols="12" md="6" lg="4">
+							<table class="table table-striped mb-0 border shadow-sm">
+								<tbody>
+									<tr>
+										<td class="border-0 font-weight-400 pr-0">Order Tax</td>
+										<td class="border-0">
+											<span>$ {{ taxFixed | floating }} </span>
+											<span class="text-nowrap"> ( {{ purchase.tax | floating }}% ) </span>
+										</td>
+									</tr>
+									<tr>
+										<td class="font-weight-400 pr-0">Discount</td>
+										<td>
+											<span>$ {{ discountFixed | floating }} </span>
+											<span class="text-nowrap"> ( {{ discountPercent | floating }}% ) </span>
+										</td>
+									</tr>
+									<tr>
+										<td class="font-weight-400 pr-0">Shipping</td>
+										<td>$ {{ purchase.shipping | floating }}</td>
+									</tr>
+									<tr>
+										<td class="font-weight-600 pr-0">Order Total</td>
+										<td class="font-weight-600 text-primary">$ {{ orderTotal | floating }}</td>
+									</tr>
+									<tr>
+										<td class="font-weight-400 pr-0">Paid</td>
+										<td>$ {{ purchase.paid | floating }}</td>
+									</tr>
+									<tr>
+										<td class="font-weight-600 pr-0">Due</td>
+										<td class="font-weight-600 text-danger">$ {{ due | floating }}</td>
+									</tr>
+								</tbody>
+							</table>
 						</b-col>
 					</b-row>
 				</b-card>
@@ -198,7 +194,7 @@ export default {
 			fields: [
 				{ key: "index", label: "#", class: "text-center" },
 
-				{ key: "name", label: "Name", class: "pl-3 position-sticky position-sm-static", tdClass: "bg-white" },
+				{ key: "name", label: "Name", class: "pl-3", tdClass: "bg-white" },
 
 				{ key: "amount", label: "Amount", class: "text-center" },
 
@@ -361,4 +357,29 @@ export default {
 		position: static !important;
 	}
 }
+/* style sheet for "A4" printing */
+@media print /* and (width: 21cm) and (height: 29.7cm) */ {
+	.order-info {
+		&.row > * {
+			max-width: calc(100% / 3);
+			flex: 0 0 calc(100% / 3);
+		}
+	}
+	.order-total {
+		&.row > * {
+			max-width: calc(100% / 2);
+			flex: 0 0 calc(100% / 2);
+		}
+	}
+	.text-print-right {
+		text-align: right !important;
+	}
+}
+
+// /* style sheet for "letter" printing */
+// @media print and (width: 8.5in) and (height: 11in) {
+// 	@page {
+// 		margin: 1in;
+// 	}
+// }
 </style>
