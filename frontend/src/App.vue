@@ -113,7 +113,6 @@ export default {
 		width: 100%;
 		min-height: 100vh;
 		background: #ebeef0;
-		overflow-x: hidden;
 		.main-content {
 			position: relative;
 			min-height: calc(100vh - 60px - 1.5rem);
