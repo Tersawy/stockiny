@@ -493,6 +493,8 @@ let updatePurchase = { ...createPurchase, id: checkId };
 
 exports.createPurchase = checkSchema(createPurchase);
 
+exports.getPurchase = checkSchema({ id: checkId });
+
 exports.getEditPurchase = checkSchema({ id: checkId });
 
 exports.updatePurchase = checkSchema(updatePurchase);
@@ -525,7 +527,7 @@ exports.changePurchaseStatus = checkSchema({
 			options: async (value, { req }) => {
 				if (!value) throw { type: "mongoId", value: "Status" };
 
-				let status = await findOne.find({ invoice: "purchases", _id: value });
+				let status = await Status.findOne({ invoice: "purchases", _id: value });
 
 				if (!status) throw { type: "notFound", value: "Status" };
 
