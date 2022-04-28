@@ -74,6 +74,53 @@ exports.createPurchase = async (req, res) => {
 	}
 };
 
+exports.getPurchase = async (req, res) => {
+	let purchase = await Purchase.findById(req.params.id, "_id tax discount discountMethod shipping paid date details createdBy status supplier warehouse total reference createdAt")
+		.populate("supplier", "_id name email phone zipCode address city country")
+		.populate("warehouse", "_id name email phone zipCode address city country")
+		.populate("details.subUnit", "_id name")
+		.populate("details.product", "_id name code variants._id variants.name")
+		.populate("status", "_id name color")
+		.populate("createdBy", "_id fullname");
+
+	if (!purchase) throw notFound();
+
+	let details = purchase.details.map((detail) => {
+
+		let _detail = {
+			amount: detail.amount,
+			quantity: detail.quantity,
+			tax: detail.tax,
+			taxMethod: detail.taxMethod,
+			discount: detail.discount,
+			discountMethod: detail.discountMethod,
+			unit: detail.unit,
+			variantId: detail.variant,
+			total: detail.total,
+			subUnit: detail.subUnit,
+		};
+
+		if (detail.product) {
+			_detail.product = detail.product._id;
+			_detail.name = detail.product.name;
+			_detail.code = detail.product.code;
+
+			let variant = detail.product.getVariantById(detail.variant);
+
+			if (variant) {
+				_detail.variantName = variant.name;
+			}
+		}
+
+		return _detail;
+	});
+
+
+	purchase = purchase.toJSON();
+
+	res.json({ doc: { ...purchase, details } });
+}
+
 exports.getEditPurchase = async (req, res) => {
 	let { id } = req.params;
 
