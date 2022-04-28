@@ -11,7 +11,7 @@
 				</b-button>
 
 				<!-- Edit Button -->
-				<router-link tag="button" class="btn btn-outline-success btn-sm ml-2" :to="{ name: 'PurchaseEdit', params: { id: $route.params.id } }">
+				<router-link class="btn btn-outline-success btn-sm ml-2" :to="{ name: 'PurchaseEdit', params: { id: $route.params.id } }">
 					<div class="d-flex align-items-center">
 						<EditIcon scale="0.67" width="17px" height="17px" />
 						<span class="ml-1">Edit</span>
