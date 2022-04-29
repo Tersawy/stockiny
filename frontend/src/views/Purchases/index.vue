@@ -7,6 +7,7 @@
 			@btnExcelClicked="btnExcelClicked"
 			@btnPdfClicked="btnPdfClicked"
 		/>
+
 		<div style="overflow-x: auto" class="border-right border-left">
 			<b-table
 				show-empty
