@@ -200,7 +200,7 @@ $paddingSizes: 10,
 		}
 
 		@media (max-width: 767.98px) {
-			& :first-child {
+			&> :first-child {
 				border-top: 0;
 			}
 		}
