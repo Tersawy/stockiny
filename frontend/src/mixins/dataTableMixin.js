@@ -206,7 +206,7 @@ export default function dataTableMixin(namespace) {
 			},
 
 			btnPdfClicked() {
-				this.$bvModal.show(this.formId);
+				window.print();
 			}
 		}
 	};
