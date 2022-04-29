@@ -8,7 +8,7 @@
 			@btnPdfClicked="btnPdfClicked"
 		/>
 
-		<div style="overflow-x: auto" class="border-right border-left">
+		<div style="overflow-x: auto" :class="`border-right border-left ${hideTableInPrint ? 'd-print-none' : ''}`">
 			<b-table
 				show-empty
 				stacked="md"
@@ -27,7 +27,7 @@
 				class="mb-0 text-nowrap"
 			>
 				<template #cell(actions)="row">
-					<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" />
+					<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" @downloadPDF="downloadPDF" />
 				</template>
 
 				<template #cell(index)="row">
@@ -112,6 +112,8 @@
 		<PaymentForm :namespace="namespace" />
 
 		<Payments :namespace="namespace" />
+
+		<Purchase v-if="hideTableInPrint" ref="invoicePrinter" class="d-none d-print-block" />
 	</main-content>
 </template>
 
@@ -128,17 +130,17 @@ const DateStr = () => import("@/components/DateStr");
 
 const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
 
+const Purchase = () => import("@/components/Purchase");
+
 export default {
 	name: "Purchases",
 
-	components: { InvoiceStatus, DateStr, ChangeIcon, CheckCircleOutlineIcon },
+	components: { Purchase, InvoiceStatus, DateStr, ChangeIcon, CheckCircleOutlineIcon },
 
 	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
 
 	data: () => ({
 		namespace: "Purchases",
-
-		components: { InvoiceStatus },
 
 		breads: [{ title: "Dashboard", link: "/" }, { title: "Purchases" }],
 
@@ -155,8 +157,12 @@ export default {
 			{ key: "paymentStatus", label: "Payment Status", sortable: true },
 			{ key: "actions", label: "Actions", class: "d-print-none", tdClass: "d-print-none", thClass: "d-print-none" }
 		],
+
 		filterationFields: { date: "", reference: "", supplier: "", warehouse: "", status: "", paymentStatus: "" },
-		searchIn: { reference: true, date: false }
+
+		searchIn: { reference: true, date: false },
+
+		hideTableInPrint: false
 	}),
 
 	async mounted() {
@@ -201,6 +207,21 @@ export default {
 
 		due(invoice) {
 			return +invoice.total - +invoice.paid || 0;
+		},
+
+		async downloadPDF(invoice) {
+			await this.$store.dispatch("Purchases/getOne", invoice._id);
+
+			this.hideTableInPrint = true;
+
+			this.$nextTick(() => {
+				window.print();
+
+				window.onfocus = () => {
+					this.hideTableInPrint = false;
+					window.onfocus = () => {};
+				};
+			});
 		}
 	}
 };
