@@ -28,7 +28,7 @@
 				<span class="mx-2 text-muted">Create Payment</span>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="downloadPDF(invoice)">
 				<span class="d-flex" style="font-size: 13px">
 					<i class="far fa-file-pdf fa-fw font-weight-300"></i>
 				</span>
@@ -72,6 +72,10 @@ export default {
 
 		moveToTrash(item) {
 			return this.$store.dispatch(`${this.namespace}/moveToTrash`, item);
+		},
+
+		downloadPDF(item) {
+			this.$emit("downloadPDF", item, this);
 		}
 	}
 };
