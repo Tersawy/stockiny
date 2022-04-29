@@ -272,4 +272,57 @@ svg.vue-barcode-element {
 		width: 100% !important;
 		padding-bottom: 10px !important;
 	}
+
+	.table.b-table {
+		border-bottom: 1px solid #dee2e6 !important;
+
+		td:not(:last-child) {
+			border-left: 1px solid #dee2e6 !important;
+		}
+
+		thead th,
+		thead td {
+			border-bottom-width: 2px;
+		}
+
+		&>thead>tr>[aria-sort],
+		&>tfoot>tr>[aria-sort] {
+			background-image: none !important;
+
+			&.b-table-sort-icon-left {
+				padding-left: 0.75rem !important;
+			}
+		}
+
+		&.b-table-stacked-sm,
+		&.b-table-stacked-md,
+		&.b-table-stacked-lg {
+			display: table !important;
+
+			&>thead {
+				display: table-header-group !important;
+			}
+
+			&>tbody {
+				display: table-row-group !important;
+
+				&>tr {
+					display: table-row !important;
+
+					&:not(:last-child) {
+						margin-bottom: 0 !important;
+					}
+
+					&>td:not(.d-print-none) {
+						display: table-cell !important;
+					}
+
+					&>[data-label]::before,
+					&>[data-label]::after {
+						display: none !important;
+					}
+				}
+			}
+		}
+	}
 }
