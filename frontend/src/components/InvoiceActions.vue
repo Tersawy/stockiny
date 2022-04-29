@@ -2,7 +2,7 @@
 	<div>
 		<b-icon @click="$refs[invoice.reference].show()" icon="three-dots-vertical" scale="1.5" class="c-pointer"></b-icon>
 
-		<b-dropdown size="sm" variant="link" class="dropdown-invoice-options" menu-class="py-0" no-caret :ref="invoice.reference" right>
+		<b-dropdown size="sm" variant="link" class="dropdown-invoice-options position-unset" menu-class="py-0" no-caret :ref="invoice.reference" right>
 			<template #button-content> </template>
 			<b-dropdown-item link-class="p-0">
 				<router-link :to="{ name: `${invoiceName}`, params: { id: invoice._id } }" class="py-2 px-4 d-flex align-items-center text-decoration-none">
