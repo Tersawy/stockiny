@@ -6,15 +6,19 @@ const TableHeaderControls = () => import("@/components/ui/TableHeaderControls");
 
 const TableFooterControls = () => import("@/components/ui/TableFooterControls");
 
+const DeleteModal = () => import("@/components/ui/DeleteModal");
+
 import EditIcon from "@/components/icons/edit.vue";
 
 import TrashIcon from "@/components/icons/trash.vue";
 
 import axios from "@/plugins/axios";
 
+import { showMessage } from "@/components/ui/utils";
+
 export default function dataTableMixin(namespace) {
 	return {
-		components: { TableHeaderControls, TableFooterControls, EditIcon, TrashIcon },
+		components: { TableHeaderControls, TableFooterControls, DeleteModal, EditIcon, TrashIcon },
 
 		data: () => ({
 			perPageOptions: [10, 20, 30, 40, 50],
@@ -165,7 +169,7 @@ export default function dataTableMixin(namespace) {
 		},
 
 		methods: {
-			...mapActions(namespace, ["getAll", "remove", "moveToTrash"]),
+			...mapActions(namespace, ["getAll"]),
 
 			...mapMutations(namespace, ["setOne"]),
 
@@ -191,6 +195,31 @@ export default function dataTableMixin(namespace) {
 				this.$nextTick(() => {
 					this.$bvModal.show(this.formId);
 				});
+			},
+
+			toTrash(item) {
+				this.$refs.deleteModal.open(item);
+			},
+
+			async moveToTrash(item) {
+				try {
+					this.$refs.deleteModal.setBusy(true);
+
+					await this.$store.dispatch(`${namespace}/moveToTrash`, item);
+
+					showMessage({ message: this.$t("messages.deleted") });
+				} catch (e) {
+					if (e.status == 400) {
+						showMessage({ error: true, message: this.$t(`messages.${e.message}`) });
+					} else if (e.status == 404) {
+						this.$store.commit(`${namespace}/remove`, item._id);
+						showMessage({ message: this.$t("messages.deleted") });
+					} else {
+						showMessage({ error: true });
+					}
+				} finally {
+					this.$refs.deleteModal.close();
+				}
 			},
 
 			btnCreateClicked() {
