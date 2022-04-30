@@ -27,7 +27,7 @@
 				class="mb-0 text-nowrap"
 			>
 				<template #cell(actions)="row">
-					<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" @downloadPDF="downloadPDF" />
+					<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" @toTrash="toTrash" @downloadPDF="downloadPDF" />
 				</template>
 
 				<template #cell(index)="row">
@@ -114,6 +114,8 @@
 		<Payments :namespace="namespace" />
 
 		<Purchase v-if="hideTableInPrint" ref="invoicePrinter" class="d-none d-print-block" />
+
+		<DeleteModal ref="deleteModal" field="Purchase" @ok="moveToTrash" />
 	</main-content>
 </template>
 

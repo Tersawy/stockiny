@@ -49,12 +49,14 @@
 		"yesDelete": "Yes, Delete",
 		"noCancel": "No, Cancel"
 	},
-
 	"messages": {
 		"saved": "Saved successfully",
 		"created": "Created successfully",
 		"updated": "Updated successfully",
 		"deleted": "Deleted successfully",
+		"paid": "Delete Payments First !",
+		"effected": "This is Effected in Stock !",
+		"notFound": "{module} Is Not Found",
 		"wrong": "Something went wrong !"
 	}
 }

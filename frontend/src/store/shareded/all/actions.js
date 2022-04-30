@@ -45,10 +45,12 @@ export default {
 		return data;
 	},
 
-	async moveToTrash({ commit, state }, payload) {
-		let data = await axios.post(`${state.prefix}/${payload._id}/trash`, payload);
+	async moveToTrash({ commit, state, dispatch }, item) {
+		let data = await axios.delete(`${state.prefix}/${item._id}`);
 
-		commit("remove", payload._id);
+		commit("remove", item._id);
+
+		dispatch("getAll");
 
 		return data;
 	},

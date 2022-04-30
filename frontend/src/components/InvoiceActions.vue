@@ -40,9 +40,9 @@
 				<span class="mx-2 text-muted">Send {{ invoiceName }} on Email</span>
 			</b-dropdown-item>
 
-			<hr class="m-0" />
+			<hr class="m-0" v-if="showDeleteBtn" />
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center text-danger" @click="moveToTrash(invoice)">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center text-danger" @click="toTrash(invoice)" v-if="showDeleteBtn">
 				<b-icon icon="trash" scale="0.8"></b-icon>
 				<span class="mx-2 text-muted">Delete {{ invoiceName }}</span>
 			</b-dropdown-item>
@@ -53,6 +53,20 @@
 <script>
 export default {
 	props: ["invoice", "namespace", "invoiceName"],
+
+	computed: {
+		showDeleteBtn() {
+			return this.effectedStatus?._id != this.invoice.status?._id;
+		},
+
+		statuses() {
+			return this.$store.state[this.namespace].statuses;
+		},
+
+		effectedStatus() {
+			return this.statuses.find((status) => status.effected);
+		}
+	},
 
 	methods: {
 		async showPayments(invoice) {
@@ -70,12 +84,12 @@ export default {
 			this.$store.commit(`${this.namespace}/setOne`, data);
 		},
 
-		moveToTrash(item) {
-			return this.$store.dispatch(`${this.namespace}/moveToTrash`, item);
+		toTrash(item) {
+			this.$emit("toTrash", item);
 		},
 
 		downloadPDF(item) {
-			this.$emit("downloadPDF", item, this);
+			this.$emit("downloadPDF", item);
 		}
 	}
 };
