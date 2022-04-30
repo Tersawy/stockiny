@@ -292,6 +292,24 @@ exports.changePurchaseStatus = async (req, res) => {
 	}
 };
 
+exports.deletePurchase = async (req, res) => {
+	let { id } = req.params;
+
+	let purchase = await Purchase.findById(id, "paid status").populate("status", "effected");
+
+	if (!purchase) throw notFound();
+
+	if (purchase.paid) throw createError("paid", 400);
+
+	if (purchase.status && purchase.status.effected) {
+		throw createError("effected", 400);
+	}
+
+	await purchase.deleteBy(req.me._id);;
+
+	res.json({});
+};
+
 exports.getPayments = async (req, res) => {
 	let purchase = await Purchase.findById(req.params.id, "payments");
 

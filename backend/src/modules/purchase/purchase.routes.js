@@ -39,7 +39,7 @@ router.put("/:id", authFor("edit:purchases"), validation.updatePurchase, validat
 
 router.post("/:id/change-status", authFor("edit:purchases"), validation.changePurchaseStatus, validationHandler, Controller.changePurchaseStatus);
 
-// router.delete("/:id", authFor("delete:purchases"), validation.delete, validationHandler, Controller.delete);
+router.delete("/:id", authFor("delete:purchases"), validation.deletePurchase, validationHandler, Controller.deletePurchase);
 
 router.get("/:id/payments", authFor("showPayment:purchases"), validation.getPayments, validationHandler, Controller.getPayments);
 

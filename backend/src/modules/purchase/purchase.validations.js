@@ -497,6 +497,8 @@ exports.getPurchase = checkSchema({ id: checkId });
 
 exports.getEditPurchase = checkSchema({ id: checkId });
 
+exports.deletePurchase = checkSchema({ id: checkId });
+
 exports.updatePurchase = checkSchema(updatePurchase);
 
 exports.changePurchaseStatus = checkSchema({
