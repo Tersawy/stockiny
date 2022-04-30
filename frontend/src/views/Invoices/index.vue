@@ -194,9 +194,9 @@ import TrashIcon from "@/components/icons/trash";
 
 const StatusForm = () => import("@/components/forms/StatusForm");
 
-const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
-const DeleteModal = () => import("@/components/ui/DeleteModal");
+const DeleteModal = () => import("@/components/DeleteModal");
 
 export default {
 	components: { StatusForm, InvoiceStatus, DeleteModal, IconPlus, TrashIcon, EditIcon },

@@ -56,11 +56,11 @@ import TrashIcon from "@/components/icons/trash";
 
 const DateStr = () => import("@/components/DateStr");
 
-const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-const DeleteModal = () => import("@/components/ui/DeleteModal");
+const DeleteModal = () => import("@/components/DeleteModal");
 
-import { showMessage } from "@/components/ui/utils";
+import { showMessage } from "@/components/utils";
 
 export default {
 	props: ["namespace"],

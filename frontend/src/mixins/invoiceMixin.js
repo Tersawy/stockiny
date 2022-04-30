@@ -2,23 +2,23 @@ import { getDate } from "@/helpers";
 
 const InvoiceAutoComplete = () => import("@/components/InvoiceAutoComplete");
 
-const DiscountInput = () => import("@/components/ui/inputs/DiscountInput");
+const DiscountInput = () => import("@/components/inputs/DiscountInput");
 
-const InvoiceStatusInput = () => import("@/components/ui/inputs/InvoiceStatusInput");
+const InvoiceStatusInput = () => import("@/components/inputs/InvoiceStatusInput");
 
 const InvoiceDetailsTable = () => import("@/components/InvoiceDetailsTable");
 
 const InvoiceTotal = () => import("@/components/InvoiceTotal");
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-const DefaultSelect = () => import("@/components/ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/inputs/DefaultSelect");
 
-const DefaultDatePickerInput = () => import("@/components/ui/DefaultDatePickerInput");
+const DefaultDatePickerInput = () => import("@/components/inputs/DefaultDatePickerInput");
 
-const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
-const InputError = () => import("@/components/ui/InputError");
+const InputError = () => import("@/components/InputError");
 
 import { mapActions, mapState } from "vuex";
 
@@ -26,7 +26,7 @@ import { required, numeric, minLength, maxLength, minValue } from "vuelidate/lib
 
 import { validationMixin } from "vuelidate";
 
-import { showMessage } from "@/components/ui/utils";
+import { showMessage } from "@/components/utils";
 
 export default (storeNamespace, amountType) => {
 	return {

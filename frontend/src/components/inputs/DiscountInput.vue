@@ -10,25 +10,25 @@
 </template>
 
 <script>
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-	export default {
-		components: { DefaultInput },
+export default {
+	components: { DefaultInput },
 
-		props: ["namespace", "vuelidate"],
+	props: ["namespace", "vuelidate"],
 
-		methods: {
-			changeDiscountMethod() {
-				this.vuelidate.discountMethod.$model = this.vuelidate.discountMethod.$model == "fixed" ? "percent" : "fixed";
-			}
+	methods: {
+		changeDiscountMethod() {
+			this.vuelidate.discountMethod.$model = this.vuelidate.discountMethod.$model == "fixed" ? "percent" : "fixed";
 		}
-	};
+	}
+};
 </script>
 
 <style lang="scss">
-	.discount-input {
-		input {
-			border-right: 0;
-		}
+.discount-input {
+	input {
+		border-right: 0;
 	}
+}
 </style>

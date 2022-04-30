@@ -130,7 +130,7 @@ import ChangeIcon from "@/components/icons/change";
 
 const DateStr = () => import("@/components/DateStr");
 
-const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
 const Purchase = () => import("@/components/Purchase");
 

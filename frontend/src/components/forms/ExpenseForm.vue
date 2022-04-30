@@ -47,15 +47,15 @@ import { validationMixin } from "vuelidate";
 
 import { getDate } from "@/helpers";
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-const DefaultSelect = () => import("@/components/ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/inputs/DefaultSelect");
 
-const DefaultDatePickerInput = () => import("@/components/ui/DefaultDatePickerInput");
+const DefaultDatePickerInput = () => import("@/components/inputs/DefaultDatePickerInput");
 
-const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
-const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
 export default {
 	components: { DefaultModal, DefaultInput, DefaultSelect, DefaultDatePickerInput, DefaultTextArea },

@@ -3,7 +3,7 @@
 </template>
 
 <script>
-const DefaultSelect = () => import("@/components/ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/inputs/DefaultSelect");
 
 export default {
 	components: { DefaultSelect },

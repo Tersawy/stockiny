@@ -39,124 +39,124 @@
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
-	import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
-	import { validationMixin } from "vuelidate";
+import { mapActions, mapState } from "vuex";
+import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
+import { validationMixin } from "vuelidate";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-	export default {
-		components: { DefaultModal, DefaultInput },
+export default {
+	components: { DefaultModal, DefaultInput },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		data: () => ({
-			customer: { name: null, phone: null, email: null, country: null, city: null, address: null, zipCode: null },
-			isBusy: false,
-			modalSettings: {
-				stayOpen: false,
-				showStayOpenBtn: true
-			}
+	data: () => ({
+		customer: { name: null, phone: null, email: null, country: null, city: null, address: null, zipCode: null },
+		isBusy: false,
+		modalSettings: {
+			stayOpen: false,
+			showStayOpenBtn: true
+		}
+	}),
+
+	validations: {
+		customer: {
+			name: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
+			email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
+			country: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			city: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			address: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) }
+		}
+	},
+
+	computed: {
+		...mapState({
+			oldCustomer: (state) => state.Customers.one
 		}),
 
-		validations: {
-			customer: {
-				name: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
-				email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
-				country: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				city: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				address: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) }
-			}
+		isUpdate() {
+			return !!this.oldCustomer._id;
 		},
 
-		computed: {
-			...mapState({
-				oldCustomer: (state) => state.Customers.one
-			}),
-
-			isUpdate() {
-				return !!this.oldCustomer._id;
-			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Customer" : "Create Customer";
-			}
-		},
-
-		methods: {
-			...mapActions("Customers", ["create", "update", "getOptions"]),
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.customer) {
-						this.customer[key] = this.oldCustomer[key] || "";
-					}
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.customer.$invalid) return;
-
-				this.isBusy = true;
-
-				try {
-					let action = this.isUpdate ? this.update : this.create;
-
-					let res = await action(this.customer);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					this.getOptions();
-
-					message = this.$t(message, { module: "Customer" });
-
-					this.$store.commit("showToast", message);
-
-					this.resetForm();
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("customerFormModal");
-					}
-
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Customers/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				for (let key in this.customer) {
-					this.customer[key] = "";
-				}
-
-				this.$store.commit("Customers/setOne", {});
-
-				this.$store.commit("Customers/resetError");
-
-				this.$nextTick(this.$v.$reset);
-			}
+		formTitle() {
+			return this.isUpdate ? "Edit Customer" : "Create Customer";
 		}
-	};
+	},
+
+	methods: {
+		...mapActions("Customers", ["create", "update", "getOptions"]),
+
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.customer) {
+					this.customer[key] = this.oldCustomer[key] || "";
+				}
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => {
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			}, 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.customer.$invalid) return;
+
+			this.isBusy = true;
+
+			try {
+				let action = this.isUpdate ? this.update : this.create;
+
+				let res = await action(this.customer);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				this.getOptions();
+
+				message = this.$t(message, { module: "Customer" });
+
+				this.$store.commit("showToast", message);
+
+				this.resetForm();
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("customerFormModal");
+				}
+
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Customers/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			for (let key in this.customer) {
+				this.customer[key] = "";
+			}
+
+			this.$store.commit("Customers/setOne", {});
+
+			this.$store.commit("Customers/resetError");
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>

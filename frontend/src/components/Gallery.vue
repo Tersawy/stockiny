@@ -138,358 +138,358 @@
 </template>
 
 <script>
-	import CloudIcon from "@/components/icons/cloud";
+import CloudIcon from "@/components/icons/cloud";
 
-	import CheckCircleIcon from "@/components/icons/check-circle";
+import CheckCircleIcon from "@/components/icons/check-circle";
 
-	const InputError = () => import("@/components/ui/InputError");
+const InputError = () => import("@/components/InputError");
 
-	const ImageUploader = () => import("@/components/ImageUploader/index");
+const ImageUploader = () => import("@/components/inputs/ImageUploader/index");
 
-	export default {
-		components: { ImageUploader, InputError, CloudIcon, CheckCircleIcon },
+export default {
+	components: { ImageUploader, InputError, CloudIcon, CheckCircleIcon },
 
-		props: {
-			id: { type: String, default: "galleryModal" },
+	props: {
+		id: { type: String, default: "galleryModal" },
 
-			title: { type: String, default: "Gallery" },
+		title: { type: String, default: "Gallery" },
 
-			imageFormatter: { type: Function, default: (image) => image },
+		imageFormatter: { type: Function, default: (image) => image },
 
-			galleryUrl: { type: String, required: true },
+		galleryUrl: { type: String, required: true },
 
-			uploadUrl: {
-				type: String,
-				default: function () {
-					return this.galleryUrl;
-				}
-			},
-
-			deleteUrl: {
-				type: String,
-				default: function () {
-					return this.galleryUrl;
-				}
-			},
-
-			multipleSelect: { type: Boolean, default: false },
-
-			hideOldSelectedView: { type: Boolean, default: true },
-
-			hideSaveBtn: { type: Boolean, default: false },
-
-			hideDeleteBtn: { type: Boolean, default: false },
-
-			oldSelected: { type: Array, default: () => [] },
-
-			defaultOldSelected: { type: String, default: "" },
-
-			beforeDelete: { type: Function, default: () => {} }
-		},
-
-		data() {
-			return {
-				mainTabs: { allImages: true, oldSelected: false, uploadToGallery: false },
-
-				images: [],
-
-				gallery: [],
-
-				uploaderError: { field: "", message: { type: "" } },
-
-				selected: [],
-
-				defaultSelected: "", // for oldSelected
-
-				loading: {
-					isBusy: false,
-
-					saveLoading: false,
-
-					deleteLoading: false
-				}
-			};
-		},
-
-		watch: {
-			"loading.isBusy"(v) {
-				if (!v) {
-					this.loading.saveLoading && (this.loading.saveLoading = false);
-					this.loading.deleteLoading && (this.loading.deleteLoading = false);
-				}
-			},
-
-			"loading.saveLoading"(v) {
-				this.loading.isBusy = v;
-			},
-
-			"loading.deleteLoading"(v) {
-				this.loading.isBusy = v;
-			},
-
-			defaultOldSelected: {
-				handler(v) {
-					this.defaultSelected = v;
-				},
-				deep: true
-			},
-
-			oldSelected: {
-				handler(v) {
-					this.selected = v.filter((image) => this.gallery.includes(image));
-				},
-				deep: true
+		uploadUrl: {
+			type: String,
+			default: function () {
+				return this.galleryUrl;
 			}
 		},
 
-		computed: {
-			selectedChanged() {
-				let countEqual = this.selected.length === this.oldSelected.length;
-
-				if (countEqual) {
-					countEqual = this.selected.every((image) => this.oldSelected.includes(image));
-				}
-
-				return countEqual;
-			},
-
-			showControls() {
-				return this.selected.length > 0 || (this.oldSelected.length > 0 && this.selected.length === 0);
-			},
-
-			showSetDefaultBtn() {
-				return this.oldSelected.length > 0 && this.defaultSelected && this.defaultOldSelected != this.defaultSelected;
+		deleteUrl: {
+			type: String,
+			default: function () {
+				return this.galleryUrl;
 			}
 		},
 
-		methods: {
-			async getGallery() {
-				try {
-					const response = await this.$axios.get(this.galleryUrl);
+		multipleSelect: { type: Boolean, default: false },
 
-					this.gallery = response.files;
-				} catch (error) {
-					console.error(error);
-				}
+		hideOldSelectedView: { type: Boolean, default: true },
+
+		hideSaveBtn: { type: Boolean, default: false },
+
+		hideDeleteBtn: { type: Boolean, default: false },
+
+		oldSelected: { type: Array, default: () => [] },
+
+		defaultOldSelected: { type: String, default: "" },
+
+		beforeDelete: { type: Function, default: () => {} }
+	},
+
+	data() {
+		return {
+			mainTabs: { allImages: true, oldSelected: false, uploadToGallery: false },
+
+			images: [],
+
+			gallery: [],
+
+			uploaderError: { field: "", message: { type: "" } },
+
+			selected: [],
+
+			defaultSelected: "", // for oldSelected
+
+			loading: {
+				isBusy: false,
+
+				saveLoading: false,
+
+				deleteLoading: false
+			}
+		};
+	},
+
+	watch: {
+		"loading.isBusy"(v) {
+			if (!v) {
+				this.loading.saveLoading && (this.loading.saveLoading = false);
+				this.loading.deleteLoading && (this.loading.deleteLoading = false);
+			}
+		},
+
+		"loading.saveLoading"(v) {
+			this.loading.isBusy = v;
+		},
+
+		"loading.deleteLoading"(v) {
+			this.loading.isBusy = v;
+		},
+
+		defaultOldSelected: {
+			handler(v) {
+				this.defaultSelected = v;
 			},
+			deep: true
+		},
 
-			async uploadToGallery() {
-				this.loading.isBusy = true;
-
-				let formData = new FormData();
-
-				this.images.forEach((image) => formData.append("images", image));
-
-				try {
-					await this.$axios.put(this.uploadUrl, formData, { headers: { "Content-Type": "multipart/form-data" } });
-
-					await this.getGallery();
-
-					this.$refs.imageUploader.$reset();
-
-					this.$nextTick(() => this.changeTab("allImages"));
-				} catch (error) {
-					console.log(error);
-					this.uploaderError = error;
-				} finally {
-					this.loading.isBusy = false;
-				}
+		oldSelected: {
+			handler(v) {
+				this.selected = v.filter((image) => this.gallery.includes(image));
 			},
+			deep: true
+		}
+	},
 
-			async deleteFromGallery() {
-				let prevented = false;
+	computed: {
+		selectedChanged() {
+			let countEqual = this.selected.length === this.oldSelected.length;
 
-				let prevent = () => (prevented = true);
+			if (countEqual) {
+				countEqual = this.selected.every((image) => this.oldSelected.includes(image));
+			}
 
-				await this.beforeDelete(this.selected, prevent);
+			return countEqual;
+		},
 
-				if (prevented) return;
+		showControls() {
+			return this.selected.length > 0 || (this.oldSelected.length > 0 && this.selected.length === 0);
+		},
 
-				this.loading.isBusy = true;
+		showSetDefaultBtn() {
+			return this.oldSelected.length > 0 && this.defaultSelected && this.defaultOldSelected != this.defaultSelected;
+		}
+	},
 
-				try {
-					await this.$axios.post(this.deleteUrl, { images: this.selected });
+	methods: {
+		async getGallery() {
+			try {
+				const response = await this.$axios.get(this.galleryUrl);
 
-					await this.getGallery();
+				this.gallery = response.files;
+			} catch (error) {
+				console.error(error);
+			}
+		},
 
-					this.$refs.imageUploader.$reset();
+		async uploadToGallery() {
+			this.loading.isBusy = true;
 
-					this.selected = [];
-				} catch (error) {
-					console.log(error);
-					this.uploaderError = error;
-				} finally {
-					this.loading.isBusy = false;
-				}
-			},
+			let formData = new FormData();
 
-			handleSave() {
-				this.$emit("save", this.selected, this.loading);
-			},
+			this.images.forEach((image) => formData.append("images", image));
 
-			handleSetDefaultImage() {
-				this.$emit("setDefault", this.defaultSelected, this.loading);
-			},
-
-			select(image) {
-				if (this.loading.isBusy) return;
-
-				if (this.multipleSelect) {
-					if (this.isSelected(image)) {
-						this.selected = this.selected.filter((selectedImage) => selectedImage !== image);
-					} else {
-						this.selected.push(image);
-					}
-				} else {
-					if (this.isSelected(image)) {
-						this.selected = [];
-					} else {
-						this.selected = [image];
-					}
-				}
-			},
-
-			isSelected(image) {
-				return this.selected.includes(image);
-			},
-
-			isOldSelected(image) {
-				return this.oldSelected.includes(image);
-			},
-
-			setDefault(image) {
-				if (this.loading.isBusy) return;
-				this.defaultSelected = image;
-			},
-
-			isDefaultOldSelected(image) {
-				return this.defaultOldSelected == image;
-			},
-
-			isDefaultSelected(image) {
-				return this.defaultSelected == image;
-			},
-
-			open() {
-				this.$bvModal.show(this.id);
-			},
-
-			close() {
-				this.$reset();
-				this.$nextTick(() => this.$bvModal.hide(this.id));
-			},
-
-			async onShow() {
-				this.changeTab("allImages");
-
-				this.$reset();
+			try {
+				await this.$axios.put(this.uploadUrl, formData, { headers: { "Content-Type": "multipart/form-data" } });
 
 				await this.getGallery();
 
-				if (this.oldSelected.length) {
-					this.selected = this.oldSelected.filter((image) => this.gallery.includes(image));
+				this.$refs.imageUploader.$reset();
 
-					this.defaultSelected = this.defaultOldSelected;
-				}
-			},
+				this.$nextTick(() => this.changeTab("allImages"));
+			} catch (error) {
+				console.log(error);
+				this.uploaderError = error;
+			} finally {
+				this.loading.isBusy = false;
+			}
+		},
 
-			onHidden() {
-				this.$reset();
-				this.$emit("hide");
-			},
+		async deleteFromGallery() {
+			let prevented = false;
 
-			$reset() {
+			let prevent = () => (prevented = true);
+
+			await this.beforeDelete(this.selected, prevent);
+
+			if (prevented) return;
+
+			this.loading.isBusy = true;
+
+			try {
+				await this.$axios.post(this.deleteUrl, { images: this.selected });
+
+				await this.getGallery();
+
+				this.$refs.imageUploader.$reset();
+
 				this.selected = [];
+			} catch (error) {
+				console.log(error);
+				this.uploaderError = error;
+			} finally {
+				this.loading.isBusy = false;
+			}
+		},
 
-				this.images = [];
+		handleSave() {
+			this.$emit("save", this.selected, this.loading);
+		},
 
-				this.loading = { isBusy: false, saveLoading: false, deleteLoading: false };
+		handleSetDefaultImage() {
+			this.$emit("setDefault", this.defaultSelected, this.loading);
+		},
 
-				this.$refs.imageUploader?.$reset();
+		select(image) {
+			if (this.loading.isBusy) return;
 
-				this.defaultSelected = "";
-			},
-
-			changeTab(field) {
-				if (this.loading.isBusy) return;
-
-				for (let key in this.mainTabs) {
-					this.mainTabs[key] = false;
-				}
-
-				this.mainTabs[field] = true;
-			},
-
-			beforeUploadImage(err) {
-				if (err) {
-					this.uploaderError = { field: "Image", message: err };
+			if (this.multipleSelect) {
+				if (this.isSelected(image)) {
+					this.selected = this.selected.filter((selectedImage) => selectedImage !== image);
 				} else {
-					this.uploaderError = { field: "Image", message: { type: "" } };
+					this.selected.push(image);
+				}
+			} else {
+				if (this.isSelected(image)) {
+					this.selected = [];
+				} else {
+					this.selected = [image];
 				}
 			}
+		},
+
+		isSelected(image) {
+			return this.selected.includes(image);
+		},
+
+		isOldSelected(image) {
+			return this.oldSelected.includes(image);
+		},
+
+		setDefault(image) {
+			if (this.loading.isBusy) return;
+			this.defaultSelected = image;
+		},
+
+		isDefaultOldSelected(image) {
+			return this.defaultOldSelected == image;
+		},
+
+		isDefaultSelected(image) {
+			return this.defaultSelected == image;
+		},
+
+		open() {
+			this.$bvModal.show(this.id);
+		},
+
+		close() {
+			this.$reset();
+			this.$nextTick(() => this.$bvModal.hide(this.id));
+		},
+
+		async onShow() {
+			this.changeTab("allImages");
+
+			this.$reset();
+
+			await this.getGallery();
+
+			if (this.oldSelected.length) {
+				this.selected = this.oldSelected.filter((image) => this.gallery.includes(image));
+
+				this.defaultSelected = this.defaultOldSelected;
+			}
+		},
+
+		onHidden() {
+			this.$reset();
+			this.$emit("hide");
+		},
+
+		$reset() {
+			this.selected = [];
+
+			this.images = [];
+
+			this.loading = { isBusy: false, saveLoading: false, deleteLoading: false };
+
+			this.$refs.imageUploader?.$reset();
+
+			this.defaultSelected = "";
+		},
+
+		changeTab(field) {
+			if (this.loading.isBusy) return;
+
+			for (let key in this.mainTabs) {
+				this.mainTabs[key] = false;
+			}
+
+			this.mainTabs[field] = true;
+		},
+
+		beforeUploadImage(err) {
+			if (err) {
+				this.uploaderError = { field: "Image", message: err };
+			} else {
+				this.uploaderError = { field: "Image", message: { type: "" } };
+			}
 		}
-	};
+	}
+};
 </script>
 
 <style lang="scss">
-	.gallery-modal + .modal-backdrop {
-		background-color: #000;
-		opacity: 0.15;
+.gallery-modal + .modal-backdrop {
+	background-color: #000;
+	opacity: 0.15;
+}
+
+.gallery-image {
+	position: relative;
+	user-select: none;
+	cursor: pointer;
+	transition: all 0.1s ease-in-out;
+	box-shadow: 0 0.125rem 0.25rem #00000013 !important;
+
+	.selected-icon {
+		position: absolute;
+		transition: all 0.15s ease-in-out;
+		opacity: 0;
+		transform: translate(-50%, -50%);
+		left: 50%;
+		top: 50%;
 	}
 
-	.gallery-image {
-		position: relative;
-		user-select: none;
-		cursor: pointer;
-		transition: all 0.1s ease-in-out;
+	&:hover {
+		box-shadow: 0 0.5rem 1rem #00000026 !important;
+		transform: scale(1.01);
+	}
+
+	&.active,
+	&.selected {
 		box-shadow: 0 0.125rem 0.25rem #00000013 !important;
+		transform: scale(0.95);
 
 		.selected-icon {
-			position: absolute;
-			transition: all 0.15s ease-in-out;
-			opacity: 0;
-			transform: translate(-50%, -50%);
-			left: 50%;
-			top: 50%;
-		}
-
-		&:hover {
-			box-shadow: 0 0.5rem 1rem #00000026 !important;
-			transform: scale(1.01);
-		}
-
-		&.active,
-		&.selected {
-			box-shadow: 0 0.125rem 0.25rem #00000013 !important;
-			transform: scale(0.95);
-
-			.selected-icon {
-				opacity: 1;
-			}
-		}
-
-		&.selected {
-			border-color: var(--success) !important;
-
-			img {
-				border-color: var(--success) !important;
-			}
-		}
-
-		&.active {
-			border-color: var(--primary) !important;
-
-			.selected-icon {
-				background-color: var(--primary) !important;
-			}
-
-			img {
-				border-color: var(--primary) !important;
-			}
-		}
-
-		&.inactive {
-			border-color: var(--warning) !important;
+			opacity: 1;
 		}
 	}
+
+	&.selected {
+		border-color: var(--success) !important;
+
+		img {
+			border-color: var(--success) !important;
+		}
+	}
+
+	&.active {
+		border-color: var(--primary) !important;
+
+		.selected-icon {
+			background-color: var(--primary) !important;
+		}
+
+		img {
+			border-color: var(--primary) !important;
+		}
+	}
+
+	&.inactive {
+		border-color: var(--warning) !important;
+	}
+}
 </style>

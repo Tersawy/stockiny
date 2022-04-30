@@ -39,127 +39,127 @@
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 
-	import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
+import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-	export default {
-		components: { DefaultModal, DefaultInput },
+export default {
+	components: { DefaultModal, DefaultInput },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		data: () => ({
-			supplier: { name: null, phone: null, email: null, country: null, city: null, address: null, zipCode: null },
-			isBusy: false,
-			modalSettings: {
-				stayOpen: false,
-				showStayOpenBtn: true
-			}
+	data: () => ({
+		supplier: { name: null, phone: null, email: null, country: null, city: null, address: null, zipCode: null },
+		isBusy: false,
+		modalSettings: {
+			stayOpen: false,
+			showStayOpenBtn: true
+		}
+	}),
+
+	validations: {
+		supplier: {
+			name: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
+			email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
+			country: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			city: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			address: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) }
+		}
+	},
+
+	computed: {
+		...mapState({
+			oldSupplier: (state) => state.Suppliers.one
 		}),
 
-		validations: {
-			supplier: {
-				name: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				phone: { required, numeric, minLength: minLength(6), maxLength: maxLength(18) },
-				email: { required, email, minLength: minLength(6), maxLength: maxLength(254) },
-				country: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				city: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				address: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				zipCode: { required, minLength: minLength(3), maxLength: maxLength(20) }
-			}
+		isUpdate() {
+			return !!this.oldSupplier._id;
 		},
 
-		computed: {
-			...mapState({
-				oldSupplier: (state) => state.Suppliers.one
-			}),
-
-			isUpdate() {
-				return !!this.oldSupplier._id;
-			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Supplier" : "Create Supplier";
-			}
-		},
-
-		methods: {
-			...mapActions("Suppliers", ["create", "update", "getOptions"]),
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.supplier) {
-						this.supplier[key] = this.oldSupplier[key] || "";
-					}
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.supplier.$invalid) return;
-
-				this.isBusy = true;
-
-				try {
-					let action = this.isUpdate ? this.update : this.create;
-
-					let res = await action(this.supplier);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					this.getOptions();
-
-					message = this.$t(message, { module: "Supplier" });
-
-					this.$store.commit("showToast", message);
-
-					this.resetForm();
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("supplierFormModal");
-					}
-
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Suppliers/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				for (let key in this.supplier) {
-					this.supplier[key] = "";
-				}
-
-				this.$store.commit("Suppliers/setOne", {});
-
-				this.$store.commit("Suppliers/resetError");
-
-				this.$nextTick(this.$v.$reset);
-			}
+		formTitle() {
+			return this.isUpdate ? "Edit Supplier" : "Create Supplier";
 		}
-	};
+	},
+
+	methods: {
+		...mapActions("Suppliers", ["create", "update", "getOptions"]),
+
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.supplier) {
+					this.supplier[key] = this.oldSupplier[key] || "";
+				}
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => {
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			}, 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.supplier.$invalid) return;
+
+			this.isBusy = true;
+
+			try {
+				let action = this.isUpdate ? this.update : this.create;
+
+				let res = await action(this.supplier);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				this.getOptions();
+
+				message = this.$t(message, { module: "Supplier" });
+
+				this.$store.commit("showToast", message);
+
+				this.resetForm();
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("supplierFormModal");
+				}
+
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Suppliers/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			for (let key in this.supplier) {
+				this.supplier[key] = "";
+			}
+
+			this.$store.commit("Suppliers/setOne", {});
+
+			this.$store.commit("Suppliers/resetError");
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>

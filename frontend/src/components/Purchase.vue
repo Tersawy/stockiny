@@ -158,7 +158,7 @@
 <script>
 const DateStr = () => import("@/components/DateStr");
 
-const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
 export default {
 	props: {

@@ -85,160 +85,160 @@
 	</main-content>
 </template>
 <script>
-	import ReportCard from "@/components/ui/ReportCard";
-	export default {
-		name: "Dashboard",
-		components: { ReportCard },
-		data() {
-			return {
-				breads: [{ title: "Dashboard" }],
-				customers: [
-					{ name: "David", country: "Italy", img: "user1.jpg" },
-					{ name: "Muhammad", country: "Egypt", img: "user2.jpg" },
-					{ name: "Amelia", country: "France", img: "user3.jpg" },
-					{ name: "Olivia", country: "USA", img: "user4.jpg" },
-					{ name: "Amit", country: "Jaban", img: "user5.jpg" }
-					// { name: "Ashraf", country: "India", img: "user6.jpg" },
-					// { name: "Diana", country: "Malaysia", img: "user7.jpg" },
-					// { name: "Yasser", country: "Egypt", img: "user8.jpg" }
-				],
-				sales: [
-					{
-						reference: "SL_1111",
-						customer: { id: 1, name: "Star Refigerator" },
-						status: 0,
-						grand_total: 74,
-						paid: 74,
-						due: 0,
-						payment_status: 0
-					},
-					{
-						reference: "SL_1112",
-						customer: { id: 2, name: "Kamal Salem" },
-						status: 2,
-						grand_total: 1890,
-						paid: 890,
-						due: 1000,
-						payment_status: 2
-					},
-					{
-						reference: "SL_1113",
-						customer: { id: 2, name: "Mohamed Ashraf" },
-						status: 1,
-						grand_total: 1595,
-						paid: 0,
-						due: 1595,
-						payment_status: 1
-					},
-					{
-						reference: "SL_1115",
-						customer: { id: 2, name: "Walk-in-customer" },
-						status: 0,
-						grand_total: 2600,
-						paid: 2600,
-						due: 0,
-						payment_status: 0
-					},
-					{
-						reference: "SL_1114",
-						customer: { id: 2, name: "Said Ali" },
-						status: 2,
-						grand_total: 3265,
-						paid: 2000,
-						due: 1265,
-						payment_status: 2
-					},
-					{
-						reference: "SL_1115",
-						customer: { id: 2, name: "Asmaa Foaad" },
-						status: 0,
-						grand_total: 4580,
-						paid: 4580,
-						due: 0,
-						payment_status: 0
-					}
-				]
-			};
-		}
-	};
+import ReportCard from "@/components/ReportCard";
+export default {
+	name: "Dashboard",
+	components: { ReportCard },
+	data() {
+		return {
+			breads: [{ title: "Dashboard" }],
+			customers: [
+				{ name: "David", country: "Italy", img: "user1.jpg" },
+				{ name: "Muhammad", country: "Egypt", img: "user2.jpg" },
+				{ name: "Amelia", country: "France", img: "user3.jpg" },
+				{ name: "Olivia", country: "USA", img: "user4.jpg" },
+				{ name: "Amit", country: "Jaban", img: "user5.jpg" }
+				// { name: "Ashraf", country: "India", img: "user6.jpg" },
+				// { name: "Diana", country: "Malaysia", img: "user7.jpg" },
+				// { name: "Yasser", country: "Egypt", img: "user8.jpg" }
+			],
+			sales: [
+				{
+					reference: "SL_1111",
+					customer: { id: 1, name: "Star Refigerator" },
+					status: 0,
+					grand_total: 74,
+					paid: 74,
+					due: 0,
+					payment_status: 0
+				},
+				{
+					reference: "SL_1112",
+					customer: { id: 2, name: "Kamal Salem" },
+					status: 2,
+					grand_total: 1890,
+					paid: 890,
+					due: 1000,
+					payment_status: 2
+				},
+				{
+					reference: "SL_1113",
+					customer: { id: 2, name: "Mohamed Ashraf" },
+					status: 1,
+					grand_total: 1595,
+					paid: 0,
+					due: 1595,
+					payment_status: 1
+				},
+				{
+					reference: "SL_1115",
+					customer: { id: 2, name: "Walk-in-customer" },
+					status: 0,
+					grand_total: 2600,
+					paid: 2600,
+					due: 0,
+					payment_status: 0
+				},
+				{
+					reference: "SL_1114",
+					customer: { id: 2, name: "Said Ali" },
+					status: 2,
+					grand_total: 3265,
+					paid: 2000,
+					due: 1265,
+					payment_status: 2
+				},
+				{
+					reference: "SL_1115",
+					customer: { id: 2, name: "Asmaa Foaad" },
+					status: 0,
+					grand_total: 4580,
+					paid: 4580,
+					due: 0,
+					payment_status: 0
+				}
+			]
+		};
+	}
+};
 </script>
 
 <style scoped lang="scss">
-	.dashboard {
-		.dashboard-card-box {
+.dashboard {
+	.dashboard-card-box {
+		position: relative;
+		width: 100%;
+		.dashboard-card {
 			position: relative;
-			width: 100%;
-			.dashboard-card {
-				position: relative;
-				background: #fff;
-				padding: 20px;
-				display: flex;
-				justify-content: space-between;
-				cursor: pointer;
-				.dashboard-card-content {
-					.dashboard-card-numbers {
-						position: relative;
-						font-size: 2em;
-						font-weight: 500;
-					}
-					.dashboard-card-name {
-						color: #999;
-					}
+			background: #fff;
+			padding: 20px;
+			display: flex;
+			justify-content: space-between;
+			cursor: pointer;
+			.dashboard-card-content {
+				.dashboard-card-numbers {
+					position: relative;
+					font-size: 2em;
+					font-weight: 500;
 				}
-				.dashboard-card-icon {
-					font-size: 2.5em;
-					color: var(--primary);
+				.dashboard-card-name {
+					color: #999;
 				}
 			}
+			.dashboard-card-icon {
+				font-size: 2.5em;
+				color: var(--primary);
+			}
 		}
-		.details {
-			.recent-customers {
+	}
+	.details {
+		.recent-customers {
+			position: relative;
+			min-height: 395px;
+			background-color: #fff;
+			.customer-img {
 				position: relative;
-				min-height: 395px;
-				background-color: #fff;
-				.customer-img {
-					position: relative;
-					width: 40px;
-					height: 40px;
-					border-radius: 50%;
-					overflow: hidden;
-					img {
-						width: 100%;
-						height: 100%;
-						object-fit: cover;
-					}
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				overflow: hidden;
+				img {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
 				}
-				table {
-					tr {
-						&:hover,
-						&:hover td h4 span {
-							background: var(--primary);
-							color: #fff;
-						}
-						td {
-							padding: 10px 10px;
-							h4 {
-								font-size: 16px;
-								font-weight: 500;
-								line-height: 1.2em;
-								span {
-									font-size: 14px;
-									color: #999;
-								}
+			}
+			table {
+				tr {
+					&:hover,
+					&:hover td h4 span {
+						background: var(--primary);
+						color: #fff;
+					}
+					td {
+						padding: 10px 10px;
+						h4 {
+							font-size: 16px;
+							font-weight: 500;
+							line-height: 1.2em;
+							span {
+								font-size: 14px;
+								color: #999;
 							}
 						}
 					}
 				}
 			}
-			// table {
-			// 	tbody tr {
-			// 		&:hover,
-			// 		&:hover td h4 span {
-			// 			background: var(--secondary);
-			// 			color: #fff;
-			// 		}
-			// 	}
-			// }
 		}
+		// table {
+		// 	tbody tr {
+		// 		&:hover,
+		// 		&:hover td h4 span {
+		// 			background: var(--secondary);
+		// 			color: #fff;
+		// 		}
+		// 	}
+		// }
 	}
+}
 </style>

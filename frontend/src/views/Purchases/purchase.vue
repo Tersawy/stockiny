@@ -181,7 +181,7 @@ import axios from "@/plugins/axios";
 
 const DateStr = () => import("@/components/DateStr");
 
-const InvoiceStatus = () => import("@/components/ui/InvoiceStatus");
+const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
 import PrinterIcon from "@/components/icons/printer";
 

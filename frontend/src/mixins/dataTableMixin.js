@@ -2,11 +2,11 @@ import { mapActions, mapMutations } from "vuex";
 
 import { getCode } from "@/helpers";
 
-const TableHeaderControls = () => import("@/components/ui/TableHeaderControls");
+const TableHeaderControls = () => import("@/components/TableHeaderControls");
 
-const TableFooterControls = () => import("@/components/ui/TableFooterControls");
+const TableFooterControls = () => import("@/components/TableFooterControls");
 
-const DeleteModal = () => import("@/components/ui/DeleteModal");
+const DeleteModal = () => import("@/components/DeleteModal");
 
 import EditIcon from "@/components/icons/edit.vue";
 
@@ -14,7 +14,7 @@ import TrashIcon from "@/components/icons/trash.vue";
 
 import axios from "@/plugins/axios";
 
-import { showMessage } from "@/components/ui/utils";
+import { showMessage } from "@/components/utils";
 
 export default function dataTableMixin(namespace) {
 	return {

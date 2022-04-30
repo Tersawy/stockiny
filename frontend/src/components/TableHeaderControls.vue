@@ -40,7 +40,7 @@ import ExcelIcon from "@/components/icons/excel";
 
 import PdfIcon from "@/components/icons/pdf";
 
-const ButtonSearchIn = () => import("@/components/ui/ButtonSearchIn");
+const ButtonSearchIn = () => import("@/components/ButtonSearchIn");
 
 export default {
 	components: { ButtonSearchIn, PlusIcon, CloudIcon, ExcelIcon, PdfIcon },

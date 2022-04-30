@@ -33,168 +33,168 @@
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 
-	import { required, minLength, maxLength } from "vuelidate/lib/validators";
+import { required, minLength, maxLength } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-	const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
-	const DefaultFileInput = () => import("@/components/ui/DefaultFileInput");
+const DefaultFileInput = () => import("@/components/inputs/DefaultFileInput");
 
-	export default {
-		components: { DefaultModal, DefaultInput, DefaultTextArea, DefaultFileInput },
+export default {
+	components: { DefaultModal, DefaultInput, DefaultTextArea, DefaultFileInput },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		data: () => ({
-			category: { name: null, code: null, description: "", image: null },
+	data: () => ({
+		category: { name: null, code: null, description: "", image: null },
 
-			imageSrc: null,
+		imageSrc: null,
 
-			isBusy: false,
+		isBusy: false,
 
-			modalSettings: { stayOpen: false, showStayOpenBtn: true }
-		}),
+		modalSettings: { stayOpen: false, showStayOpenBtn: true }
+	}),
 
-		validations: {
-			category: {
-				name: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				code: { required, minLength: minLength(3), maxLength: maxLength(20) },
-				description: { maxLength: maxLength(254) },
-				image: {}
-			}
-		},
+	validations: {
+		category: {
+			name: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			code: { required, minLength: minLength(3), maxLength: maxLength(20) },
+			description: { maxLength: maxLength(254) },
+			image: {}
+		}
+	},
 
-		watch: {
-			"category.image"(v) {
-				if (v) {
-					this.imageSrc = URL.createObjectURL(v);
-				} else {
-					this.imageSrc = null;
-				}
-			}
-		},
-
-		computed: {
-			...mapState({
-				oldCategory: (state) => state.Categories.one
-			}),
-
-			isUpdate() {
-				return !!this.oldCategory?._id;
-			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Category" : "Create Category";
-			}
-		},
-
-		methods: {
-			...mapActions("Categories", ["create", "update", "getOptions"]),
-
-			removeImage() {
-				this.category.image = null;
+	watch: {
+		"category.image"(v) {
+			if (v) {
+				this.imageSrc = URL.createObjectURL(v);
+			} else {
 				this.imageSrc = null;
-				if (this.isUpdate) {
-					this.category.imageDeleted = true;
-				}
-			},
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.category) {
-						if (key === "image") {
-							this.category[key] = null;
-							continue;
-						}
-
-						this.category[key] = this.oldCategory[key] || "";
-					}
-
-					this.imageSrc = this.oldCategory.image ? `${this.BASE_URL}/images/categories/${this.oldCategory.image}` : null;
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.category.$invalid) return;
-
-				this.isBusy = true;
-
-				let data = this.category;
-
-				if (this.category.image) {
-					data = new FormData();
-
-					for (let field in this.category) {
-						data.set(field, this.category[field]);
-					}
-
-					data = [data, { headers: { "Content-Type": "multipart/formdata" } }];
-				}
-
-				try {
-					let action = this.isUpdate ? this.update : this.create;
-
-					let res = await action(data);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					this.getOptions();
-
-					message = this.$t(message, { module: "Category" });
-
-					this.$store.commit("showToast", message);
-
-					this.resetForm();
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("categoryFormModal");
-					}
-
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Categories/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				for (let key in this.category) {
-					this.category[key] = key == "image" ? null : "";
-				}
-
-				this.imageSrc = null;
-
-				this.$store.commit("Categories/setOne", {});
-
-				this.$store.commit("Categories/resetError");
-
-				this.$nextTick(this.$v.$reset);
 			}
 		}
-	};
+	},
+
+	computed: {
+		...mapState({
+			oldCategory: (state) => state.Categories.one
+		}),
+
+		isUpdate() {
+			return !!this.oldCategory?._id;
+		},
+
+		formTitle() {
+			return this.isUpdate ? "Edit Category" : "Create Category";
+		}
+	},
+
+	methods: {
+		...mapActions("Categories", ["create", "update", "getOptions"]),
+
+		removeImage() {
+			this.category.image = null;
+			this.imageSrc = null;
+			if (this.isUpdate) {
+				this.category.imageDeleted = true;
+			}
+		},
+
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.category) {
+					if (key === "image") {
+						this.category[key] = null;
+						continue;
+					}
+
+					this.category[key] = this.oldCategory[key] || "";
+				}
+
+				this.imageSrc = this.oldCategory.image ? `${this.BASE_URL}/images/categories/${this.oldCategory.image}` : null;
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => {
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			}, 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.category.$invalid) return;
+
+			this.isBusy = true;
+
+			let data = this.category;
+
+			if (this.category.image) {
+				data = new FormData();
+
+				for (let field in this.category) {
+					data.set(field, this.category[field]);
+				}
+
+				data = [data, { headers: { "Content-Type": "multipart/formdata" } }];
+			}
+
+			try {
+				let action = this.isUpdate ? this.update : this.create;
+
+				let res = await action(data);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				this.getOptions();
+
+				message = this.$t(message, { module: "Category" });
+
+				this.$store.commit("showToast", message);
+
+				this.resetForm();
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("categoryFormModal");
+				}
+
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Categories/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			for (let key in this.category) {
+				this.category[key] = key == "image" ? null : "";
+			}
+
+			this.imageSrc = null;
+
+			this.$store.commit("Categories/setOne", {});
+
+			this.$store.commit("Categories/resetError");
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>

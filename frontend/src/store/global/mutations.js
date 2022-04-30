@@ -1,4 +1,4 @@
-import * as utils from "@/components/ui/utils";
+import * as utils from "@/components/utils";
 
 export const showToast = (_state, message) => {
 	if (!message) return;

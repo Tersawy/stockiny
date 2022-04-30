@@ -78,7 +78,7 @@ import { required, minLength, maxLength } from "vuelidate/lib/validators";
 
 import { validationMixin } from "vuelidate";
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
 export default {
 	name: "Roles",

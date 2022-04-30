@@ -1,4 +1,4 @@
-// import { showToast } from "@/components/ui/utils";
+// import { showToast } from "@/components/utils";
 
 export default {
 	setAll(state, data) {

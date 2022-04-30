@@ -26,63 +26,63 @@
 </template>
 
 <script>
-	const DiscountInput = () => import("@/components/ui/inputs/DiscountInput");
+const DiscountInput = () => import("@/components/inputs/DiscountInput");
 
-	const TaxInput = () => import("@/components/ui/inputs/TaxInput");
+const TaxInput = () => import("@/components/inputs/TaxInput");
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-	const SubUnitsInput = () => import("@/components/ui/inputs/SubUnitsInput");
+const SubUnitsInput = () => import("@/components/inputs/SubUnitsInput");
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-	import { required, numeric, minValue } from "vuelidate/lib/validators";
+import { required, numeric, minValue } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	export default {
-		components: { DiscountInput, TaxInput, DefaultInput, SubUnitsInput, DefaultModal },
+export default {
+	components: { DiscountInput, TaxInput, DefaultInput, SubUnitsInput, DefaultModal },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		props: {
-			namespace: { type: String, required: true },
+	props: {
+		namespace: { type: String, required: true },
 
-			amountType: { type: String, required: true },
+		amountType: { type: String, required: true },
 
-			detail: { type: Object }
-		},
+		detail: { type: Object }
+	},
 
-		validations: {
-			detail: {
-				tax: { numeric, minValue: minValue(0) },
-				taxMethod: { required },
-				discount: { numeric, minValue: minValue(0) },
-				discountMethod: { required },
-				subUnit: { required },
-				subUnitAmount: { required, numeric, minValue: minValue(1) }
-			}
-		},
-
-		computed: {
-			unitLabel() {
-				return this.amountType == "Price" ? "Sale Unit" : "Purchase Unit";
-			}
-		},
-
-		methods: {
-			handleSave(evt) {
-				this.$v.$touch();
-
-				if (this.$v.$invalid) {
-					if (evt) evt.preventDefault();
-					return;
-				}
-
-				this.$emit("done", this.detail);
-
-				this.$bvModal.hide("productDetailModal");
-			}
+	validations: {
+		detail: {
+			tax: { numeric, minValue: minValue(0) },
+			taxMethod: { required },
+			discount: { numeric, minValue: minValue(0) },
+			discountMethod: { required },
+			subUnit: { required },
+			subUnitAmount: { required, numeric, minValue: minValue(1) }
 		}
-	};
+	},
+
+	computed: {
+		unitLabel() {
+			return this.amountType == "Price" ? "Sale Unit" : "Purchase Unit";
+		}
+	},
+
+	methods: {
+		handleSave(evt) {
+			this.$v.$touch();
+
+			if (this.$v.$invalid) {
+				if (evt) evt.preventDefault();
+				return;
+			}
+
+			this.$emit("done", this.detail);
+
+			this.$bvModal.hide("productDetailModal");
+		}
+	}
+};
 </script>

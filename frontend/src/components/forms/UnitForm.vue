@@ -33,161 +33,161 @@
 </template>
 
 <script>
-	import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex";
 
-	import { required, minLength, maxLength, minValue, numeric, requiredIf } from "vuelidate/lib/validators";
+import { required, minLength, maxLength, minValue, numeric, requiredIf } from "vuelidate/lib/validators";
 
-	import { validationMixin } from "vuelidate";
+import { validationMixin } from "vuelidate";
 
-	const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-	const DefaultSelect = () => import("../ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/inputs/DefaultSelect");
 
-	const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
-	export default {
-		components: { DefaultModal, DefaultInput, DefaultSelect },
+export default {
+	components: { DefaultModal, DefaultInput, DefaultSelect },
 
-		mixins: [validationMixin],
+	mixins: [validationMixin],
 
-		data: () => ({
-			unit: { name: "", shortName: "", value: 1, operator: "*", base: null },
+	data: () => ({
+		unit: { name: "", shortName: "", value: 1, operator: "*", base: null },
 
-			isBusy: false,
+		isBusy: false,
 
-			modalSettings: { stayOpen: false, showStayOpenBtn: true },
+		modalSettings: { stayOpen: false, showStayOpenBtn: true },
 
-			operatorOptions: [
-				{ name: "Multiply (*)", value: "*" },
-				{ name: "Divide (/)", value: "/" }
-			]
-		}),
+		operatorOptions: [
+			{ name: "Multiply (*)", value: "*" },
+			{ name: "Divide (/)", value: "/" }
+		]
+	}),
 
-		validations: {
-			unit: {
-				name: { required, minLength: minLength(3), maxLength: maxLength(54) },
-				shortName: { required, minLength: minLength(1), maxLength: maxLength(54) },
-				base: {},
-				value: {
-					required: requiredIf(function () {
-						return !!this.unit.base;
-					}),
-					numeric,
-					minValue: minValue(1)
-				},
-				operator: {
-					required: requiredIf(function () {
-						return !!this.unit.base;
-					}),
-					minLength: minLength(1),
-					maxLength: maxLength(1)
-				}
-			}
-		},
-
-		mounted() {
-			this.getBaseOptions();
-		},
-
-		watch: {
-			"unit.base": function (newValue) {
-				if (!newValue) {
-					this.unit.value = 1;
-					this.unit.operator = "*";
-				}
-			}
-		},
-
-		computed: {
-			...mapState({
-				oldUnit: (state) => state.Units.one,
-				baseOptions: (state) => state.Units.baseOptions
-			}),
-
-			isUpdate() {
-				return !!this.oldUnit._id;
+	validations: {
+		unit: {
+			name: { required, minLength: minLength(3), maxLength: maxLength(54) },
+			shortName: { required, minLength: minLength(1), maxLength: maxLength(54) },
+			base: {},
+			value: {
+				required: requiredIf(function () {
+					return !!this.unit.base;
+				}),
+				numeric,
+				minValue: minValue(1)
 			},
-
-			formTitle() {
-				return this.isUpdate ? "Edit Unit" : "Create Unit";
-			}
-		},
-
-		methods: {
-			...mapActions("Units", ["create", "update", "getBaseOptions", "getOptions"]),
-
-			isOpened() {
-				if (this.isUpdate) {
-					for (let key in this.unit) {
-						if (key == "base" && this.oldUnit[key]) {
-							this.unit[key] = this.oldUnit[key]._id || null;
-							continue;
-						}
-
-						this.unit[key] = this.oldUnit[key];
-					}
-
-					this.modalSettings.showStayOpenBtn = false;
-				} else {
-					this.resetForm();
-					this.modalSettings.showStayOpenBtn = true;
-				}
-
-				setTimeout(() => {
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				}, 300);
-			},
-
-			async handleSave(bvt) {
-				bvt.preventDefault();
-
-				this.$v.$touch();
-
-				if (this.$v.unit.$invalid) return;
-
-				this.isBusy = true;
-
-				try {
-					let action = this.isUpdate ? this.update : this.create;
-
-					let res = await action(this.unit);
-
-					let message = "actions.created";
-
-					if (res.status == 200) {
-						message = "actions.updated";
-					}
-
-					message = this.$t(message, { module: "Unit" });
-
-					this.$store.commit("showToast", message);
-
-					this.resetForm();
-
-					this.getBaseOptions();
-					this.getOptions();
-
-					if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
-						return this.$bvModal.hide("unitFormModal");
-					}
-
-					this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
-				} catch (e) {
-					this.$store.commit("Units/setError", e);
-				} finally {
-					this.isBusy = false;
-				}
-			},
-
-			resetForm() {
-				this.unit = { name: "", shortName: "", value: 1, operator: "*", base: null };
-
-				this.$store.commit("Units/setOne", {});
-
-				this.$store.commit("Units/resetError");
-
-				this.$nextTick(this.$v.$reset);
+			operator: {
+				required: requiredIf(function () {
+					return !!this.unit.base;
+				}),
+				minLength: minLength(1),
+				maxLength: maxLength(1)
 			}
 		}
-	};
+	},
+
+	mounted() {
+		this.getBaseOptions();
+	},
+
+	watch: {
+		"unit.base": function (newValue) {
+			if (!newValue) {
+				this.unit.value = 1;
+				this.unit.operator = "*";
+			}
+		}
+	},
+
+	computed: {
+		...mapState({
+			oldUnit: (state) => state.Units.one,
+			baseOptions: (state) => state.Units.baseOptions
+		}),
+
+		isUpdate() {
+			return !!this.oldUnit._id;
+		},
+
+		formTitle() {
+			return this.isUpdate ? "Edit Unit" : "Create Unit";
+		}
+	},
+
+	methods: {
+		...mapActions("Units", ["create", "update", "getBaseOptions", "getOptions"]),
+
+		isOpened() {
+			if (this.isUpdate) {
+				for (let key in this.unit) {
+					if (key == "base" && this.oldUnit[key]) {
+						this.unit[key] = this.oldUnit[key]._id || null;
+						continue;
+					}
+
+					this.unit[key] = this.oldUnit[key];
+				}
+
+				this.modalSettings.showStayOpenBtn = false;
+			} else {
+				this.resetForm();
+				this.modalSettings.showStayOpenBtn = true;
+			}
+
+			setTimeout(() => {
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			}, 300);
+		},
+
+		async handleSave(bvt) {
+			bvt.preventDefault();
+
+			this.$v.$touch();
+
+			if (this.$v.unit.$invalid) return;
+
+			this.isBusy = true;
+
+			try {
+				let action = this.isUpdate ? this.update : this.create;
+
+				let res = await action(this.unit);
+
+				let message = "actions.created";
+
+				if (res.status == 200) {
+					message = "actions.updated";
+				}
+
+				message = this.$t(message, { module: "Unit" });
+
+				this.$store.commit("showToast", message);
+
+				this.resetForm();
+
+				this.getBaseOptions();
+				this.getOptions();
+
+				if (!this.modalSettings.showStayOpenBtn || !this.modalSettings.stayOpen) {
+					return this.$bvModal.hide("unitFormModal");
+				}
+
+				this.$refs?.inputName?.$children[0]?.$children[0]?.focus();
+			} catch (e) {
+				this.$store.commit("Units/setError", e);
+			} finally {
+				this.isBusy = false;
+			}
+		},
+
+		resetForm() {
+			this.unit = { name: "", shortName: "", value: 1, operator: "*", base: null };
+
+			this.$store.commit("Units/setOne", {});
+
+			this.$store.commit("Units/resetError");
+
+			this.$nextTick(this.$v.$reset);
+		}
+	}
+};
 </script>

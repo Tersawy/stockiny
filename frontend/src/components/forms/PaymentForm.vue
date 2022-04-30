@@ -61,21 +61,21 @@
 </template>
 
 <script>
-const DefaultDatePickerInput = () => import("@/components/ui/DefaultDatePickerInput");
+const DefaultDatePickerInput = () => import("@/components/inputs/DefaultDatePickerInput");
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-const DefaultSelect = () => import("@/components/ui/DefaultSelect");
+const DefaultSelect = () => import("@/components/inputs/DefaultSelect");
 
-const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
-const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
 import { required, maxLength, helpers } from "vuelidate/lib/validators";
 
 import { validationMixin } from "vuelidate";
 
-import { showMessage } from "@/components/ui/utils";
+import { showMessage } from "@/components/utils";
 
 import { getDate } from "@/helpers";
 

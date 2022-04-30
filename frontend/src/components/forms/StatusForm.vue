@@ -27,11 +27,11 @@ import { required, maxLength, minLength } from "vuelidate/lib/validators";
 
 import { validationMixin } from "vuelidate";
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-const DefaultTextArea = () => import("@/components/ui/DefaultTextArea");
+const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
-const DefaultModal = () => import("@/components/ui/DefaultModal");
+const DefaultModal = () => import("@/components/DefaultModal");
 
 export default {
 	components: { DefaultModal, DefaultInput, DefaultTextArea },

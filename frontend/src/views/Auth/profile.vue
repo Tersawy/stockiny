@@ -84,11 +84,11 @@ import { required, minLength, maxLength, email, numeric } from "vuelidate/lib/va
 
 import { validationMixin } from "vuelidate";
 
-const DefaultInput = () => import("@/components/ui/DefaultInput");
+const DefaultInput = () => import("@/components/inputs/DefaultInput");
 
-const InputError = () => import("@/components/ui/InputError");
+const InputError = () => import("@/components/InputError");
 
-const DragAndDropImage = () => import("@/components/ui/DragAndDropImage");
+const DragAndDropImage = () => import("@/components/inputs/DragAndDropImage");
 
 export default {
 	name: "Profile",
