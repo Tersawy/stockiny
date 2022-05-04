@@ -132,15 +132,21 @@ export default function dataTableMixin(namespace) {
 			queries() {
 				let queries = `?page=${this.page}&perPage=${this.perPage}&search=${this.search}&sortBy=${this.fieldSort}&sortDir=${this.dirSort}`;
 
-				for (let field in this.filterationFields) {
-					queries += `&${field}=${this.filterationFields[field]}`;
+				if (this.filterationFields && Object.keys(this.filterationFields).length) {
+					for (let field in this.filterationFields) {
+						if (this.filterationFields[field] != "") {
+							queries += `&${field}=${this.filterationFields[field]}`;
+						}
+					}
 				}
 
-				queries += "&searchIn=";
+				if (this.searchIn && Object.keys(this.searchIn).length) {
+					queries += "&searchIn=";
 
-				for (let field in this.searchIn) {
-					if (this.searchIn[field]) {
-						queries += `${field},`;
+					for (let field in this.searchIn) {
+						if (this.searchIn[field]) {
+							queries += `${field},`;
+						}
 					}
 				}
 
@@ -179,22 +185,26 @@ export default function dataTableMixin(namespace) {
 				this.finallData();
 			},
 
-			finallData() {
+			async finallData() {
 				this.tableIsBusy = true;
 
-				this.getAll(this.queries);
+				await this.getAll(this.queries);
 
-				this.$nextTick(() => {
-					this.tableIsBusy = false;
-				});
+				this.$nextTick(() => (this.tableIsBusy = false));
+			},
+
+			async handleFilter(data, finished) {
+				this.filterationFields = data;
+
+				await this.finallData();
+
+				finished(); // tell filteration component that we are done to reset busy state
 			},
 
 			edit(item) {
 				this.setOne({ ...item });
 
-				this.$nextTick(() => {
-					this.$bvModal.show(this.formId);
-				});
+				this.$nextTick(() => this.$bvModal.show(this.formId));
 			},
 
 			toTrash(item) {

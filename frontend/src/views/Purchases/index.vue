@@ -1,12 +1,16 @@
 <template>
 	<main-content :breads="breads">
-		<TableHeaderControls
+		<table-header-controls
 			:controls="tableControls"
 			@btnCreateClicked="btnCreateClicked"
 			@btnImportClicked="btnImportClicked"
 			@btnExcelClicked="btnExcelClicked"
 			@btnPdfClicked="btnPdfClicked"
-		/>
+		>
+			<template #button-search-in>
+				<InvoiceButtonFilter :statuses="statuses" :warehouses="warehouseOptions" :suppliers="supplierOptions" @mounted="filterMounted" @filter="handleFilter" />
+			</template>
+		</table-header-controls>
 
 		<div style="overflow-x: auto" :class="`border-right border-left ${hideTableInPrint ? 'd-print-none' : ''}`">
 			<b-table
@@ -134,10 +138,14 @@ const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
 const Purchase = () => import("@/components/Purchase");
 
+const InvoiceButtonFilter = () => import("@/components/InvoiceButtonFilter");
+
+import { mapState } from "vuex";
+
 export default {
 	name: "Purchases",
 
-	components: { Purchase, InvoiceStatus, DateStr, ChangeIcon, CheckCircleOutlineIcon },
+	components: { Purchase, InvoiceStatus, DateStr, InvoiceButtonFilter, ChangeIcon, CheckCircleOutlineIcon },
 
 	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
 
@@ -167,14 +175,16 @@ export default {
 		hideTableInPrint: false
 	}),
 
-	async mounted() {
-		await this.getStatuses();
+	mounted() {
+		this.getStatuses();
 	},
 
 	computed: {
-		statuses() {
-			return this.$store.state.Purchases.statuses;
-		}
+		...mapState({
+			warehouseOptions: (s) => s.Warehouses.options,
+			supplierOptions: (s) => s.Suppliers.options,
+			statuses: (s) => s.Purchases.statuses
+		})
 	},
 
 	methods: {
@@ -184,6 +194,18 @@ export default {
 
 		status(status, statusOption) {
 			return { effected: status._id == statusOption._id };
+		},
+
+		async filterMounted(finished) {
+			let suppliers = this.$store.dispatch("Suppliers/getOptions");
+
+			let warehouses = this.$store.dispatch("Warehouses/getOptions");
+
+			try {
+				await Promise.all([suppliers, warehouses]);
+			} finally {
+				finished();
+			}
 		},
 
 		async changeStatus(item, statusOption) {
