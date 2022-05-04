@@ -26,7 +26,7 @@ generateStatusRoutes({
     }
 });
 
-router.get("/", authFor("read:purchases"), Controller.getPurchases);
+router.get("/", authFor("read:purchases"), validation.getPurchases, Controller.getPurchases);
 
 router.post("/", authFor("create:purchases"), validation.createPurchase, validationHandler, Controller.createPurchase);
 
