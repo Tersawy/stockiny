@@ -6,6 +6,8 @@ const mongoosePagination = require("../plugins/mongoosePagination");
 
 const mongooseSearch = require("../plugins/mongooseSearch");
 
+const mongooseFilter = require("../plugins/mongooseFilter");
+
 const mongoosethrowUniqueError = require("../plugins/mongoosethrowUniqueError");
 
 const consoleColors = require("../utils/consoleColors");
@@ -21,6 +23,8 @@ if (!process.env.DB_NAME) {
 }
 
 mongoose.plugin(mongooseSearch);
+
+mongoose.plugin(mongooseFilter);
 
 mongoose.plugin(mongoosePagination);
 
