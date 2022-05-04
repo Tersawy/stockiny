@@ -9,13 +9,30 @@ const Purchase = require("./Purchase");
 exports.getPurchases = async (req, res) => {
 	let select = "date reference supplier warehouse status total paid paymentStatus";
 
-	let query = Purchase.find({}, select)
+	let filterOptions = { query: req.query, filterationFields: ["date", "supplier", "warehouse", "status"] };
+
+	let paymentStatus = req.query.paymentStatus;
+
+	if (paymentStatus) {
+		if (paymentStatus === "paid") {
+			paymentStatus = { $where: "this.total === this.paid" };
+		} else if (paymentStatus === "unpaid") {
+			paymentStatus = { $where: "this.paid === 0" };
+		} else if (paymentStatus === "partial") {
+			paymentStatus = { $where: "this.paid < this.total && this.paid != 0" };
+		}
+	}
+
+	paymentStatus = paymentStatus || {};
+
+	let query = Purchase.find(paymentStatus, select)
 		.withPagination(req.query)
 		.withSearch(req.query)
+		.withFilter(filterOptions)
 		.populate("supplier warehouse", "name")
 		.populate("status", "name color");
 
-	let counts = Purchase.count().withSearch(req.query);
+	let counts = Purchase.count().withSearch(req.query).withFilter(filterOptions);
 
 	let [docs, total] = await Promise.all([query, counts]);
 
