@@ -3,8 +3,10 @@
 		<b-col cols="12" lg="6" xl="4">
 			<b-form-group class="mb-0">
 				<b-input-group>
-					<b-form-input :placeholder="inputSeachPlaceholder" v-model="controls.search" />
-					<ButtonSearchIn :searchIn="controls.searchIn" />
+					<b-form-input :placeholder="inputSeachPlaceholder" v-model="controls.search" class="search-input" />
+					<slot name="button-search-in">
+						<ButtonSearchIn :searchIn="controls.searchIn" />
+					</slot>
 				</b-input-group>
 			</b-form-group>
 		</b-col>
