@@ -491,6 +491,18 @@ let checkId = {
 
 let updatePurchase = { ...createPurchase, id: checkId };
 
+exports.getPurchases = checkSchema({
+	date: { in: "query", toDate: true },
+
+	warehouse: { in: "query", customSanitizer: { options: (v) => mongoose.Types.ObjectId.isValid(v) ? v : null } },
+
+	supplier: { in: "query", customSanitizer: { options: (v) => mongoose.Types.ObjectId.isValid(v) ? v : null } },
+
+	status: { in: "query", customSanitizer: { options: (v) => mongoose.Types.ObjectId.isValid(v) ? v : null } },
+
+	paymentStatus: { in: "query", customSanitizer: { options: (v) => ["paid", "partial", "unpaid"].includes(v) ? v : null } },
+});
+
 exports.createPurchase = checkSchema(createPurchase);
 
 exports.getPurchase = checkSchema({ id: checkId });
