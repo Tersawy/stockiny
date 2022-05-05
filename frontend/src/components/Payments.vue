@@ -85,7 +85,10 @@ export default {
 		}
 	},
 	methods: {
-		print() {},
+		print(payment) {
+			this.$emit("print", payment);
+		},
+
 		sendSms() {},
 		sendEmail() {},
 		edit(payment) {
