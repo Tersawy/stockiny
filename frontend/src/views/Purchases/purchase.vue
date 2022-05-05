@@ -229,6 +229,8 @@ export default {
 		},
 
 		details() {
+			if (!this.purchase.details) return [];
+
 			return this.purchase.details.map((item) => {
 				return {
 					...item,
