@@ -27,7 +27,9 @@ export default function dataTableMixin(namespace) {
 			page: 1,
 			sortBy: "createdAt",
 			sortDesc: true,
-			search: ""
+			search: "",
+
+			printsControl: { table: false, item: false }
 		}),
 
 		async beforeRouteEnter(to, from, next) {
@@ -232,6 +234,12 @@ export default function dataTableMixin(namespace) {
 				}
 			},
 
+			hideAllPrints() {
+				for (let print in this.printsControl) {
+					this.printsControl[print] = false;
+				}
+			},
+
 			btnCreateClicked() {
 				this.$bvModal.show(this.formId);
 			},
@@ -245,7 +253,11 @@ export default function dataTableMixin(namespace) {
 			},
 
 			btnPdfClicked() {
-				window.print();
+				this.hideAllPrints();
+
+				this.printsControl.table = true;
+
+				this.$nextTick(() => window.print())
 			}
 		}
 	};
