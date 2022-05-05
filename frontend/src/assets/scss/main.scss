@@ -330,4 +330,9 @@ svg.vue-barcode-element {
 			}
 		}
 	}
+
+	.modal,
+	.modal-backdrop {
+		display: none !important;
+	}
 }
