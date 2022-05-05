@@ -6,6 +6,7 @@
 			@btnImportClicked="btnImportClicked"
 			@btnExcelClicked="btnExcelClicked"
 			@btnPdfClicked="btnPdfClicked"
+			inputSeachPlaceholder="Search by reference"
 		>
 			<template #button-search-in>
 				<InvoiceButtonFilter :statuses="statuses" :warehouses="warehouseOptions" :suppliers="supplierOptions" @mounted="filterMounted" @filter="handleFilter" />
