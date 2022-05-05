@@ -8,6 +8,7 @@
 			@btnPdfClicked="btnPdfClicked"
 			inputSeachPlaceholder="Search by reference"
 			noImport
+			:excelProps="excelProps"
 		>
 			<template #button-search-in>
 				<InvoiceButtonFilter :statuses="statuses" :warehouses="warehouseOptions" :suppliers="supplierOptions" @mounted="filterMounted" @filter="handleFilter" />
@@ -144,6 +145,8 @@ const InvoiceButtonFilter = () => import("@/components/InvoiceButtonFilter");
 
 import { mapState } from "vuex";
 
+import { getDate } from "@/helpers";
+
 export default {
 	name: "Purchases",
 
@@ -174,7 +177,23 @@ export default {
 
 		searchIn: { reference: true, date: false },
 
-		hideTableInPrint: false
+		hideTableInPrint: false,
+
+		excel: {
+			fileName: "Purchases",
+
+			columns: [
+				{ label: "Date", field: "date", dataFormat: getDate },
+				{ label: "Reference", field: "reference" },
+				{ label: "Supplier", field: "supplier.name" },
+				{ label: "Warehouse", field: "warehouse.name" },
+				{ label: "Status", field: "status.name" },
+				{ label: "Total", field: "total" },
+				{ label: "Paid", field: "paid" },
+				{ label: "Due", field: "due" },
+				{ label: "Payment Status", field: "paymentStatus" }
+			]
+		}
 	}),
 
 	mounted() {
@@ -186,7 +205,14 @@ export default {
 			warehouseOptions: (s) => s.Warehouses.options,
 			supplierOptions: (s) => s.Suppliers.options,
 			statuses: (s) => s.Purchases.statuses
-		})
+		}),
+
+		excelProps() {
+			return {
+				...this.excel,
+				data: this.items.map((item) => ({ ...item, due: +item.total - (+item.paid || 0) }))
+			};
+		}
 	},
 
 	methods: {
