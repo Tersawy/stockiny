@@ -20,7 +20,7 @@
 					<ExcelIcon />
 					<span class="d-none d-sm-block ml-1">EXCEL</span>
 				</b-btn>
-				<b-btn variant="info" class="d-inline-flex align-items-center mr-3 mb-3" @click="$emit('btnImportClicked')">
+				<b-btn variant="info" class="d-inline-flex align-items-center mr-3 mb-3" @click="$emit('btnImportClicked')" v-if="!noImport">
 					<CloudIcon />
 					<span class="d-none d-sm-block ml-1">Import</span>
 				</b-btn>
@@ -55,7 +55,10 @@ export default {
 				searchIn: { name: true, reference: true }
 			})
 		},
-		inputSeachPlaceholder: { type: String, default: "Type to search" }
+
+		inputSeachPlaceholder: { type: String, default: "Type to search" },
+
+		noImport: { type: Boolean, default: false }
 	}
 };
 </script>
