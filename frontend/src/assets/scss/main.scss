@@ -280,6 +280,10 @@ svg.vue-barcode-element {
 			border-left: 1px solid #dee2e6 !important;
 		}
 
+		thead {
+			border-left: 1px solid #dee2e6 !important;
+		}
+
 		thead th,
 		thead td {
 			border-bottom-width: 2px;
@@ -290,7 +294,7 @@ svg.vue-barcode-element {
 			background-image: none !important;
 
 			&.b-table-sort-icon-left {
-				padding-left: 0.75rem !important;
+				padding-left: 0.3rem !important;
 			}
 		}
 
@@ -315,6 +319,7 @@ svg.vue-barcode-element {
 
 					&>td:not(.d-print-none) {
 						display: table-cell !important;
+						padding-left: 0rem !important;
 					}
 
 					&>[data-label]::before,

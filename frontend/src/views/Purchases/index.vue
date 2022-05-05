@@ -14,7 +14,7 @@
 			</template>
 		</table-header-controls>
 
-		<div style="overflow-x: auto" :class="`border-right border-left ${hideTableInPrint ? 'd-print-none' : ''}`">
+		<div style="overflow-x: auto" :class="`border-right text-nowrap ${hideTableInPrint ? 'd-print-none' : ''}`">
 			<b-table
 				show-empty
 				stacked="md"
