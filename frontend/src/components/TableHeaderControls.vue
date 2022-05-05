@@ -16,10 +16,11 @@
 					<PdfIcon />
 					<span class="d-none d-sm-block ml-1">PDF</span>
 				</b-btn>
-				<b-btn variant="success" class="d-inline-flex align-items-center mr-3 mb-3" @click="$emit('btnExcelClicked')">
+
+				<vue-excel-xlsx v-bind="excelProps" class="btn btn-success d-inline-flex align-items-center mr-3 mb-3">
 					<ExcelIcon />
 					<span class="d-none d-sm-block ml-1">EXCEL</span>
-				</b-btn>
+				</vue-excel-xlsx>
 				<b-btn variant="info" class="d-inline-flex align-items-center mr-3 mb-3" @click="$emit('btnImportClicked')" v-if="!noImport">
 					<CloudIcon />
 					<span class="d-none d-sm-block ml-1">Import</span>
@@ -42,10 +43,12 @@ import ExcelIcon from "@/components/icons/excel";
 
 import PdfIcon from "@/components/icons/pdf";
 
+import VueExcelXlsx from "vue-excel-xlsx/VueExcelXlsx";
+
 const ButtonSearchIn = () => import("@/components/ButtonSearchIn");
 
 export default {
-	components: { ButtonSearchIn, PlusIcon, CloudIcon, ExcelIcon, PdfIcon },
+	components: { ButtonSearchIn, VueExcelXlsx, PlusIcon, CloudIcon, ExcelIcon, PdfIcon },
 
 	props: {
 		controls: {
@@ -58,7 +61,18 @@ export default {
 
 		inputSeachPlaceholder: { type: String, default: "Type to search" },
 
-		noImport: { type: Boolean, default: false }
+		noImport: { type: Boolean, default: false },
+
+		excelProps: {
+			type: Object,
+			default: () => ({
+				data: [],
+				columns: [],
+				fileName: "locanos",
+				fileType: "xlsx",
+				sheetName: "sheetname"
+			})
+		}
 	}
 };
 </script>
