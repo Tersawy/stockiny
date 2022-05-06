@@ -18,6 +18,10 @@ export default {
 		state.all.total = data.total;
 	},
 
+	setOne(state, doc) {
+		state.one = { ...state.one, ...doc };
+	},
+
 	deleteStatus(state, payload) {
 		state.statuses = state.statuses.filter((status) => status._id != payload._id);
 	},
