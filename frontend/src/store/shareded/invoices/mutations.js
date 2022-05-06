@@ -19,7 +19,11 @@ export default {
 	},
 
 	setOne(state, doc) {
-		state.one = { ...state.one, ...doc };
+		if (doc._id == state.one._id) {
+			state.one = { ...state.one, ...doc };
+		} else {
+			state.one = doc;
+		}
 	},
 
 	deleteStatus(state, payload) {
