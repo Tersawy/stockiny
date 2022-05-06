@@ -510,9 +510,11 @@ export default {
 		 * @returns {Boolean}
 		 */
 		ArePermissionsEqualByAction(action) {
-			let permissionsCount = this.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
+			let onlyMainAction = action + ":";
 
-			let userPermissionsCount = this.user.permissions.reduce((total, permission) => (permission.indexOf(action) > -1 ? total + 1 : total), 0);
+			let permissionsCount = this.permissions.reduce((total, permission) => (permission.indexOf(onlyMainAction) > -1 ? total + 1 : total), 0);
+
+			let userPermissionsCount = this.user.permissions.reduce((total, permission) => (permission.indexOf(onlyMainAction) > -1 ? total + 1 : total), 0);
 
 			return permissionsCount === userPermissionsCount;
 		},
