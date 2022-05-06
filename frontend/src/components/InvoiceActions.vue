@@ -18,7 +18,7 @@
 				</router-link>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="showPayments(invoice)">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="showPayments(invoice)" v-if="hasPayments">
 				<b-icon icon="credit-card" scale="0.8"></b-icon>
 				<span class="mx-2 text-muted">Show Payments</span>
 			</b-dropdown-item>
@@ -28,7 +28,7 @@
 				<span class="mx-2 text-muted">Create Payment</span>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="downloadPaymentsPDF(invoice)">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="downloadPaymentsPDF(invoice)" v-if="hasPayments">
 				<span class="d-flex" style="font-size: 13px">
 					<i class="far fa-file-pdf fa-fw font-weight-300"></i>
 				</span>
@@ -72,6 +72,10 @@ export default {
 
 		effectedStatus() {
 			return this.statuses.find((status) => status.effected);
+		},
+
+		hasPayments() {
+			return this.invoice.paid > 0;
 		}
 	},
 
