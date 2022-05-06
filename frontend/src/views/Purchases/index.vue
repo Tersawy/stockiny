@@ -15,7 +15,11 @@
 			</template>
 		</table-header-controls>
 
-		<div style="overflow-x: auto" :class="`border-right text-nowrap ${hideTableInPrint ? 'd-print-none' : ''}`">
+		<div class="d-none d-print-block w-100" v-if="!printsControl.item">
+			<PrintHeader />
+		</div>
+
+		<div style="overflow-x: auto" :class="`text-nowrap ${printsControl.table ? '' : 'd-print-none'}`">
 			<b-table
 				show-empty
 				stacked="md"
@@ -34,7 +38,14 @@
 				class="mb-0 text-nowrap"
 			>
 				<template #cell(actions)="row">
-					<InvoiceActions :invoice="row.item" :namespace="namespace" invoiceName="Purchase" @toTrash="toTrash" @downloadPDF="downloadPDF" />
+					<InvoiceActions
+						:invoice="row.item"
+						:namespace="namespace"
+						invoiceName="Purchase"
+						@toTrash="toTrash"
+						@downloadPDF="downloadPDF"
+						@downloadPaymentsPDF="printPayments"
+					/>
 				</template>
 
 				<template #cell(index)="row">
@@ -118,11 +129,17 @@
 
 		<PaymentForm :namespace="namespace" />
 
-		<Payments :namespace="namespace" />
-
-		<Purchase v-if="hideTableInPrint" ref="invoicePrinter" class="d-none d-print-block" />
+		<Payments :namespace="namespace" @print="printPayment" />
 
 		<DeleteModal ref="deleteModal" field="Purchase" @ok="moveToTrash" />
+
+		<div class="d-none d-print-block">
+			<Purchase v-if="printsControl.item" />
+
+			<template v-if="printsControl.payment">
+				<PurchasePayment :paymentId="paymentId" />
+			</template>
+		</div>
 	</main-content>
 </template>
 
@@ -141,6 +158,10 @@ const InvoiceStatus = () => import("@/components/InvoiceStatus");
 
 const Purchase = () => import("@/components/Purchase");
 
+const PurchasePayment = () => import("@/components/prints/PurchasePayment");
+
+const PrintHeader = () => import("@/components/prints/layout/PrintHeader");
+
 const InvoiceButtonFilter = () => import("@/components/InvoiceButtonFilter");
 
 import { mapState } from "vuex";
@@ -150,7 +171,7 @@ import { getDate } from "@/helpers";
 export default {
 	name: "Purchases",
 
-	components: { Purchase, InvoiceStatus, DateStr, InvoiceButtonFilter, ChangeIcon, CheckCircleOutlineIcon },
+	components: { Purchase, PurchasePayment, PrintHeader, InvoiceStatus, DateStr, InvoiceButtonFilter, ChangeIcon, CheckCircleOutlineIcon },
 
 	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
 
@@ -177,7 +198,7 @@ export default {
 
 		searchIn: { reference: true, date: false },
 
-		hideTableInPrint: false,
+		printsControl: { table: false, item: false, payment: false },
 
 		excel: {
 			fileName: "Purchases",
@@ -193,7 +214,9 @@ export default {
 				{ label: "Due", field: "due" },
 				{ label: "Payment Status", field: "paymentStatus" }
 			]
-		}
+		},
+
+		paymentId: {}
 	}),
 
 	mounted() {
@@ -204,7 +227,8 @@ export default {
 		...mapState({
 			warehouseOptions: (s) => s.Warehouses.options,
 			supplierOptions: (s) => s.Suppliers.options,
-			statuses: (s) => s.Purchases.statuses
+			statuses: (s) => s.Purchases.statuses,
+			purchase: (s) => s.Purchases.one
 		}),
 
 		excelProps() {
@@ -264,16 +288,47 @@ export default {
 		async downloadPDF(invoice) {
 			await this.$store.dispatch("Purchases/getOne", invoice._id);
 
-			this.hideTableInPrint = true;
+			this.hideAllPrints();
 
-			this.$nextTick(() => {
-				window.print();
+			this.printsControl.item = true;
 
-				window.onfocus = () => {
-					this.hideTableInPrint = false;
-					window.onfocus = () => {};
-				};
-			});
+			setTimeout(() => window.print(), 500);
+		},
+
+		async printPayment(payment) {
+			if (this.purchase) {
+				let res = { payments: this.purchase.payments || [], invoiceId: this.purchase._id };
+
+				await this.$store.dispatch("Purchases/getOne", this.purchase._id);
+
+				this.$store.commit("Purchases/payments", res);
+			}
+
+			this.hideAllPrints();
+
+			this.paymentId = payment._id;
+
+			this.printsControl.payment = true;
+
+			setTimeout(() => window.print(), 500);
+		},
+
+		async printPayments(purchase) {
+			this.$store.commit("Purchases/setOne", purchase);
+
+			let getOne = this.$store.dispatch("Purchases/getOne", this.purchase._id);
+
+			let getPayments = this.$store.dispatch("Purchases/getPayments");
+
+			await Promise.all([getOne, getPayments]);
+
+			this.hideAllPrints();
+
+			this.paymentId = null;
+
+			this.printsControl.payment = true;
+
+			setTimeout(() => window.print(), 500);
 		}
 	}
 };
