@@ -362,18 +362,9 @@ export default {
 
 					await this.getRole(roleId);
 
-					setTimeout(() => {
-						// remove this line to avoid old permissions stay in the form
-						// let permissions = new Set([...this.rolePermissions, ...((this.isUpdate && this.oldUser.permissions) || [])]); // merge permissions by Set to avoid duplicates
+					this.user.permissions = [...this.rolePermissions];
 
-						if (this.roleLoaded) {
-							this.user.permissions = [...this.rolePermissions];
-						} else {
-							this.roleLoaded = true;
-						}
-
-						this.roleLoading = false;
-					}, 1000);
+					this.roleLoading = false;
 				}
 			},
 			deep: true
