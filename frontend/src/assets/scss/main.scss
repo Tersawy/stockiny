@@ -274,19 +274,21 @@ svg.vue-barcode-element {
 	}
 
 	.table.b-table {
-		border-bottom: 1px solid #dee2e6 !important;
+		border: 1px solid #dee2e6 !important;
+		border-top: none !important;
 
-		td:not(:last-child) {
+		td:not(:first-child) {
 			border-left: 1px solid #dee2e6 !important;
 		}
 
 		thead {
-			border-left: 1px solid #dee2e6 !important;
-		}
+			border-top: none !important;
 
-		thead th,
-		thead td {
-			border-bottom-width: 2px;
+			th,
+			td {
+				border-bottom-width: 1px;
+				border-top: none !important;
+			}
 		}
 
 		&>thead>tr>[aria-sort],

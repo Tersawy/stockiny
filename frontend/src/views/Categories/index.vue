@@ -8,7 +8,7 @@
 			@btnPdfClicked="btnPdfClicked"
 		/>
 
-		<div style="overflow-x: auto" class="border-right text-nowrap">
+		<div style="overflow-x: auto" class="text-nowrap">
 			<b-table
 				show-empty
 				stacked="md"
