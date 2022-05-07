@@ -62,22 +62,28 @@ exports.createPurchase = async (req, res) => {
 
 	session.startTransaction();
 
-	let updates = [purchase.save()];
+	// This fix => ParallelSaveError: Can't save() the same doc multiple times in parallel
+	let productsUpdated = [];
 
 	for (let detail of purchase.details) {
 		let product = throwIfNotValidDetail(detail, products);
+
+		// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
+		let updatedProduct = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+
+		product = updatedProduct || product;
 
 		if (status.effected) {
 			let quantity = detail.stock;
 
 			product.addToStock({ warehouse, quantity, variant: detail.variant });
 
-			updates.push(product.save());
+			if (!updatedProduct) productsUpdated.push(product);
 		}
 	}
 
 	try {
-		await Promise.all(updates);
+		await Promise.all([purchase.save(), ...productsUpdated.map((product) => product.save())]);
 
 		await session.commitTransaction();
 
