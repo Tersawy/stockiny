@@ -26,7 +26,7 @@
 				hover
 				sort-icon-left
 				:busy="tableIsBusy"
-				:items="items"
+				:items="invoices"
 				:fields="fields"
 				:current-page="1"
 				:per-page="perPage"
@@ -34,7 +34,7 @@
 				:sort-desc.sync="sortDesc"
 				@context-changed="contextChanged"
 				:filter="search"
-				:filter-function="() => items"
+				:filter-function="() => invoices"
 				class="mb-0 text-nowrap"
 			>
 				<template #cell(actions)="row">
@@ -105,18 +105,12 @@
 								<ChangeIcon scale="1" v-b-tooltip title="Change Status" />
 							</template>
 							<b-overlay :show="item.status.loading" spinner-variant="secondary" spinner-small>
-								<div class="d-flex justify-content-between px-3 py-2 border-bottom" v-for="statusOption in statuses" :key="statusOption._id">
+								<div class="d-flex justify-content-between px-3 py-2 border-bottom" v-for="status in item.statuses" :key="status._id">
 									<div class="d-flex align-items-center">
-										<InvoiceStatus :status="statusOption" />
-										<CheckCircleOutlineIcon v-if="statusOption.effected" scale="0.7" class="ml-1" />
+										<InvoiceStatus :status="status" />
+										<CheckCircleOutlineIcon v-if="status.effected" scale="0.7" class="ml-1" />
 									</div>
-									<b-form-checkbox
-										switch
-										class="ml-4"
-										:disabled="item.status._id == statusOption._id"
-										v-model="status(item.status, statusOption).effected"
-										@change="changeStatus(item, statusOption)"
-									></b-form-checkbox>
+									<b-form-checkbox switch class="ml-4" :disabled="status.selected" v-model="status.selected" @change="changeStatus(item, status)"></b-form-checkbox>
 								</div>
 							</b-overlay>
 						</b-dropdown>
@@ -236,16 +230,20 @@ export default {
 				...this.excel,
 				data: this.items.map((item) => ({ ...item, due: +item.total - (+item.paid || 0) }))
 			};
+		},
+
+		invoices() {
+			return this.items.map((item) => {
+				item.statuses = this.statuses.map((status) => ({ ...status, selected: item.status._id == status._id, loading: false }));
+
+				return item;
+			});
 		}
 	},
 
 	methods: {
 		getStatuses() {
 			return this.$store.dispatch("Purchases/getStatuses");
-		},
-
-		status(status, statusOption) {
-			return { effected: status._id == statusOption._id };
 		},
 
 		async filterMounted(finished) {
@@ -260,17 +258,19 @@ export default {
 			}
 		},
 
-		async changeStatus(item, statusOption) {
+		async changeStatus(item, status) {
 			item.status.loading = true;
 
 			try {
-				await this.$store.dispatch("Purchases/changeStatus", { invoiceId: item._id, statusId: statusOption._id });
+				await this.$store.dispatch("Purchases/changeStatus", { invoiceId: item._id, statusId: status._id });
 
-				item.status = { ...statusOption, loading: false };
+				item.status = Object.assign(item.status, status);
 
 				this.$store.commit("showMessage");
 			} catch (e) {
 				this.$store.commit("showMessage", { error: true });
+
+				status.selected = false;
 			} finally {
 				item.status.loading = false;
 			}
