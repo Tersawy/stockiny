@@ -83,7 +83,7 @@ exports.createPurchase = async (req, res) => {
 	}
 
 	try {
-		await Promise.all([purchase.save(), ...productsUpdated.map((product) => product.save())]);
+		await Promise.all([purchase.save({ session }), ...productsUpdated.map((product) => product.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -252,7 +252,7 @@ exports.updatePurchase = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		await Promise.all([purchase.save(), ...productsUpdated.map((product) => product.save())]);
+		await Promise.all([purchase.save({ session }), ...productsUpdated.map((product) => product.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -301,7 +301,9 @@ exports.changePurchaseStatus = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		await Promise.all([purchase.save(), ...updates.map((p) => p.save())]);
+		// MongoServerError: Transaction numbers are only allowed on a replica set member or mongos
+		// https://stackoverflow.com/questions/51461952/mongodb-v4-0-transaction-mongoerror-transaction-numbers-are-only-allowed-on-a
+		await Promise.all([purchase.save({ session }), ...updates.map((p) => p.save({ session }))]);
 
 		await session.commitTransaction();
 
