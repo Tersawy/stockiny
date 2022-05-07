@@ -13,17 +13,9 @@ exports.getPurchases = async (req, res) => {
 
 	let paymentStatus = req.query.paymentStatus;
 
-	if (paymentStatus) {
-		if (paymentStatus === "paid") {
-			paymentStatus = { $where: "this.total === this.paid" };
-		} else if (paymentStatus === "unpaid") {
-			paymentStatus = { $where: "this.paid === 0" };
-		} else if (paymentStatus === "partial") {
-			paymentStatus = { $where: "this.paid < this.total && this.paid != 0" };
-		}
-	}
+	let queries = { paid: "this.total === this.paid", unpaid: "this.paid === 0", partial: "this.paid < this.total && this.paid != 0" }
 
-	paymentStatus = paymentStatus || {};
+	paymentStatus = (Object.keys(queries).includes(paymentStatus) && { $where: queries[paymentStatus] } || {});
 
 	let query = Purchase.find(paymentStatus, select)
 		.withPagination(req.query)
