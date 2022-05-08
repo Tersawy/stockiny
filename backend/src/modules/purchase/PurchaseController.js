@@ -262,7 +262,11 @@ exports.changePurchaseStatus = async (req, res) => {
 	const { status } = req.body;
 
 	// get product in detail to update stock
-	let purchase = await Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock").populate("status", "effected");
+	let purchase = await Purchase.findById(req.params.id)
+		.populate("details.subUnit", "operator value")
+		.populate("details.unit", "name")
+		.populate("details.product", "name variants._id variants.stock variants.name")
+		.populate("status", "effected");
 
 	if (!purchase) throw notFound();
 
@@ -270,10 +274,23 @@ exports.changePurchaseStatus = async (req, res) => {
 	// because maybe the same product is in the details array more than one time with different variant
 	let updates = [];
 
+	let errors = [];
+
 	for (let detail of purchase.details) {
 		let product = updates.find((p) => p._id.toString() === detail.product._id.toString());
 
 		let updatedProduct = product || detail.product;
+
+		// get real stock before any operation
+		let variant = detail.product.getVariantById(detail.variant);
+
+		let stockBefore = 0;
+
+		if (variant) {
+			let stock = variant.getStock(purchase.warehouse);
+
+			stockBefore = (stock && stock.quantity) || stockBefore;
+		}
 
 		if (purchase.status && purchase.status.effected) {
 			detail.product.subtractFromStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
@@ -283,8 +300,23 @@ exports.changePurchaseStatus = async (req, res) => {
 			detail.product.addToStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
 		}
 
+		// check stock if less than 0
+		if (variant) {
+			let stock = variant.getStock(purchase.warehouse);
+
+			let stockAfter = (stock && stock.quantity) || 0; // this because maybe variant doesn't have a stock
+
+			if (stockAfter < 0) {
+				let error = { type: "quantity", variantName: variant.name, productName: detail.product.name, unitName: detail.unit.name, stockAfter, stockBefore };
+
+				errors.push(error);
+			}
+		}
+
 		if (!product) updates.push(updatedProduct);
 	}
+
+	if (errors.length > 0) throw createError({ type: "quantity", errors }, 422);
 
 	purchase.status = status._id;
 
