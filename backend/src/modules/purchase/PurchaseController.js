@@ -307,7 +307,7 @@ exports.changePurchaseStatus = async (req, res) => {
 			let stockAfter = (stock && stock.quantity) || 0; // this because maybe variant doesn't have a stock
 
 			if (stockAfter < 0) {
-				let error = { type: "quantity", variantName: variant.name, productName: detail.product.name, unitName: detail.unit.name, stockAfter, stockBefore };
+				let error = { variantName: variant.name, productName: detail.product.name, unitName: detail.unit.name, stockAfter, stockBefore };
 
 				errors.push(error);
 			}
