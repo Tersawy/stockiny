@@ -134,6 +134,34 @@
 				<PurchasePayment :paymentId="paymentId" />
 			</template>
 		</div>
+
+		<default-modal
+			id="quantityErrors"
+			:settings="{ showStayOpenBtn: false, showOkBtn: false }"
+			title="Quantity Errors"
+			:modalProps="{ headerClass: 'py-3', centered: true }"
+		>
+			<template #btn-close="{ close }">
+				<b-btn variant="outline-primary" size="sm" @click="close">Close</b-btn>
+			</template>
+
+			<b-table :fields="quantityErrors.tableFields" :items="quantityErrors.errors">
+				<template #cell(productName)="row">
+					<div class="mb-2">
+						<strong>{{ row.value }}</strong>
+						<small class="text-nowrap text-muted"> ( {{ row.item.variantName }} ) </small>
+					</div>
+				</template>
+
+				<template #cell(stockBefore)="row">
+					<b-badge variant="outline-warning"> {{ row.value | floating }} {{ row.item.unitName }} </b-badge>
+				</template>
+
+				<template #cell(stockAfter)="row">
+					<b-badge variant="outline-danger"> {{ row.value | floating }} {{ row.item.unitName }} </b-badge>
+				</template>
+			</b-table>
+		</default-modal>
 	</main-content>
 </template>
 
@@ -158,6 +186,8 @@ const PrintHeader = () => import("@/components/prints/layout/PrintHeader");
 
 const InvoiceButtonFilter = () => import("@/components/InvoiceButtonFilter");
 
+const DefaultModal = () => import("@/components/DefaultModal");
+
 import { mapState } from "vuex";
 
 import { getDate } from "@/helpers";
@@ -165,7 +195,7 @@ import { getDate } from "@/helpers";
 export default {
 	name: "Purchases",
 
-	components: { Purchase, PurchasePayment, PrintHeader, InvoiceStatus, DateStr, InvoiceButtonFilter, ChangeIcon, CheckCircleOutlineIcon },
+	components: { Purchase, PurchasePayment, PrintHeader, InvoiceStatus, DateStr, InvoiceButtonFilter, DefaultModal, ChangeIcon, CheckCircleOutlineIcon },
 
 	mixins: [dataTableMixin("Purchases"), invoicePaymentsMixin],
 
@@ -210,7 +240,16 @@ export default {
 			]
 		},
 
-		paymentId: {}
+		paymentId: {},
+
+		quantityErrors: {
+			tableFields: [
+				{ key: "productName", label: "Product" },
+				{ key: "stockBefore", label: "Stock Before" },
+				{ key: "stockAfter", label: "Stock After" }
+			],
+			errors: []
+		}
 	}),
 
 	mounted() {
@@ -269,6 +308,11 @@ export default {
 				this.$store.commit("showMessage");
 			} catch (e) {
 				this.$store.commit("showMessage", { error: true });
+
+				if (e.status == 422 && e.type == "quantity") {
+					this.quantityErrors.errors = e.errors;
+					this.$bvModal.show("quantityErrors");
+				}
 
 				status.selected = false;
 			} finally {
