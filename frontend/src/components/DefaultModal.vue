@@ -7,13 +7,13 @@
 						<slot name="title"> {{ title }} </slot>
 					</span>
 				</div>
-				<b-form-checkbox v-if="settings.showStayOpenBtn" v-model="settings.stayOpen" switch> Stay open </b-form-checkbox>
+				<b-form-checkbox v-if="mSettings.showStayOpenBtn" v-model="mSettings.stayOpen" switch> Stay open </b-form-checkbox>
 				<div class="d-flex align-items-center">
 					<slot name="btn-close" v-bind="{ isBusy, close }">
 						<b-button size="sm" variant="outline-danger" :disabled="isBusy" @click="close"> Close </b-button>
 					</slot>
 					<!-- <b-button v-if="!isBusy" type="submit" variant="outline-primary"> Save </b-button> -->
-					<b-button v-if="settings.showOkBtn" size="sm" variant="outline-primary" :disabled="isBusy" class="d-flex align-items-center ml-2" @click="ok">
+					<b-button v-if="mSettings.showOkBtn" size="sm" variant="outline-primary" :disabled="isBusy" class="d-flex align-items-center ml-2" @click="ok">
 						<slot name="ok">Save</slot>
 						<b-spinner v-if="isBusy" small class="mx-1"></b-spinner>
 					</b-button>
@@ -42,11 +42,7 @@ export default {
 		},
 		settings: {
 			type: Object,
-			default: () => ({
-				stayOpen: false,
-				showStayOpenBtn: true,
-				showOkBtn: true
-			})
+			default: () => ({})
 		},
 		modalProps: {
 			type: Object,
@@ -59,6 +55,12 @@ export default {
 			let defaultProps = { size: "lg" };
 
 			return { ...defaultProps, ...this.modalProps };
+		},
+
+		mSettings() {
+			let defaultProps = { stayOpen: false, showStayOpenBtn: true, showOkBtn: true };
+
+			return { ...defaultProps, ...this.settings };
 		}
 	},
 
