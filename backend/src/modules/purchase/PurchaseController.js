@@ -139,22 +139,22 @@ exports.getPurchase = async (req, res) => {
 exports.getEditPurchase = async (req, res) => {
 	let { id } = req.params;
 
-	let select = "_id date warehouse supplier shipping tax discount discountMethod status reference details notes";
+	let select = "date warehouse supplier shipping tax discount discountMethod status reference details notes";
 
-	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image");
+	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
 
 	let details = [];
 
 	purchase.details.forEach(detail => {
 		let _detail = {
-			amount: detail.amount,
+			amount: detail.unitAmount,
 			quantity: detail.quantity,
 			tax: detail.tax,
 			taxMethod: detail.taxMethod,
 			discount: detail.discount,
 			discountMethod: detail.discountMethod,
 			unit: detail.unit,
-			subUnit: detail.subUnit,
+			subUnit: detail.subUnit._id,
 			variantId: detail.variant
 		};
 

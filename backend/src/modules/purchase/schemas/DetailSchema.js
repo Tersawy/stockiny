@@ -74,6 +74,29 @@ class Detail {
 
 		return isMultiple ? this.quantity * +this.subUnit.value : this.quantity / +this.subUnit.value;
 	}
+
+	/* 
+		* Before accessing the amountUnit, we need to populate the subUnit field first
+		@return amountUnit depends on the main unit (e.g. unit) of the product and the unit of the detail
+	*/
+	get unitAmount() {
+		let amount = +this.amount;
+
+		let subUnitId = this.subUnit._id.toString();
+
+		let mainUnitId = this.unit.toString();
+
+		let subUnitIsMainUnit = mainUnitId === subUnitId;
+
+		if (subUnitIsMainUnit) return amount;
+
+		let isMultiple = this.subUnit.operator === "*";
+
+		// reverse the operator to get the amountUnit depending on the unit (product unit)
+		amount = isMultiple ? amount / +this.subUnit.value : amount * +this.subUnit.value;
+
+		return amount;
+	}
 }
 
 detailSchema.loadClass(Detail);
