@@ -182,19 +182,80 @@ exports.getEditPurchase = async (req, res) => {
 };
 
 exports.updatePurchase = async (req, res) => {
-	let { details, warehouse, status } = req.body;
+	let { details, warehouse, status, warehouseDoc } = req.body;
 
 	// get product in detail to update stock if status effected
-	let purchaseQuery = Purchase.findById(req.params.id).populate("details.subUnit", "_id operator value").populate("details.product", "_id variants._id variants.stock").populate("status", "effected");
+	let purchaseQuery = Purchase.findById(req.params.id)
+		.populate("details.subUnit", "operator value")
+		.populate("details.unit", "name")
+		.populate("details.product", "name variants._id variants.stock variants.name")
+		.populate("status", "effected")
+		.populate("warehouse", "name");
+
 
 	let productIds = details.map((detail) => detail.product);
 
 	// get products for new details
-	let productsQuery = Product.find({ _id: { $in: productIds } }, "_id availableForPurchase unit variants._id variants.availableForPurchase variants.stock");
+	let productsQuery = Product.find({ _id: { $in: productIds } }, "name availableForPurchase unit variants._id variants.availableForPurchase variants.stock variants.name").populate("unit", "name");
 
 	let [purchase, products] = await Promise.all([purchaseQuery, productsQuery]);
 
 	if (!purchase) throw notFound();
+
+	/* ================================================= Get Initial Stock ================================================= */
+	// get initial stock to send stock before update in errors if final stock is less than 0 after save
+	let stocksBefore = [];
+
+	for (let detail of purchase.details) {
+		let variant = detail.product.getVariantById(detail.variant);
+
+		if (variant) {
+			let stock = variant.getStock(purchase.warehouse);
+
+			if (stock) {
+				let _stock = {
+					product: { _id: detail.product._id, name: detail.product.name },
+					variant: { _id: detail.variant._id, name: detail.variant.name },
+					warehouse: { _id: purchase.warehouse._id, name: purchase.warehouse.name },
+					stock: stock.quantity,
+					unitName: detail.unit.name
+				};
+
+				stocksBefore.push(_stock);
+			}
+		}
+	};
+
+	for (let detail of details) {
+		let product = products.find((p) => p._id.toString() === detail.product.toString());
+
+		if (product) {
+			let variant = product.getVariantById(detail.variant);
+
+			if (variant) {
+				let stock = variant.getStock(warehouse);
+
+				const ID = (obj) => typeof obj === "string" ? obj.toString() : obj._id.toString();
+
+				if (stock) {
+					let stockBefore = stocksBefore.find((s) => ID(s.product) === ID(detail.product) && ID(s.variant) === ID(detail.variant) && ID(s.warehouse) === ID(warehouse));
+
+					if (stockBefore) continue;
+
+					let _stock = {
+						product: { _id: product._id, name: product.name },
+						variant: { _id: variant._id, name: variant.name },
+						warehouse: { _id: warehouseDoc._id, name: warehouseDoc.name },
+						stock: stock.quantity,
+						unitName: product.unit.name
+					};
+
+					stocksBefore.push(_stock);
+				}
+			}
+		}
+	};
+	/* ===================================================================================================================== */
 
 	let productsUpdated = [];
 
@@ -206,7 +267,7 @@ exports.updatePurchase = async (req, res) => {
 
 			let product = productUpdated || detail.product;
 
-			product.subtractFromStock({ warehouse: purchase.warehouse, quantity: detail.stock, variant: detail.variant });
+			product.subtractFromStock({ warehouse: purchase.warehouse._id, quantity: detail.stock, variant: detail.variant });
 
 			if (!productUpdated) productsUpdated.push(product);
 		}
@@ -238,6 +299,29 @@ exports.updatePurchase = async (req, res) => {
 			if (!updatedProduct) productsUpdated.push(product);
 		}
 	}
+
+	let errors = [];
+
+	if (productsUpdated.length > 0) {
+		for (let productStock of stocksBefore) {
+			let product = productsUpdated.find((p) => p._id.toString() === productStock.product._id.toString());
+
+			let quantity = product.getVariantById(productStock.variant._id).getStock(productStock.warehouse._id).quantity;
+
+			if (quantity < 0) {
+				errors.push({
+					productName: productStock.product.name,
+					variantName: productStock.variant.name,
+					warehouseName: productStock.warehouse.name,
+					stockBefore: productStock.stock,
+					stockAfter: quantity,
+					unitName: productStock.unitName
+				});
+			}
+		}
+	}
+
+	if (errors.length > 0) throw createError({ type: "quantity", errors }, 422);
 
 	let session = await mongoose.startSession();
 
@@ -416,7 +500,7 @@ let throwIfNotValidDetail = (detail, products) => {
 
 	if (!product.availableForPurchase) throw e("product");
 
-	unit = detail.unit = product.unit;
+	unit = detail.unit = (product.unit._id || product.unit);
 
 	variant = product.getVariantById(detail.variant);
 

@@ -55,12 +55,14 @@ let createPurchase = {
 		},
 
 		custom: {
-			options: async (value) => {
+			options: async (value, { req }) => {
 				if (!value) throw { type: "mongoId", value: "Warehouse" };
 
-				let warehouse = await Warehouse.findById(value, "_id");
+				let warehouse = await Warehouse.findById(value);
 
 				if (!warehouse) throw { type: "notFound", value: "Warehouse" };
+
+				req.body.warehouseDoc = warehouse;
 
 				return true;
 			},
