@@ -71,6 +71,8 @@ class Product extends Model {
 		if (!variant) return;
 
 		variant.addToStock({ quantity, warehouse });
+
+		return this;
 	}
 
 	subtractFromStock({ warehouse, variant, quantity }) {
@@ -79,6 +81,8 @@ class Product extends Model {
 		if (!variant) return;
 
 		variant.subtractFromStock({ quantity, warehouse });
+
+		return this;
 	}
 }
 
