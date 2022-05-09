@@ -7,7 +7,7 @@ const statusSchema = new Schema({
 
     color: { type: String, required: true, trim: true, maxlength: 20, default: "#000000" },
 
-    description: { type: String, required: true, trim: true, minlength: 3, maxlength: 254 },
+    description: { type: String, trim: true, maxlength: 254, default: "" },
 
     effected: { type: Boolean, default: false },
 
