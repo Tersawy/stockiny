@@ -20,6 +20,8 @@ const DefaultTextArea = () => import("@/components/inputs/DefaultTextArea");
 
 const InputError = () => import("@/components/InputError");
 
+const DefaultModal = () => import("@/components/DefaultModal");
+
 import { mapActions, mapState } from "vuex";
 
 import { required, numeric, minLength, maxLength, minValue } from "vuelidate/lib/validators";
@@ -40,7 +42,8 @@ export default (storeNamespace, amountType) => {
 			DefaultSelect,
 			DefaultDatePickerInput,
 			DefaultTextArea,
-			InputError
+			InputError,
+			DefaultModal
 		},
 
 		mixins: [validationMixin],
@@ -62,7 +65,17 @@ export default (storeNamespace, amountType) => {
 					details: []
 				},
 
-				isBusy: false
+				isBusy: false,
+
+				quantityErrors: {
+					tableFields: [
+						{ key: "productName", label: "Product" },
+						{ key: "stockBefore", label: "Stock Before" },
+						{ key: "stockAfter", label: "Stock After" },
+						{ key: "warehouseName", label: "Warehouse" }
+					],
+					errors: []
+				}
 			};
 		},
 
@@ -260,7 +273,12 @@ export default (storeNamespace, amountType) => {
 
 					showMessage({ message: this.$t(message) });
 				} catch (err) {
-					this.$store.commit(`${storeNamespace}/setError`, err);
+					if (err.status == 422 && err.type == "quantity") {
+						this.quantityErrors.errors = err.errors;
+						this.$bvModal.show("quantityErrors");
+					} else {
+						this.$store.commit(`${storeNamespace}/setError`, err);
+					}
 				} finally {
 					this.isBusy = false;
 				}
