@@ -36,7 +36,7 @@ exports.getPurchases = async (req, res) => {
 };
 
 exports.createPurchase = async (req, res) => {
-	let { details, warehouse, status } = req.body;
+	let { details, warehouse, statusDoc } = req.body;
 
 	let purchaseDoc = new Purchase().fill(req.body).addDetails(details).by(req.me._id);
 
@@ -65,7 +65,7 @@ exports.createPurchase = async (req, res) => {
 
 		product = updatedProduct || product;
 
-		if (status.effected) {
+		if (statusDoc.effected) {
 			let quantity = detail.stock;
 
 			product.addToStock({ warehouse, quantity, variant: detail.variant });
@@ -182,7 +182,7 @@ exports.getEditPurchase = async (req, res) => {
 };
 
 exports.updatePurchase = async (req, res) => {
-	let { details, warehouse, status, warehouseDoc } = req.body;
+	let { details, warehouse, statusDoc, warehouseDoc } = req.body;
 
 	// get product in detail to update stock if status effected
 	let purchaseQuery = Purchase.findById(req.params.id)
@@ -284,7 +284,7 @@ exports.updatePurchase = async (req, res) => {
 	}
 
 	// if purchase status effected, update stock
-	if (status.effected) {
+	if (statusDoc.effected) {
 		for (let detail of purchase.details) {
 			let product = products.find((p) => p._id.toString() === detail.product.toString());
 

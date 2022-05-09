@@ -446,7 +446,7 @@ let createPurchase = {
 
 				if (!status) throw { type: "notFound", value: "Status" };
 
-				req.body.status = status;
+				req.body.statusDoc = status;
 
 				return true;
 			}
