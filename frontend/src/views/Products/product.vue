@@ -64,8 +64,7 @@
 
 					<!-- Product Notes -->
 					<b-row>
-						<b-col :cols="product.notes ? 6 : 12" class="d-none d-lg-block">
-							<div class="d-flex w-100 align-items-center justify-content-center"></div>
+						<b-col :cols="product.notes ? 6 : 12" class="d-none d-lg-block mx-auto">
 							<Barcode :value="product.code" :format="product.barcodeType" :flat="barcodeTypeFlat" />
 						</b-col>
 						<b-col v-if="product.notes" class="product-field py-2 striped mt-0 mt-sm-3 mt-lg-0">
