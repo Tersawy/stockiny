@@ -79,14 +79,20 @@ const routes = [
 	{
 		path: "/sales/create",
 		name: "SaleCreate",
-		component: () => /* webpackChunkName: "SaleCreate" */ import("@/views/Sales/form"),
+		component: () => /* webpackChunkName: "SaleCreate" */ import("@/views/Sales/saleForm"),
 		meta: { auth: true, permissions: ["create:sales"] }
 	},
 	{
 		path: "/sales/:id/edit",
 		name: "SaleEdit",
-		component: () => /* webpackChunkName: "SaleEdit" */ import("@/views/Sales/form"),
+		component: () => /* webpackChunkName: "SaleEdit" */ import("@/views/Sales/saleForm"),
 		meta: { auth: true, permissions: ["edit:sales"] }
+	},
+	{
+		path: "/sales/:id",
+		name: "Sale",
+		component: () => /* webpackChunkName: "Sale" */ import("@/views/Sales/sale"),
+		meta: { auth: true, permissions: ["show:sales"] }
 	},
 	{
 		path: "/sales-return",
