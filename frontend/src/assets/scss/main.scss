@@ -7,7 +7,7 @@ $font-size-lg: $font-size-base * 1.25;
 $font-size-sm: $font-size-base * 0.8;
 // $font-family-base: "Open Sans", sans-serif;
 $font-family-base: "Poppins",
-sans-serif;
+	sans-serif;
 
 $input-btn-focus-width: 0.06rem;
 $btn-focus-box-shadow: none !important;
@@ -46,27 +46,27 @@ body {
 }
 
 $fontWeightSizes: 100,
-200,
-300,
-400,
-500,
-600,
-700,
-800,
-900;
+	200,
+	300,
+	400,
+	500,
+	600,
+	700,
+	800,
+	900;
 
 @each $size in $fontWeightSizes {
 	.font-weight-#{$size} {
-		font-weight: $size !important;
+		font-weight: $size  !important;
 	}
 }
 
 $marginSizes: 10,
-20,
-30,
-40,
-50,
-60;
+	20,
+	30,
+	40,
+	50,
+	60;
 
 @each $size in $marginSizes {
 	.m-#{$size}px {
@@ -95,11 +95,11 @@ $marginSizes: 10,
 }
 
 $paddingSizes: 10,
-20,
-30,
-40,
-50,
-60;
+	20,
+	30,
+	40,
+	50,
+	60;
 
 @each $size in $paddingSizes {
 	.p-#{$size}px {
@@ -386,4 +386,8 @@ svg.vue-barcode-element {
 	.text-print-right {
 		text-align: right !important;
 	}
+}
+
+.position-unset {
+	position: unset !important;
 }
