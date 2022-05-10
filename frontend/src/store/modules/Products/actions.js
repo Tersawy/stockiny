@@ -27,6 +27,26 @@ export default {
 		return data;
 	},
 
+	async changeSaleReturnAvailability({ commit }, payload) {
+		let data = await axios.post(`/products/${payload.productId}/change-sale-return-availability`, payload);
+
+		data.productId = payload.productId;
+
+		commit("setSaleReturnAvailability", data);
+
+		return data;
+	},
+
+	async changePurchaseReturnAvailability({ commit }, payload) {
+		let data = await axios.post(`/products/${payload.productId}/change-purchase-return-availability`, payload);
+
+		data.productId = payload.productId;
+
+		commit("setPurchaseReturnAvailability", data);
+
+		return data;
+	},
+
 	async changeVariantSaleAvailability({ commit }, payload) {
 		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-sale-availability`, payload);
 
@@ -43,6 +63,26 @@ export default {
 		data.productId = payload.productId;
 
 		commit("setVariantPurchaseAvailability", data);
+
+		return data;
+	},
+
+	async changeVariantSaleReturnAvailability({ commit }, payload) {
+		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-sale-return-availability`, payload);
+
+		data.productId = payload.productId;
+
+		commit("setVariantSaleReturnAvailability", data);
+
+		return data;
+	},
+
+	async changeVariantPurchaseReturnAvailability({ commit }, payload) {
+		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-purchase-return-availability`, payload);
+
+		data.productId = payload.productId;
+
+		commit("setVariantPurchaseReturnAvailability", data);
 
 		return data;
 	},

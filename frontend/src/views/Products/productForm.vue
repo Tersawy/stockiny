@@ -118,12 +118,19 @@
 					<!-- Product Controls -->
 					<b-col :class="{ 'mt-4': !isUpdate }">
 						<b-card header="Product Controls">
-							<b-row cols="1" cols-md="2" cols-lg="1">
-								<b-col>
-									<b-form-checkbox v-model="product.availableForSale" switch class="mx-3 mb-3 mb-md-0 mb-lg-3 text-nowrap"> Is Available For Sale ? </b-form-checkbox>
+							<p>Is Available For </p>
+							<b-row cols="1" cols-sm="2" cols-md="4" cols-lg="2">
+								<b-col class="mb-3 mb-md-0 mb-lg-3">
+									<b-form-checkbox v-model="product.availableForSale" switch class="mr-3 text-nowrap">Sale ? </b-form-checkbox>
 								</b-col>
-								<b-col>
-									<b-form-checkbox v-model="product.availableForPurchase" switch class="mx-3 text-nowrap"> Is Available For Purchase ? </b-form-checkbox>
+								<b-col class="mb-3 mb-md-0 mb-lg-3">
+									<b-form-checkbox v-model="product.availableForPurchase" switch class="mr-3 text-nowrap">Purchase ? </b-form-checkbox>
+								</b-col>
+								<b-col class="mb-3 mb-md-0 mb-lg-3">
+									<b-form-checkbox v-model="product.availableForSaleReturn" switch class="mr-3 text-nowrap">Sale Return ? </b-form-checkbox>
+								</b-col>
+								<b-col lg="12" xl="6">
+									<b-form-checkbox v-model="product.availableForPurchaseReturn" switch class="mr-3 text-nowrap">Purchase Return ? </b-form-checkbox>
 								</b-col>
 							</b-row>
 						</b-card>
@@ -203,6 +210,8 @@ export default {
 				images: [],
 				availableForSale: true,
 				availableForPurchase: true,
+				availableForSaleReturn: true,
+				availableForPurchaseReturn: true,
 				variants: [],
 				note: null
 			},

@@ -10,7 +10,7 @@
 		<b-row class="mt-4">
 			<b-col cols="12" lg="8">
 				<!-- Product Details -->
-				<b-card>
+				<b-card class="h-100">
 					<template #header>
 						<div class="d-flex justify-content-between align-items-center">
 							<span>Product Details</span>
@@ -99,15 +99,26 @@
 
 					<!-- Product Controls -->
 					<b-card header="Product Controls" class="mt-4">
-						<b-row cols="1" cols-md="2" cols-lg="1">
-							<b-col>
-								<b-form-checkbox @change="changeSaleAvailability" v-model="product.availableForSale" switch class="mx-3 mb-3 mb-md-0 mb-lg-3 text-nowrap">
-									Is Available For Sale ?
+						<p>Is Available For </p>
+						<b-row cols="1" cols-sm="2" cols-md="4" cols-lg="2">
+							<b-col class="mb-3">
+								<b-form-checkbox @change="changeSaleAvailability" v-model="product.availableForSale" switch class="mr-3 text-nowrap">
+									Sale ?
 								</b-form-checkbox>
 							</b-col>
-							<b-col>
-								<b-form-checkbox @change="changePurchaseAvailability" v-model="product.availableForPurchase" switch class="mx-3 text-nowrap">
-									Is Available For Purchase ?
+							<b-col class="mb-3">
+								<b-form-checkbox @change="changePurchaseAvailability" v-model="product.availableForPurchase" switch class="mr-3 text-nowrap">
+									Purchase ?
+								</b-form-checkbox>
+							</b-col>
+							<b-col class="mb-3">
+								<b-form-checkbox @change="changeSaleReturnAvailability" v-model="product.availableForSaleReturn" switch class="mr-3 text-nowrap">
+									Sale Return ?
+								</b-form-checkbox>
+							</b-col>
+							<b-col lg="12" xl="6">
+								<b-form-checkbox @change="changePurchaseReturnAvailability" v-model="product.availableForPurchaseReturn" switch class="mr-3 text-nowrap">
+									Purchase Return ?
 								</b-form-checkbox>
 							</b-col>
 						</b-row>
@@ -187,6 +198,16 @@
 											<span class="font-weight-bold mr-2 mr-md-3 pr-4 pr-md-0"> Available For Purchase: </span>
 											<!-- eslint-disable-next-line -->
 											<b-form-checkbox class="ml-1 ml-md-0" @change="changeVariantPurchaseAvailability($event, variant)" v-model="variant.availableForPurchase" switch />
+										</b-col>
+										<b-col class="py-2 product-field d-flex" :class="{ 'striped striped-md-none': variant.updatedAt }">
+											<span class="font-weight-bold mr-5 mr-md-3 pr-4 pr-md-0"> Available For Sale Return: </span>
+											<!-- eslint-disable-next-line -->
+											<b-form-checkbox @change="changeVariantSaleReturnAvailability($event, variant)" v-model="variant.availableForSaleReturn" switch />
+										</b-col>
+										<b-col class="py-2 product-field d-flex" :class="{ 'striped striped-md-none': !variant.updatedAt, 'striped-md': variant.updatedAt }">
+											<span class="font-weight-bold mr-2 mr-md-3 pr-4 pr-md-0"> Available For Purchase Return: </span>
+											<!-- eslint-disable-next-line -->
+											<b-form-checkbox class="ml-1 ml-md-0" @change="changeVariantPurchaseReturnAvailability($event, variant)" v-model="variant.availableForPurchaseReturn" switch />
 										</b-col>
 									</b-row>
 									<template v-if="Array.isArray(variant.stock)">
@@ -442,6 +463,32 @@
 				}
 			},
 
+			async changeSaleReturnAvailability(availableForSaleReturn) {
+				try {
+					let data = { availableForSaleReturn, productId: this.productId };
+
+					await this.$store.dispatch("Products/changeSaleReturnAvailability", data);
+
+					this.$store.commit("showMessage");
+				} catch (error) {
+					console.log(error);
+					this.$store.commit("showMessage", { error: true });
+				}
+			},
+
+			async changePurchaseReturnAvailability(availableForPurchaseReturn) {
+				try {
+					let data = { availableForPurchaseReturn, productId: this.productId };
+
+					await this.$store.dispatch("Products/changePurchaseReturnAvailability", data);
+
+					this.$store.commit("showMessage");
+				} catch (error) {
+					console.log(error);
+					this.$store.commit("showMessage", { error: true });
+				}
+			},
+
 			async changeVariantSaleAvailability(availableForSale, variant) {
 				try {
 					let data = { availableForSale, productId: this.productId, variantId: variant._id };
@@ -460,6 +507,32 @@
 					let data = { availableForPurchase, productId: this.productId, variantId: variant._id };
 
 					await this.$store.dispatch("Products/changeVariantPurchaseAvailability", data);
+
+					this.$store.commit("showMessage");
+				} catch (error) {
+					console.log(error);
+					this.$store.commit("showMessage", { error: true });
+				}
+			},
+
+			async changeVariantSaleReturnAvailability(availableForSaleReturn, variant) {
+				try {
+					let data = { availableForSaleReturn, productId: this.productId, variantId: variant._id };
+
+					await this.$store.dispatch("Products/changeVariantSaleReturnAvailability", data);
+
+					this.$store.commit("showMessage");
+				} catch (error) {
+					console.log(error);
+					this.$store.commit("showMessage", { error: true });
+				}
+			},
+
+			async changeVariantPurchaseReturnAvailability(availableForPurchaseReturn, variant) {
+				try {
+					let data = { availableForPurchaseReturn, productId: this.productId, variantId: variant._id };
+
+					await this.$store.dispatch("Products/changeVariantPurchaseReturnAvailability", data);
 
 					this.$store.commit("showMessage");
 				} catch (error) {

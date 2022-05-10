@@ -398,6 +398,24 @@ exports.changeSaleAvailability = async (req, res) => {
 	res.json({ availableForSale: product.availableForSale });
 };
 
+exports.changeSaleReturnAvailability = async (req, res) => {
+	const { id } = req.params;
+
+	const { availableForSaleReturn } = req.body;
+
+	let product = await Product.findById(id, "availableForSaleReturn");
+
+	if (!product) throw notFound();
+
+	product.availableForSaleReturn = availableForSaleReturn;
+
+	product.updatedBy = req.me._id;
+
+	await product.save();
+
+	res.json({ availableForSaleReturn: product.availableForSaleReturn });
+};
+
 exports.changePurchaseAvailability = async (req, res) => {
 	const { id } = req.params;
 
@@ -414,6 +432,24 @@ exports.changePurchaseAvailability = async (req, res) => {
 	await product.save();
 
 	res.json({ availableForPurchase: product.availableForPurchase });
+};
+
+exports.changePurchaseReturnAvailability = async (req, res) => {
+	const { id } = req.params;
+
+	const { availableForPurchaseReturn } = req.body;
+
+	let product = await Product.findById(id, "availableForPurchaseReturn");
+
+	if (!product) throw notFound();
+
+	product.availableForPurchaseReturn = availableForPurchaseReturn;
+
+	product.updatedBy = req.me._id;
+
+	await product.save();
+
+	res.json({ availableForPurchaseReturn: product.availableForPurchaseReturn });
 };
 
 exports.changeImage = async (req, res) => {
@@ -498,6 +534,28 @@ exports.changeVariantSaleAvailability = async (req, res) => {
 	res.json({ availableForSale: variant.availableForSale });
 };
 
+exports.changeVariantSaleReturnAvailability = async (req, res) => {
+	const { id, variantId } = req.params;
+
+	let { availableForSaleReturn } = req.body;
+
+	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
+
+	if (!product) throw notFound();
+
+	let variant = product.getVariantById(variantId);
+
+	if (!variant) throw notFound("Variant");
+
+	variant.availableForSaleReturn = availableForSaleReturn;
+
+	product.updatedBy = req.me._id;
+
+	await product.save();
+
+	res.json({ availableForSaleReturn: variant.availableForSaleReturn });
+};
+
 exports.changeVariantPurchaseAvailability = async (req, res) => {
 	const { id, variantId } = req.params;
 
@@ -518,6 +576,28 @@ exports.changeVariantPurchaseAvailability = async (req, res) => {
 	await product.save();
 
 	return res.json({ availableForPurchase: variant.availableForPurchase });
+};
+
+exports.changeVariantPurchaseReturnAvailability = async (req, res) => {
+	const { id, variantId } = req.params;
+
+	let { availableForPurchaseReturn } = req.body;
+
+	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
+
+	if (!product) throw notFound();
+
+	let variant = product.getVariantById(variantId);
+
+	if (!variant) throw notFound("Variant");
+
+	variant.availableForPurchaseReturn = availableForPurchaseReturn;
+
+	product.updatedBy = req.me._id;
+
+	await product.save();
+
+	return res.json({ availableForPurchaseReturn: variant.availableForPurchaseReturn });
 };
 
 exports.changeVariantImages = async (req, res) => {

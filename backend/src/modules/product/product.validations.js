@@ -407,6 +407,26 @@ let create = {
 		},
 	},
 
+	availableForSaleReturn: {
+		in: "body",
+
+		customSanitizer: {
+			options: (value) => {
+				return value == "true" || value == true;
+			},
+		},
+	},
+
+	availableForPurchaseReturn: {
+		in: "body",
+
+		customSanitizer: {
+			options: (value) => {
+				return value == "true" || value == true;
+			},
+		},
+	},
+
 	notes: {
 		in: "body",
 
@@ -473,9 +493,17 @@ exports.changeSaleAvailability = checkSchema(controls("availableForSale"));
 
 exports.changePurchaseAvailability = checkSchema(controls("availableForPurchase"));
 
+exports.changeSaleReturnAvailability = checkSchema(controls("availableForSaleReturn"));
+
+exports.changePurchaseReturnAvailability = checkSchema(controls("availableForPurchaseReturn"));
+
 exports.changeVariantSaleAvailability = checkSchema({ ...controls("availableForSale"), variantId: checkId });
 
 exports.changeVariantPurchaseAvailability = checkSchema({ ...controls("availableForPurchase"), variantId: checkId });
+
+exports.changeVariantSaleReturnAvailability = checkSchema({ ...controls("availableForSaleReturn"), variantId: checkId });
+
+exports.changeVariantPurchaseReturnAvailability = checkSchema({ ...controls("availableForPurchaseReturn"), variantId: checkId });
 
 exports.addVariant = checkSchema({
 	id: checkId,

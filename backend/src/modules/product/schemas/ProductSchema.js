@@ -42,6 +42,10 @@ const productSchema = new Schema(
 
 		availableForPurchase: { type: Boolean, default: false },
 
+		availableForSaleReturn: { type: Boolean, default: false },
+
+		availableForPurchaseReturn: { type: Boolean, default: false },
+
 		// stock: [stockSchema],
 
 		// images: [imageSchema],

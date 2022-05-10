@@ -17,6 +17,10 @@ const variantSchema = new Schema(
 		availableForSale: { type: Boolean, default: false },
 
 		availableForPurchase: { type: Boolean, default: false },
+
+		availableForSaleReturn: { type: Boolean, default: false },
+
+		availableForPurchaseReturn: { type: Boolean, default: false },
 	},
 	{ timestamps: true }
 );

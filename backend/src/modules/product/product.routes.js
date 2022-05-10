@@ -45,6 +45,15 @@ router.post(
 	Controller.changeSaleAvailability
 );
 
+/* Change Product Sale Return Availability */
+router.post(
+	"/:id/change-sale-return-availability",
+	authForAny("edit:products"),
+	validation.changeSaleReturnAvailability,
+	validationHandler,
+	Controller.changeSaleReturnAvailability
+);
+
 /* Change Product Purchase Availability */
 router.post(
 	"/:id/change-purchase-availability",
@@ -52,6 +61,15 @@ router.post(
 	validation.changePurchaseAvailability,
 	validationHandler,
 	Controller.changePurchaseAvailability
+);
+
+/* Change Product Purchase Availability */
+router.post(
+	"/:id/change-purchase-return-availability",
+	authForAny("edit:products"),
+	validation.changePurchaseReturnAvailability,
+	validationHandler,
+	Controller.changePurchaseReturnAvailability
 );
 
 /* Add Variant */
@@ -97,6 +115,24 @@ router.post(
 	validation.changeVariantPurchaseAvailability,
 	validationHandler,
 	Controller.changeVariantPurchaseAvailability
+);
+
+/* Change Variant SaleReturn Availability */
+router.post(
+	"/:id/variants/:variantId/change-sale-return-availability",
+	authForAny("edit:products"),
+	validation.changeVariantSaleReturnAvailability,
+	validationHandler,
+	Controller.changeVariantSaleReturnAvailability
+);
+
+/* Change Variant PurchaseReturn Availability */
+router.post(
+	"/:id/variants/:variantId/change-purchase-return-availability",
+	authForAny("edit:products"),
+	validation.changeVariantPurchaseReturnAvailability,
+	validationHandler,
+	Controller.changeVariantPurchaseReturnAvailability
 );
 
 /* Change Product Image */
