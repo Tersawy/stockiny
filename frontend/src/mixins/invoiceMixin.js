@@ -275,6 +275,12 @@ export default (storeNamespace, amountType) => {
 				} catch (err) {
 					if (err.status == 422 && err.type == "quantity") {
 						this.quantityErrors.errors = err.errors;
+
+						if (!this.isUpdate) {
+							// remove warehouse in create because the invoice has only one warehouse
+							this.quantityErrors.tableFields.pop();
+						}
+
 						this.$bvModal.show("quantityErrors");
 					} else {
 						this.$store.commit(`${storeNamespace}/setError`, err);
