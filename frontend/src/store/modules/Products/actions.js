@@ -147,45 +147,15 @@ export default {
 		return true;
 	},
 
-	async getPurchaseOptions({ commit }, { warehouse }) {
-		let data = await axios.get(`/products/purchase-options?warehouse=${warehouse}`);
+	async getOptions({ commit }, { warehouse, type }) {
+		let data = await axios.get(`/products/options?warehouse=${warehouse}&type=${type}`);
 
 		data.warehouse = warehouse;
 
-		data.invoiceName = "purchase";
-
-		commit("setOptions", data);
-
-		return data;
-	},
-
-	async getSaleOptions({ commit }, { warehouse }) {
-		let data = await axios.get(`/products/sale-options?warehouse=${warehouse}`);
-
-		data.warehouse = warehouse;
-
-		data.invoiceName = "sale";
+		data.type = type;
 
 		commit("setOptions", data);
 
 		return data;
 	}
-
-	// async details({ commit }, payload) {
-	// 	let data = await axios.post("/products/details", payload);
-	// 	commit("details", data);
-	// 	return data;
-	// },
-
-	// async create({ dispatch }, payload) {
-	// 	let data = await axios.post("/products/create", payload);
-	// 	dispatch("all");
-	// 	return data;
-	// },
-
-	// async update({ dispatch }, item) {
-	// 	let data = await axios.put(`/products/${item._id}`, item);
-	// 	dispatch("all");
-	// 	return data;
-	// }
 };

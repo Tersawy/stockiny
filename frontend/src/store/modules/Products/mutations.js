@@ -142,10 +142,10 @@ export default {
 		}
 	},
 
-	setOptions(state, { invoiceName, options, warehouse }) {
-		state.options[invoiceName] = state.options[invoiceName].filter((option) => option.warehouse != warehouse);
+	setOptions(state, { type, options, warehouse }) {
+		state.options[type] = state.options[type].filter((option) => option.warehouse != warehouse);
 
-		state.options[invoiceName] = options.map((option) => ({ ...option, warehouse }));
+		state.options[type] = options.map((option) => ({ ...option, warehouse }));
 	}
 	// details(state, res) {
 	// 	state.details = res.data;

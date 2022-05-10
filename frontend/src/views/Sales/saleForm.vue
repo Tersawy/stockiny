@@ -123,6 +123,18 @@ export default {
 		return {
 			breads: [{ title: "Dashboard", link: "/" }, { title: "Sales", link: "/sales" }, { title: isEdit ? "Edit" : "Create" }]
 		};
+	},
+
+	computed: {
+		productOptions() {
+			return this.$store.getters["Products/options"]("sale", this.invoice.warehouse);
+		}
+	},
+	
+	methods: {
+		getProductOptions(payload) {
+			return this.$store.dispatch("Products/getOptions", { ...payload, type: "sale" });
+		}
 	}
 };
 </script>

@@ -477,6 +477,39 @@ exports.product = checkSchema({ id: checkId });
 
 exports.getEdit = checkSchema({ id: checkId });
 
+exports.getOptions = checkSchema({
+	warehouse: {
+		in: "query",
+
+		exists: { errorMessage: { type: "required" } },
+
+		notEmpty: { errorMessage: { type: "required" } },
+
+		isMongoId: { errorMessage: { type: "mongoId" } }
+	},
+
+	type: {
+		in: "query",
+
+		exists: { errorMessage: { type: "required" } },
+
+		notEmpty: { errorMessage: { type: "required" } },
+
+		isString: { errorMessage: { type: "string" } },
+
+		// must be one of the following
+		custom: {
+			options: (value) => {
+				let types = ["sale", "purchase", "saleReturn", "purchaseReturn"];
+
+				if (types.includes(value)) return true;
+
+				throw { type: "invalid", value: "type" };
+			},
+		}
+	}
+});
+
 exports.delete = checkSchema({ id: checkId });
 
 let controls = (controlName) => ({

@@ -18,11 +18,8 @@ router.get("/", authFor("read:products"), Controller.products);
 /* Get Product To Edit */
 router.get("/:id/edit", authFor("edit:products"), validation.getEdit, validationHandler, Controller.getEdit);
 
-/* Get Product Options To Make Purchases */
-router.get("/purchase-options", isAuth, Controller.getPurchaseOptions);
-
-/* Get Product Options To Make Sale */
-router.get("/sale-options", isAuth, Controller.getSaleOptions);
+/* Get Product Options To Make Invoices */
+router.get("/options", isAuth, Controller.getOptions);
 
 /* Get Product To Show */
 router.get("/:id", authForAny("show:products"), Controller.product);

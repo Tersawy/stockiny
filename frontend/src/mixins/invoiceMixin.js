@@ -111,11 +111,7 @@ export default (storeNamespace, amountType) => {
 						// TODO:: choise default warehouse from settings instead
 						this.invoice.warehouse = data.options[0]._id;
 
-						if (this.isPrice) {
-							this.getSaleOptions({ warehouse: this.invoice.warehouse });
-						} else {
-							this.getPurchaseOptions({ warehouse: this.invoice.warehouse });
-						}
+						this.getProductOptions({ warehouse: this.invoice.warehouse });
 					}
 				}
 			});
@@ -159,11 +155,7 @@ export default (storeNamespace, amountType) => {
 					if (v) {
 						this.invoice.details = [];
 
-						if (this.isPrice) {
-							this.getSaleOptions({ warehouse: v });
-						} else {
-							this.getPurchaseOptions({ warehouse: v });
-						}
+						this.getProductOptions({ warehouse: v });
 					}
 				},
 				deep: true
@@ -189,20 +181,12 @@ export default (storeNamespace, amountType) => {
 
 			isUpdate() {
 				return !!this.id;
-			},
-
-			productOptions() {
-				let invoiceName = this.isPrice ? "sale" : "purchase";
-
-				return this.$store.getters["Products/options"](invoiceName, this.invoice.warehouse);
 			}
 		},
 
 		methods: {
 			...mapActions({
 				getWarehousesOpt: "Warehouses/getOptions",
-				getPurchaseOptions: "Products/getPurchaseOptions",
-				getSaleOptions: "Products/getSaleOptions",
 				getUnitsOptions: "Units/getOptions",
 				getSuppliersOpt: "Suppliers/getOptions",
 				getCustomersOpt: "Customers/getOptions",

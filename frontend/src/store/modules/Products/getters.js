@@ -1,7 +1,7 @@
 export default {
 	options(state) {
-		return (invoiceName, warehouse) => {
-			let options = state.options[invoiceName] || [];
+		return (type, warehouse) => {
+			let options = state.options[type] || [];
 
 			options = options.filter((opt) => opt.warehouse == warehouse);
 

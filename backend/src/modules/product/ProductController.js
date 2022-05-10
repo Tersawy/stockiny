@@ -102,12 +102,8 @@ exports.getVariantStocks = async (req, res) => {
 		]
 	}
 */
-exports.getPurchaseOptions = async (req, res) => {
+let getPurchaseOptions = async (req, res) => {
 	let { warehouse } = req.query;
-
-	warehouse = mongoose.Types.ObjectId.isValid(warehouse) ? warehouse : null;
-
-	if (!warehouse) return res.json({ options: [] });
 
 	let warehouseId = mongoose.Types.ObjectId(warehouse);
 
@@ -172,7 +168,7 @@ exports.getPurchaseOptions = async (req, res) => {
 		},
 	]);
 
-	res.json({ options: products });
+	return res.json({ options: products });
 };
 
 /* 
@@ -195,12 +191,8 @@ exports.getPurchaseOptions = async (req, res) => {
 		]
 	}
 */
-exports.getSaleOptions = async (req, res) => {
+let getSaleOptions = async (req, res) => {
 	let { warehouse } = req.query;
-
-	warehouse = mongoose.Types.ObjectId.isValid(warehouse) ? warehouse : null;
-
-	if (!warehouse) return res.json({ options: [] });
 
 	let warehouseId = mongoose.Types.ObjectId(warehouse);
 
@@ -289,8 +281,19 @@ exports.getSaleOptions = async (req, res) => {
 		},
 	]);
 
-	res.json({ options: products });
+	return res.json({ options: products });
 };
+
+exports.getOptions = (req, res) => {
+	let { type } = req.query;
+
+	let optionsMethods = {
+		purchase: getPurchaseOptions,
+		sale: getSaleOptions,
+	}
+
+	return optionsMethods[type](req, res);
+}
 
 exports.create = async (req, res) => {
 	const { name, code, variants } = req.body;
