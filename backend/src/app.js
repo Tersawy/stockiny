@@ -43,6 +43,7 @@ let routes = {
 	gallery: "gallery",
 	invoices: "invoice",
 	purchases: "purchase",
+	sales: "sale",
 };
 
 for (let route in routes) {
