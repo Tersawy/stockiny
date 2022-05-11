@@ -15,8 +15,6 @@ export default {
 
 					option.discountMethod = "fixed";
 
-					option.quantity = 1;
-
 					option.stock = variant.stock;
 
 					option.variantId = variant._id;

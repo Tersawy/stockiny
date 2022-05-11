@@ -47,14 +47,7 @@
 						<b-btn :variant="row.item.decrementBtn" size="sm" class="font-default" @click="decrementQuantity(row)"> - </b-btn>
 					</b-input-group-prepend>
 
-					<b-form-input
-						class="border-0 shadow-none bg-light text-center"
-						min="1"
-						@keypress="quantityPress($event, row)"
-						@paste="quantityPress($event, row)"
-						v-model.number="row.item.quantity"
-						@change="quantityChanged(row)"
-					/>
+					<b-form-input class="border-0 shadow-none bg-light text-center" v-model.number="row.item.quantity" @change="quantityChanged(row)" />
 
 					<b-input-group-append>
 						<b-btn :variant="row.item.incrementBtn" size="sm" class="font-default" @click="incrementQuantity(row)"> + </b-btn>
@@ -92,7 +85,9 @@ export default {
 
 		namespace: { type: String },
 
-		checkQuantity: { type: Boolean }
+		checkQuantity: { type: Boolean },
+
+		productOptions: { type: Array }
 	},
 
 	components: { InvoiceDetailForm, EditIcon, TrashIcon, GalleryIcon },
@@ -122,19 +117,11 @@ export default {
 			handler(newValue, oldValue) {
 				//? This subUnit has been changed so we need to reset product amount input in productDetailForm
 				if (oldValue && newValue) {
-					let invoiceName = this.amountType == "Price" ? "sale" : "purchase";
-
-					let productOption = this.$store.state.Products.options[invoiceName]?.find((opt) => opt.product == this.detail.product);
+					let productOption = this.productOptions.find((opt) => opt.product == this.detail.product);
 
 					this.detail.amount = productOption.amount;
 
 					this.detail.subUnitAmount = this.subUnitAmount(this.detail);
-
-					// let unit = this.subUnit(this.detail);
-
-					// let isMultiple = unit.operator === "*";
-
-					// this.detail.stock = !isMultiple ? +this.detail.stock * +unit.value : +this.detail.stock / +unit.value;
 				}
 			},
 			deep: true
@@ -172,21 +159,17 @@ export default {
 		},
 
 		addDetail(product) {
-			if (!this.invoice.warehouse) return this.setGlobalError("Please choose the warehouse first");
+			if (!this.invoice.warehouse) return alert("Please choose the warehouse first");
+
+			if (typeof product.quantity === "undefined") {
+				product.quantity = product.stock > 1 && product.stock > 0 ? this.instock(product) : 1;
+			}
 
 			let detail = this.net(product);
 
 			detail.decrementBtn = "primary";
 			detail.incrementBtn = "primary";
 			detail.stockVariant = "outline-success";
-
-			if (this.checkQuantity) {
-				if (+product.instock < +product.quantity) {
-					let msg = `${product.name}-${product.variant} doesn't have quantity in this warehouse`;
-
-					return this.setGlobalError(msg + " , Please create a purchase for this product first");
-				}
-			}
 
 			this.invoice.details.push(detail);
 		},
@@ -291,8 +274,8 @@ export default {
 		},
 
 		incrementQuantity(row) {
-			if (/^\d+$|^\d+\.\d+$/.test(row.item.quantity)) {
-				if (this.checkQuantity && row.item.quantity >= row.item.stock) {
+			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
+				if (this.checkQuantity && row.item.quantity >= row.item.instock) {
 					row.item.stockVariant = "outline-danger";
 					row.item.incrementBtn = "danger";
 					return setTimeout(() => {
@@ -303,56 +286,36 @@ export default {
 				row.item.quantity += 1;
 				row.value += 1;
 			} else {
-				row.item.quantity = 1;
-				row.value = 1;
+				row.item.quantity = row.item.instock || 1;
+				row.value = row.item.instock || 1;
 			}
 
 			this.updateDetail(row.item);
 		},
 
 		decrementQuantity(row) {
-			if (/^\d+$|^\d+\.\d+$/.test(row.item.quantity) && row.item.quantity - 1 > 0) {
+			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity) && row.item.quantity - 1 > 0) {
 				row.item.quantity -= 1;
 				row.value -= 1;
 			} else {
-				if (row.item.quantity == 1) {
+				if (row.item.quantity == 1 || row.item.quantity == row.item.instock) {
 					row.item.decrementBtn = "danger";
 					return setTimeout(() => (row.item.decrementBtn = "primary"), 1000);
 				}
-				row.item.quantity = 1;
-				row.value = 1;
-			}
-
-			this.updateDetail(row.item);
-		},
-
-		quantityPress(evt, row) {
-			let theEvent = evt || window.event,
-				key;
-
-			// Handle paste
-			if (theEvent.type === "paste") {
-				key = window.event.clipboardData.getData("text/plain");
-			} else {
-				// Handle key press
-				key = theEvent.keyCode || theEvent.which;
-				key = String.fromCharCode(key);
-			}
-
-			let regex = /^\d+$|^\d+\.\d+$/;
-
-			if (!regex.test(key)) {
-				row.item.quantity = 1;
-				theEvent.returnValue = false;
-				if (theEvent.preventDefault) theEvent.preventDefault();
+				row.item.quantity = row.item.instock || 1;
+				row.value = row.item.instock || 1;
 			}
 
 			this.updateDetail(row.item);
 		},
 
 		quantityChanged(row) {
-			if (!row.item.quantity || (this.checkQuantity && row.item.stock < row.item.quantity)) {
-				row.item.quantity = row.item.stock || 1;
+			let regex = /^\d+$|^\d+\.\d+$|^\.\d+$/;
+
+			let isValid = regex.test(row.item.quantity);
+
+			if (!isValid || (this.checkQuantity && row.item.instock < row.item.quantity)) {
+				row.item.quantity = row.item.instock || 1;
 			}
 
 			this.updateDetail(row.item);

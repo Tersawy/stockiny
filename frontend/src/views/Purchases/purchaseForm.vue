@@ -58,7 +58,15 @@
 						<input-error :vuelidate-field="$v.invoice.details" field="details" namespace="Purchases" />
 
 						<!-- -------------Products Table------------- -->
-						<invoice-details-table ref="invoiceDetailsTable" class="mt-4" :check-quantity="false" :invoice="invoice" amount-type="Cost" namespace="Purchases" />
+						<invoice-details-table
+							ref="invoiceDetailsTable"
+							:product-options="productOptions"
+							class="mt-4"
+							:check-quantity="false"
+							:invoice="invoice"
+							amount-type="Cost"
+							namespace="Purchases"
+						/>
 					</b-card>
 				</b-col>
 
