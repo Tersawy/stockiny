@@ -143,11 +143,6 @@ export default {
 	},
 
 	setOptions(state, { type, options, warehouse }) {
-		state.options[type] = state.options[type].filter((option) => option.warehouse != warehouse);
-
 		state.options[type] = options.map((option) => ({ ...option, warehouse }));
 	}
-	// details(state, res) {
-	// 	state.details = res.data;
-	// }
 };
