@@ -143,6 +143,8 @@ exports.getEditPurchase = async (req, res) => {
 
 	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
 
+	if (!purchase) throw notFound();
+
 	let details = [];
 
 	purchase.details.forEach(detail => {
