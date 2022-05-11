@@ -1,5 +1,5 @@
 <template>
-	<default-modal id="productDetailModal" @ok="handleSave" @hidden="$emit('reset-modal')" :settings="{ showStayOpenBtn: false }" :modal-props="{ size: 'md' }">
+	<default-modal id="productDetailModal" @ok="handleSave" @hidden="$emit('reset-modal')" :showStayOpenBtn="false" :modal-props="{ size: 'md' }">
 		<b-form @submit.prevent="handleSave" v-if="detail">
 			<!-- -------------Detail Unit Amount------------- -->
 			<default-input

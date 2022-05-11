@@ -1,5 +1,14 @@
 <template>
-	<default-modal id="brandFormModal" @ok="handleSave" @hidden="resetForm" :isBusy="isBusy" :title="formTitle" @show="isOpened" :settings="modalSettings">
+	<default-modal
+		id="brandFormModal"
+		@ok="handleSave"
+		@hidden="resetForm"
+		:isBusy="isBusy"
+		:title="formTitle"
+		@show="isOpened"
+		:stayOpen.sync="modalSettings.stayOpen"
+		:showStayOpenBtn="modalSettings.showStayOpenBtn"
+	>
 		<div class="brand-form">
 			<b-form v-on:submit="handleSave">
 				<b-row cols="1">

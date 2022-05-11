@@ -1,5 +1,14 @@
 <template>
-	<default-modal id="variantFormModal" @ok="handleSave" @hidden="onHidden" :isBusy="isBusy" :title="formTitle" @show="isOpened" :settings="modalSettings">
+	<default-modal
+		id="variantFormModal"
+		@ok="handleSave"
+		@hidden="onHidden"
+		:isBusy="isBusy"
+		:title="formTitle"
+		@show="isOpened"
+		:stayOpen.sync="modalSettings.stayOpen"
+		:showStayOpenBtn="modalSettings.showStayOpenBtn"
+	>
 		<div class="variant-form">
 			<b-form v-on:submit="handleSave">
 				<b-row cols="1">

@@ -81,12 +81,7 @@
 			</b-row>
 		</b-form>
 
-		<default-modal
-			id="quantityErrors"
-			:settings="{ showStayOpenBtn: false, showOkBtn: false }"
-			title="Quantity Errors"
-			:modalProps="{ headerClass: 'py-3', centered: true }"
-		>
+		<default-modal id="quantityErrors" :showStayOpenBtn="false" :showOkBtn="false" title="Quantity Errors" :modalProps="{ headerClass: 'py-3', centered: true }">
 			<template #btn-close="{ close }">
 				<b-btn variant="outline-primary" size="sm" @click="close">Close</b-btn>
 			</template>
@@ -130,7 +125,7 @@ export default {
 			return this.$store.getters["Products/options"]("sale", this.invoice.warehouse);
 		}
 	},
-	
+
 	methods: {
 		getProductOptions(payload) {
 			return this.$store.dispatch("Products/getOptions", { ...payload, type: "sale" });

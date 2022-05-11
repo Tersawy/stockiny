@@ -1,5 +1,14 @@
 <template>
-	<default-modal id="currencyFormModal" @ok="handleSave" @hidden="resetForm" :isBusy="isBusy" :title="formTitle" @show="isOpened" :settings="modalSettings">
+	<default-modal
+		id="currencyFormModal"
+		@ok="handleSave"
+		@hidden="resetForm"
+		:isBusy="isBusy"
+		:title="formTitle"
+		@show="isOpened"
+		:stayOpen.sync="modalSettings.stayOpen"
+		:showStayOpenBtn="modalSettings.showStayOpenBtn"
+	>
 		<div class="currency-form">
 			<b-form v-on:submit="handleSave">
 				<b-row cols="1" cols-md="2">

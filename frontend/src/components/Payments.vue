@@ -1,5 +1,5 @@
 <template>
-	<default-modal id="payments" :settings="{ showStayOpenBtn: false }" @ok="$bvModal.show('paymentForm')">
+	<default-modal id="payments" :showStayOpenBtn="false" @ok="$bvModal.show('paymentForm')">
 		<template #title>
 			<div class="d-flex align-items-center">
 				<h6 class="mb-0">Payments:&nbsp;</h6>

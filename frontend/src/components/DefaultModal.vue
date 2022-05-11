@@ -7,13 +7,13 @@
 						<slot name="title"> {{ title }} </slot>
 					</span>
 				</div>
-				<b-form-checkbox v-if="mSettings.showStayOpenBtn" v-model="mSettings.stayOpen" switch> Stay open </b-form-checkbox>
+				<b-form-checkbox v-if="showStayOpenBtn" v-model="_stayOpen" switch> Stay open </b-form-checkbox>
 				<div class="d-flex align-items-center">
 					<slot name="btn-close" v-bind="{ isBusy, close }">
 						<b-button size="sm" variant="outline-danger" :disabled="isBusy" @click="close"> Close </b-button>
 					</slot>
 					<!-- <b-button v-if="!isBusy" type="submit" variant="outline-primary"> Save </b-button> -->
-					<b-button v-if="mSettings.showOkBtn" size="sm" variant="outline-primary" :disabled="isBusy" class="d-flex align-items-center ml-2" @click="ok">
+					<b-button v-if="showOkBtn" size="sm" variant="outline-primary" :disabled="isBusy" class="d-flex align-items-center ml-2" @click="ok">
 						<slot name="ok">Save</slot>
 						<b-spinner v-if="isBusy" small class="mx-1"></b-spinner>
 					</b-button>
@@ -28,26 +28,19 @@
 <script>
 export default {
 	props: {
-		id: {
-			type: String,
-			default: "formModal"
-		},
-		title: {
-			type: String,
-			default: "Form"
-		},
-		isBusy: {
-			type: Boolean,
-			default: false
-		},
-		settings: {
-			type: Object,
-			default: () => ({})
-		},
-		modalProps: {
-			type: Object,
-			default: () => {}
-		}
+		id: { type: String, default: "formModal" },
+
+		title: { type: String, default: "Form" },
+
+		isBusy: { type: Boolean, default: false },
+
+		modalProps: { type: Object, default: () => {} },
+
+		stayOpen: { type: Boolean, default: false },
+
+		showStayOpenBtn: { type: Boolean, default: true },
+
+		showOkBtn: { type: Boolean, default: true }
 	},
 
 	computed: {
@@ -57,10 +50,13 @@ export default {
 			return { ...defaultProps, ...this.modalProps };
 		},
 
-		mSettings() {
-			let defaultProps = { stayOpen: false, showStayOpenBtn: true, showOkBtn: true };
-
-			return { ...defaultProps, ...this.settings };
+		_stayOpen: {
+			get: function () {
+				return this.stayOpen;
+			},
+			set: function (value) {
+				this.$emit("update:stayOpen", value);
+			}
 		}
 	},
 

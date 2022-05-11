@@ -1,5 +1,5 @@
 <template>
-	<default-modal id="paymentForm" @ok="handleSave" @hidden="resetModal" @show="isOpened" :settings="{ showStayOpenBtn: false }" :isBusy="isBusy">
+	<default-modal id="paymentForm" @ok="handleSave" @hidden="resetModal" @show="isOpened" :showStayOpenBtn="false" :isBusy="isBusy">
 		<template #title>
 			<div class="d-flex align-items-center">
 				<template v-if="isUpdate">
