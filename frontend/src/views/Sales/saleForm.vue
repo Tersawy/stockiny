@@ -62,7 +62,7 @@
 							ref="invoiceDetailsTable"
 							:product-options="productOptions"
 							class="mt-4"
-							:check-quantity="false"
+							:check-quantity="true"
 							:invoice="invoice"
 							amount-type="Price"
 							namespace="Sales"
