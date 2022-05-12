@@ -33,9 +33,9 @@
 								<default-select label="Customer" field="customer" :options="customerOptions" :vuelidate="$v.invoice" namespace="Sales" />
 							</b-col>
 
-							<!-- -------------Shipping Price Input------------- -->
+							<!-- -------------Shipping Cost Input------------- -->
 							<b-col>
-								<default-input label="Shipping Price" field="shipping" append="$" :vuelidate="$v.invoice" namespace="Sales" type="number" />
+								<default-input label="Shipping Cost" field="shipping" append="$" :vuelidate="$v.invoice" namespace="Sales" type="number" />
 							</b-col>
 
 							<!-- -------------Sale Tax Input------------- -->
