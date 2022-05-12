@@ -47,7 +47,7 @@
 						<b-btn :variant="row.item.decrementBtn" size="sm" class="font-default" @click="decrementQuantity(row)"> - </b-btn>
 					</b-input-group-prepend>
 
-					<b-form-input class="border-0 shadow-none bg-light text-center" v-model.number="row.item.quantity" @change="quantityChanged(row)" />
+					<b-form-input class="border-0 shadow-none bg-light text-center" v-model.number="row.item.quantity" @change="quantityChanged(row)" @focus="selectTarget" />
 
 					<b-input-group-append>
 						<b-btn :variant="row.item.incrementBtn" size="sm" class="font-default" @click="incrementQuantity(row)"> + </b-btn>
@@ -323,6 +323,10 @@ export default {
 
 		removeProduct(row) {
 			this.invoice.details = this.invoice.details.filter((_p, i) => i != row.index);
+		},
+
+		selectTarget(e) {
+			e.currentTarget && e.currentTarget?.select();
 		}
 	}
 };
