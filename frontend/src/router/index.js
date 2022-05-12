@@ -96,21 +96,27 @@ const routes = [
 	},
 	{
 		path: "/sales-return",
-		name: "SaleReturn",
-		component: () => /* webpackChunkName: "SaleReturn" */ import("@/views/SalesReturn/index"),
+		name: "SalesReturn",
+		component: () => /* webpackChunkName: "SalesReturn" */ import("@/views/SalesReturn/index"),
 		meta: { auth: true, permissions: ["read:salesReturn"] }
 	},
 	{
 		path: "/sales-return/create",
 		name: "SaleReturnCreate",
-		component: () => /* webpackChunkName: "SaleReturnCreate" */ import("@/views/SalesReturn/form"),
+		component: () => /* webpackChunkName: "SaleReturnCreate" */ import("@/views/SalesReturn/saleReturnForm"),
 		meta: { auth: true, permissions: ["create:salesReturn"] }
 	},
 	{
 		path: "/sales-return/:id/edit",
 		name: "SaleReturnEdit",
-		component: () => /* webpackChunkName: "SaleReturnEdit" */ import("@/views/SalesReturn/form"),
+		component: () => /* webpackChunkName: "SaleReturnEdit" */ import("@/views/SalesReturn/saleReturnForm"),
 		meta: { auth: true, permissions: ["edit:salesReturn"] }
+	},
+	{
+		path: "/sales-return/:id",
+		name: "SaleReturn",
+		component: () => /* webpackChunkName: "SaleReturn" */ import("@/views/SalesReturn/saleReturn"),
+		meta: { auth: true, permissions: ["show:salesReturn"] }
 	},
 	{
 		path: "/purchases",
