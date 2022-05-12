@@ -44,6 +44,7 @@ let routes = {
 	invoices: "invoice",
 	purchases: "purchase",
 	sales: "sale",
+	"purchases-return": "purchaseReturn",
 };
 
 for (let route in routes) {

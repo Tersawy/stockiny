@@ -138,21 +138,27 @@ const routes = [
 	},
 	{
 		path: "/purchases-return",
-		name: "PurchaseReturn",
-		component: () => /* webpackChunkName: "PurchaseReturn" */ import("@/views/PurchasesReturn/index"),
+		name: "PurchasesReturn",
+		component: () => /* webpackChunkName: "PurchasesReturn" */ import("@/views/PurchasesReturn/index"),
 		meta: { auth: true, permissions: ["read:purchasesReturn"] }
 	},
 	{
 		path: "/purchases-return/create",
 		name: "PurchaseReturnCreate",
-		component: () => /* webpackChunkName: "PurchaseReturnCreate" */ import("@/views/PurchasesReturn/form"),
+		component: () => /* webpackChunkName: "PurchaseReturnCreate" */ import("@/views/PurchasesReturn/purchaseReturnForm"),
 		meta: { auth: true, permissions: ["create:purchasesReturn"] }
 	},
 	{
 		path: "/purchases-return/:id/edit",
 		name: "PurchaseReturnEdit",
-		component: () => /* webpackChunkName: "PurchaseReturnEdit" */ import("@/views/PurchasesReturn/form"),
+		component: () => /* webpackChunkName: "PurchaseReturnEdit" */ import("@/views/PurchasesReturn/purchaseReturnForm"),
 		meta: { auth: true, permissions: ["edit:purchasesReturn"] }
+	},
+	{
+		path: "/purchases-return/:id",
+		name: "PurchaseReturn",
+		component: () => /* webpackChunkName: "PurchaseReturn" */ import("@/views/PurchasesReturn/purchaseReturn"),
+		meta: { auth: true, permissions: ["show:purchasesReturn"] }
 	},
 	{
 		path: "/invoices",
