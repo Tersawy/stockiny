@@ -162,7 +162,7 @@ export default {
 			if (!this.invoice.warehouse) return alert("Please choose the warehouse first");
 
 			if (typeof product.quantity === "undefined") {
-				product.quantity = product.stock > 1 && product.stock > 0 ? this.instock(product) : 1;
+				product.quantity = this.instock(product) < 1 && product.stock > 0 ? this.instock(product) : 1;
 			}
 
 			let detail = this.net(product);
