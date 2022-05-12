@@ -275,16 +275,24 @@ export default {
 
 		incrementQuantity(row) {
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
-				if (this.checkQuantity && row.item.quantity >= row.item.instock) {
-					row.item.stockVariant = "outline-danger";
-					row.item.incrementBtn = "danger";
-					return setTimeout(() => {
-						row.item.stockVariant = "outline-success";
-						row.item.incrementBtn = "primary";
-					}, 1000);
+				if (this.checkQuantity) {
+					if (row.item.quantity >= row.item.instock) {
+						row.item.stockVariant = "outline-danger";
+						row.item.incrementBtn = "danger";
+						return setTimeout(() => {
+							row.item.stockVariant = "outline-success";
+							row.item.incrementBtn = "primary";
+						}, 1000);
+					}
+
+					if (row.item.quantity + 1 > row.item.instock) {
+						row.item.quantity = row.item.instock;
+						row.value = row.item.instock;
+					}
+				} else {
+					row.item.quantity += 1;
+					row.value += 1;
 				}
-				row.item.quantity += 1;
-				row.value += 1;
 			} else {
 				row.item.quantity = row.item.instock || 1;
 				row.value = row.item.instock || 1;
