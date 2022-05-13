@@ -19,7 +19,7 @@ router.get("/", authFor("read:products"), Controller.products);
 router.get("/:id/edit", authFor("edit:products"), validation.getEdit, validationHandler, Controller.getEdit);
 
 /* Get Product Options To Make Invoices */
-router.get("/options", isAuth, Controller.getOptions);
+router.get("/options", isAuth, validation.getOptions, validationHandler, Controller.getOptions);
 
 /* Get Product To Show */
 router.get("/:id", authForAny("show:products"), Controller.product);
