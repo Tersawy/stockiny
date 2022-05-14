@@ -288,6 +288,9 @@ export default {
 					if (row.item.quantity + 1 > row.item.instock) {
 						row.item.quantity = row.item.instock;
 						row.value = row.item.instock;
+					} else {
+						row.item.quantity += 1;
+						row.value += 1;
 					}
 				} else {
 					row.item.quantity += 1;
