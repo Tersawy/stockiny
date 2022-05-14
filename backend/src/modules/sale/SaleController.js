@@ -44,8 +44,9 @@ exports.createSale = async (req, res) => {
 
 	let productIds = details.map((detail) => detail.product);
 
-	let productDocs = Product.find({ _id: { $in: productIds } }, productSelect);
+	let productDocs = Product.find({ _id: { $in: productIds } }, productSelect).populate("unit", "name");
 
+	// ! we can't get unit with new populate because it will be get from product
 	saleDoc = saleDoc.populate("details.subUnit", "name value operator base");
 
 	let [products, sale] = await Promise.all([productDocs, saleDoc]);
@@ -91,6 +92,7 @@ exports.createSale = async (req, res) => {
 							variantName: variant.name,
 							stockBefore,
 							stockAfter: stock.quantity,
+							unitName: product.unit.name,
 						});
 					}
 				}
