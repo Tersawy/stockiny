@@ -277,15 +277,15 @@ export default {
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
 				if (this.checkQuantity) {
 					if (row.item.quantity >= row.item.instock) {
+						if (row.item.timeout) clearTimeout(row.item.timeout);
 						row.item.stockVariant = "outline-danger";
 						row.item.incrementBtn = "danger";
-						return setTimeout(() => {
+						row.item.timeout = setTimeout(() => {
 							row.item.stockVariant = "outline-success";
 							row.item.incrementBtn = "primary";
-						}, 1000);
-					}
-
-					if (row.item.quantity + 1 > row.item.instock) {
+							this.updateDetail(row.item);
+						}, 300);
+					} else if (row.item.quantity + 1 > row.item.instock) {
 						row.item.quantity = row.item.instock;
 						row.value = row.item.instock;
 					} else {
@@ -310,11 +310,19 @@ export default {
 				row.value -= 1;
 			} else {
 				if (row.item.quantity == 1 || row.item.quantity == row.item.instock) {
+					if (row.item.timeout) clearTimeout(row.item.timeout);
+
 					row.item.decrementBtn = "danger";
-					return setTimeout(() => (row.item.decrementBtn = "primary"), 1000);
+
+					row.item.timeout = setTimeout(() => {
+						row.item.decrementBtn = "primary";
+
+						this.updateDetail(row.item);
+					}, 300);
+				} else {
+					row.item.quantity = row.item.instock || 1;
+					row.value = row.item.instock || 1;
 				}
-				row.item.quantity = row.item.instock || 1;
-				row.value = row.item.instock || 1;
 			}
 
 			this.updateDetail(row.item);
