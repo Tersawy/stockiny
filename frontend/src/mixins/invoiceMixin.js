@@ -262,7 +262,7 @@ export default (storeNamespace, amountType) => {
 
 						if (!this.isUpdate) {
 							// remove warehouse in create because the invoice has only one warehouse
-							this.quantityErrors.tableFields.pop();
+							this.quantityErrors.tableFields = this.quantityErrors.tableFields.filter((field) => field.key != "warehouseName");
 						}
 
 						this.$bvModal.show("quantityErrors");
