@@ -40,11 +40,11 @@ exports.createPurchaseReturn = async (req, res) => {
 
 	let purchaseReturnDoc = new PurchaseReturn().fill(req.body).addDetails(details).by(req.me._id);
 
-	let productSelect = "availableForPurchaseReturn unit variants._id variants.availableForPurchaseReturn variants.stock";
+	let productSelect = "name availableForPurchaseReturn unit variants._id variants.availableForPurchaseReturn variants.stock variants.name";
 
 	let productIds = details.map((detail) => detail.product);
 
-	let productDocs = Product.find({ _id: { $in: productIds } }, productSelect);
+	let productDocs = Product.find({ _id: { $in: productIds } }, productSelect).populate("unit", "name");
 
 	purchaseReturnDoc = purchaseReturnDoc.populate("details.subUnit", "_id value operator base");
 
@@ -91,6 +91,7 @@ exports.createPurchaseReturn = async (req, res) => {
 							variantName: variant.name,
 							stockBefore,
 							stockAfter: stock.quantity,
+							unitName: product.unit.name
 						});
 					}
 				}
