@@ -159,7 +159,7 @@ export default {
 		},
 
 		addDetail(product) {
-			if (!this.invoice.warehouse) return alert("Please choose the warehouse first");
+			if (!this.invoice.warehouse && !this.invoice.fromWarehouse) return alert("Please choose the warehouse first");
 
 			if (typeof product.quantity === "undefined") {
 				product.quantity = this.instock(product) < 1 && product.stock > 0 ? this.instock(product) : 1;
