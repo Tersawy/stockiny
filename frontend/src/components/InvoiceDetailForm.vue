@@ -18,7 +18,7 @@
 			<discount-input :vuelidate="$v.detail" :namespace="namespace" />
 
 			<!-- -------------Detail Sub Unit------------- -->
-			<sub-units-input :main-unit-id="detail.unit" :label="unitLabel" field="subUnit" :vuelidate="$v.detail" :namespace="namespace" />
+			<sub-units-input :main-unit-id="detail.unit" :label="_unitLabel" field="subUnit" :vuelidate="$v.detail" :namespace="namespace" />
 
 			<input type="submit" hidden class="d-none" style="display: none" />
 		</b-form>
@@ -50,7 +50,9 @@ export default {
 
 		amountType: { type: String, required: true },
 
-		detail: { type: Object }
+		detail: { type: Object },
+
+		unitLabel: { type: String, required: false }
 	},
 
 	validations: {
@@ -65,7 +67,9 @@ export default {
 	},
 
 	computed: {
-		unitLabel() {
+		_unitLabel() {
+			if (this.unitLabel) return this.unitLabel;
+
 			return this.amountType == "Price" ? "Sale Unit" : "Purchase Unit";
 		}
 	},

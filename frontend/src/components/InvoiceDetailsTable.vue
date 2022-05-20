@@ -64,7 +64,14 @@
 			</template>
 		</b-table>
 
-		<InvoiceDetailForm :namespace="namespace" :amountType="amountType" :detail="detail" @done="updateDetail" @reset-modal="() => (detail = null)" />
+		<InvoiceDetailForm
+			:unitLabel="unitLabel"
+			:namespace="namespace"
+			:amountType="amountType"
+			:detail="detail"
+			@done="updateDetail"
+			@reset-modal="() => (detail = null)"
+		/>
 	</div>
 </template>
 
@@ -87,7 +94,9 @@ export default {
 
 		checkQuantity: { type: Boolean },
 
-		productOptions: { type: Array }
+		productOptions: { type: Array },
+
+		unitLabel: { type: String }
 	},
 
 	components: { InvoiceDetailForm, EditIcon, TrashIcon, GalleryIcon },
