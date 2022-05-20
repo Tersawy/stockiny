@@ -18,25 +18,41 @@
 						<BFormSelect id="status" v-model="filter.status" :options="statusesOptions" text-field="name" value-field="_id" />
 					</b-form-group>
 
-					<!-- Payment Status -->
-					<b-form-group label-for="paymentStatus" label="Payment status">
-						<BFormSelect id="paymentStatus" v-model="filter.paymentStatus" :options="paymentStatuses" />
-					</b-form-group>
+					<template v-if="!isTransfer">
+						<!-- Payment Status -->
+						<b-form-group label-for="paymentStatus" label="Payment status">
+							<BFormSelect id="paymentStatus" v-model="filter.paymentStatus" :options="paymentStatuses" />
+						</b-form-group>
 
-					<!-- Supplier -->
-					<b-form-group label-for="supplier" label="Supplier" v-if="suppliers.length">
-						<BFormSelect id="supplier" v-model="filter.supplier" :options="suppliersOptions" text-field="name" value-field="_id" />
-					</b-form-group>
+						<!-- Supplier -->
+						<!-- Used For Purchases and Purchases Return -->
+						<b-form-group label-for="supplier" label="Supplier" v-if="suppliers.length">
+							<BFormSelect id="supplier" v-model="filter.supplier" :options="suppliersOptions" text-field="name" value-field="_id" />
+						</b-form-group>
 
-					<!-- Customer -->
-					<b-form-group label-for="customer" label="Customer" v-if="customers.length">
-						<BFormSelect id="customer" v-model="filter.customer" :options="customersOptions" text-field="name" value-field="_id" />
-					</b-form-group>
+						<!-- Customer -->
+						<!-- Used For Sales and Sales Return -->
+						<b-form-group label-for="customer" label="Customer" v-if="customers.length">
+							<BFormSelect id="customer" v-model="filter.customer" :options="customersOptions" text-field="name" value-field="_id" />
+						</b-form-group>
 
-					<!-- Warehouse -->
-					<b-form-group label-for="warehouse" label="Warehouse">
-						<BFormSelect id="warehouse" v-model="filter.warehouse" :options="warehousesOptions" text-field="name" value-field="_id" />
-					</b-form-group>
+						<!-- Warehouse -->
+						<b-form-group label-for="warehouse" label="Warehouse">
+							<BFormSelect id="warehouse" v-model="filter.warehouse" :options="warehousesOptions" text-field="name" value-field="_id" />
+						</b-form-group>
+					</template>
+
+					<template v-else>
+						<!-- Warehouse From -->
+						<b-form-group label-for="fromWarehouse" label="From Warehouse">
+							<BFormSelect id="fromWarehouse" v-model="filter.fromWarehouse" :options="warehousesOptions" text-field="name" value-field="_id" />
+						</b-form-group>
+
+						<!-- Warehouse To -->
+						<b-form-group label-for="toWarehouse" label="To Warehouse">
+							<BFormSelect id="toWarehouse" v-model="filter.toWarehouse" :options="toWarehousesOptions" text-field="name" value-field="_id" />
+						</b-form-group>
+					</template>
 
 					<div class="d-flex justify-content-end">
 						<!-- Reset Button -->
@@ -59,14 +75,15 @@ export default {
 		statuses: { type: Array, default: () => [] },
 		suppliers: { type: Array, default: () => [] },
 		customers: { type: Array, default: () => [] },
-		warehouses: { type: Array, default: () => [] }
+		warehouses: { type: Array, default: () => [] },
+		isTransfer: { type: Boolean, default: false }
 	},
 
 	components: { FilterIcon },
 
 	data() {
 		return {
-			filter: { date: "", reference: "", supplier: "", customer: "", warehouse: "", status: "", paymentStatus: "" },
+			filter: { date: "", reference: "", supplier: "", customer: "", warehouse: "", status: "", paymentStatus: "", fromWarehouse: "", toWarehouse: "" },
 
 			paymentStatuses: [
 				{ text: "All", value: "" },
@@ -106,6 +123,16 @@ export default {
 			return [{ _id: "", name: "All" }, ...this.warehouses.filter((v) => !v.disabled)];
 		},
 
+		toWarehousesOptions() {
+			return this.warehousesOptions.filter((v) => {
+				if (this.filter.fromWarehouse) {
+					return v._id !== this.filter.fromWarehouse;
+				}
+
+				return true;
+			});
+		},
+
 		filterIsAvailable() {
 			return Object.keys(this.filter).every((key) => this.filter[key] == "");
 		},
@@ -120,6 +147,14 @@ export default {
 			}
 
 			return Object.keys(this.filter).every((key) => this.filter[key] == this.lastResult[key]);
+		}
+	},
+
+	watch: {
+		"filter.fromWarehouse"(value) {
+			if (value) {
+				this.filter.toWarehouse = "";
+			}
 		}
 	},
 
@@ -152,7 +187,9 @@ export default {
 		},
 
 		reset() {
-			this.filter = { date: "", reference: "", supplier: "", customer: "", warehouse: "", status: "", paymentStatus: "" };
+			for (let key in this.filter) {
+				this.filter[key] = "";
+			}
 
 			if (!this.lastResult) return; // No need to reset if there is no last result to prevent sending a new request to the server with the same empty filter
 
