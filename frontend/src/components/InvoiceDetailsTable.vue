@@ -57,7 +57,7 @@
 
 			<template #cell(discountUnitAmount)="row"> $ {{ row.item.discountUnitAmount | floating }} </template>
 
-			<template #cell(netUnitTax)="row"> $ {{ row.item.netUnitTax | floating }} </template>
+			<template #cell(netUnitTax)="row"> $ {{ (row.item.netUnitTax * row.item.quantity) | floating }} </template>
 
 			<template #cell(subtotalUnitAmount)="row">
 				$ <span class="text-primary font-weight-600"> {{ row.item.subtotalUnitAmount | floating }} </span>
