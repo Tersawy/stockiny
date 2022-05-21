@@ -47,7 +47,13 @@
 						<b-btn :variant="row.item.decrementBtn" size="sm" class="font-default" @click="decrementQuantity(row)"> - </b-btn>
 					</b-input-group-prepend>
 
-					<b-form-input class="border-0 shadow-none bg-light text-center" v-model.number="row.item.quantity" @change="quantityChanged(row)" @focus="selectTarget" />
+					<b-form-input
+						class="border-0 shadow-none bg-light text-center"
+						v-model.number="row.item.quantity"
+						@change="quantityChanged(row, $event)"
+						@focus="selectTarget"
+						ref="quantityInput"
+					/>
 
 					<b-input-group-append>
 						<b-btn :variant="row.item.incrementBtn" size="sm" class="font-default" @click="incrementQuantity(row)"> + </b-btn>
@@ -156,7 +162,11 @@ export default {
 
 	methods: {
 		updateDetail(detail) {
-			this.invoice.details = this.invoice.details.map((oldDetail) => {
+			let details = [...this.invoice.details];
+
+			this.invoice.details = [];
+
+			details = details.map((oldDetail) => {
 				if (oldDetail.product == detail.product && oldDetail.variantId == detail.variantId) {
 					oldDetail = this.net(detail);
 					for (let key in detail) {
@@ -164,6 +174,10 @@ export default {
 					}
 				}
 				return oldDetail;
+			});
+
+			this.$nextTick(() => {
+				this.invoice.details = details;
 			});
 		},
 
@@ -337,16 +351,22 @@ export default {
 			this.updateDetail(row.item);
 		},
 
-		quantityChanged(row) {
+		quantityChanged(row, value) {
 			let regex = /^\d+$|^\d+\.\d+$|^\.\d+$/;
 
-			let isValid = regex.test(row.item.quantity);
+			let detail = JSON.parse(JSON.stringify(row.item));
 
-			if (!isValid || (this.checkQuantity && row.item.instock < row.item.quantity)) {
-				row.item.quantity = row.item.instock || 1;
+			detail.quantity = parseFloat(value);
+			row.value = parseFloat(value);
+
+			let isValid = regex.test(detail.quantity);
+
+			if (!isValid || (this.checkQuantity && detail.instock < detail.quantity)) {
+				detail.quantity = detail.instock || 1;
+				row.value = detail.instock || 1;
 			}
 
-			this.updateDetail(row.item);
+			this.updateDetail(detail);
 		},
 
 		removeProduct(row) {
