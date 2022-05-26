@@ -93,7 +93,7 @@
 								{{ item.subUnit.name }}
 							</template>
 
-							<template #cell(tax)="{ item }">$&nbsp;{{ item.taxAmount | floating }} </template>
+							<template #cell(tax)="{ item }">$&nbsp;{{ (item.taxAmount * item.quantity) | floating }} </template>
 
 							<template #cell(discount)="{ item }">
 								<span>$&nbsp;{{ item.discountAmount | floating }}</span>
