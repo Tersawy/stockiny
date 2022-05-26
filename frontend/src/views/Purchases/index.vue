@@ -99,7 +99,7 @@
 							:toggle-attrs="{ style: 'padding-top:2px;padding-bottom:2px;' }"
 							no-caret
 							menu-class="py-0 shadow-sm"
-							class="d-print-none"
+							class="d-print-none position-unset"
 						>
 							<template #button-content>
 								<ChangeIcon scale="1" v-b-tooltip title="Change Status" />
