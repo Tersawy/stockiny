@@ -31,7 +31,11 @@ class Variant {
 	}
 
 	get defaultImage() {
-		return this.images.find(image => !!image.default);
+		let image = this.images.find(image => !!image.default);
+
+		if (image) return image.name;
+
+		return null;
 	}
 
 	setDefaultImage(name) {
