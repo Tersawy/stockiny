@@ -167,6 +167,30 @@ const routes = [
 		meta: { auth: true, permissions: ["show:purchasesReturn"] }
 	},
 	{
+		path: "/transfers",
+		name: "Transfers",
+		component: () => /* webpackChunkName: "Transfers" */ import("@/views/Transfers/index"),
+		meta: { auth: true, permissions: ["read:transfers"] }
+	},
+	{
+		path: "/transfers/create",
+		name: "TransferCreate",
+		component: () => /* webpackChunkName: "TransferCreate" */ import("@/views/Transfers/transferForm"),
+		meta: { auth: true, permissions: ["create:transfers"] }
+	},
+	{
+		path: "/transfers/:id/edit",
+		name: "TransferEdit",
+		component: () => /* webpackChunkName: "TransferEdit" */ import("@/views/Transfers/transferForm"),
+		meta: { auth: true, permissions: ["edit:transfers"] }
+	},
+	{
+		path: "/transfers/:id",
+		name: "Transfer",
+		component: () => /* webpackChunkName: "Transfer" */ import("@/views/Transfers/transfer"),
+		meta: { auth: true, permissions: ["show:transfers"] }
+	},
+	{
 		path: "/invoices",
 		name: "Invoices",
 		component: () => /* webpackChunkName: "Invoices" */ import("@/views/Invoices/index"),

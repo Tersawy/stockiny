@@ -176,6 +176,52 @@
 					</b-table>
 				</b-card>
 			</b-col>
+			<b-col class="mt-4">
+				<b-card class="invoice-card h-100">
+					<template #header>
+						<h6 class="mb-0">Transfers</h6>
+					</template>
+
+					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
+						<h6 class="text-muted mb-0">Statuses</h6>
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createTransferStatus)">
+							<IconPlus color="var(--primary)" />
+							<span class="mx-1">add</span>
+						</b-btn>
+					</div>
+
+					<b-table
+						striped
+						stacked="sm"
+						hover
+						v-if="transferStatuses && transferStatuses.length"
+						:fields="fields"
+						:items="transferStatuses"
+						small
+						class="status-table m-0"
+					>
+						<template #cell(name)="{ item }">
+							<InvoiceStatus :status="item" />
+						</template>
+
+						<template #cell(effected)="{ item }">
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changeTransferStatusEffected, item)" switch :disabled="item.effected" />
+						</template>
+
+						<template #cell(actions)="{ item }">
+							<div class="d-flex align-items-center">
+								<a @click="openStatusForm(updateTransferStatus, item)" class="text-success">
+									<EditIcon />
+								</a>
+
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deleteTransferStatus, item)" class="text-danger ml-3">
+									<TrashIcon />
+								</a>
+							</div>
+						</template>
+					</b-table>
+				</b-card>
+			</b-col>
 		</b-row>
 
 		<StatusForm :statusHandler="statusHandler" :oldStatus="status" />
@@ -218,68 +264,56 @@ export default {
 	},
 
 	computed: {
-		// ...mapState("Invoices", ["all"]),
-
-		// purchases() {
-		// 	return this.all?.docs?.find((doc) => doc.name == "purchases") || {};
-		// },
-
-		// purchasesReturn() {
-		// 	return this.all?.docs?.find((doc) => doc.name == "purchases-return") || {};
-		// },
-
-		// sales() {
-		// 	return this.all?.docs?.find((doc) => doc.name == "sales") || {};
-		// },
-
-		// salesReturn() {
-		// 	return this.all?.docs?.find((doc) => doc.name == "sales-return") || {};
-		// }
-
 		...mapState({
 			purchaseStatuses: (state) => state.Purchases.statuses,
 			purchaseReturnStatuses: (state) => state.PurchasesReturn.statuses,
 			saleStatuses: (state) => state.Sales.statuses,
-			saleReturnStatuses: (state) => state.SalesReturn.statuses
+			saleReturnStatuses: (state) => state.SalesReturn.statuses,
+			transferStatuses: (state) => state.Transfers.statuses
 		})
 	},
 
 	methods: {
-		// ...mapActions("Invoices", ["getAll", "changeEffectedStatus", "deleteStatus"]),
 		...mapActions({
 			getPurchaseStatuses: "Purchases/getStatuses",
-			getPurchaseReturnStatuses: "PurchasesReturn/getStatuses",
-
 			createPurchaseStatus: "Purchases/createStatus",
-			createPurchaseReturnStatus: "PurchasesReturn/createStatus",
-
 			updatePurchaseStatus: "Purchases/updateStatus",
-			updatePurchaseReturnStatus: "PurchasesReturn/updateStatus",
-
 			changePurchaseStatusEffected: "Purchases/changeEffectedStatus",
-			changePurchaseReturnStatusEffected: "PurchasesReturn/changeEffectedStatus",
-
 			deletePurchaseStatus: "Purchases/deleteStatus",
+
+			getPurchaseReturnStatuses: "PurchasesReturn/getStatuses",
+			createPurchaseReturnStatus: "PurchasesReturn/createStatus",
+			updatePurchaseReturnStatus: "PurchasesReturn/updateStatus",
+			changePurchaseReturnStatusEffected: "PurchasesReturn/changeEffectedStatus",
 			deletePurchaseReturnStatus: "PurchasesReturn/deleteStatus",
 
 			getSaleStatuses: "Sales/getStatuses",
-			getSaleReturnStatuses: "SalesReturn/getStatuses",
-
 			createSaleStatus: "Sales/createStatus",
-			createSaleReturnStatus: "SalesReturn/createStatus",
-
 			updateSaleStatus: "Sales/updateStatus",
-			updateSaleReturnStatus: "SalesReturn/updateStatus",
-
 			changeSaleStatusEffected: "Sales/changeEffectedStatus",
-			changeSaleReturnStatusEffected: "SalesReturn/changeEffectedStatus",
-
 			deleteSaleStatus: "Sales/deleteStatus",
-			deleteSaleReturnStatus: "SalesReturn/deleteStatus"
+
+			getSaleReturnStatuses: "SalesReturn/getStatuses",
+			createSaleReturnStatus: "SalesReturn/createStatus",
+			updateSaleReturnStatus: "SalesReturn/updateStatus",
+			changeSaleReturnStatusEffected: "SalesReturn/changeEffectedStatus",
+			deleteSaleReturnStatus: "SalesReturn/deleteStatus",
+
+			getTransferStatuses: "Transfers/getStatuses",
+			createTransferStatus: "Transfers/createStatus",
+			updateTransferStatus: "Transfers/updateStatus",
+			changeTransferStatusEffected: "Transfers/changeEffectedStatus",
+			deleteTransferStatus: "Transfers/deleteStatus"
 		}),
 
 		getAllStatuses() {
-			return Promise.all([this.getPurchaseStatuses(), this.getPurchaseReturnStatuses(), this.getSaleStatuses(), this.getSaleReturnStatuses()]);
+			return Promise.all([
+				this.getPurchaseStatuses(),
+				this.getPurchaseReturnStatuses(),
+				this.getSaleStatuses(),
+				this.getSaleReturnStatuses(),
+				this.getTransferStatuses()
+			]);
 		},
 
 		openStatusForm(statusHandler, status) {

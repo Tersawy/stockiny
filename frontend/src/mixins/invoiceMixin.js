@@ -102,6 +102,10 @@ export default (storeNamespace, amountType) => {
 		},
 
 		async mounted() {
+			// selfMounted is defined in data to prevent the mixin from being applied to the parent component
+			// this is because we to want to run mounted() in the parent component e.g. transferForm
+			if (typeof this.selfMounted === "function") return this.selfMounted();
+
 			this.getUnitsOptions();
 
 			this.getWarehousesOpt().then((data) => {
