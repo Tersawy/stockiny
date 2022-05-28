@@ -531,7 +531,11 @@ let throwIfNotValidDetail = (detail, products) => {
 
 	if (!product.availableForSale) throw e("product");
 
-	unit = detail.unit = (product.unit._id || product.unit);
+	if (detail.unit) { // in update we get unit with detail so we don't need to set it again from product
+		unit = detail.unit._id || detail.unit;
+	} else {
+		unit = detail.unit = (product.unit._id || product.unit);
+	}
 
 	variant = product.getVariantById(detail.variant);
 
