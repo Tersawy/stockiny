@@ -1,16 +1,18 @@
 <template>
-	<Autocomplete :search="autoSearch" placeholder="Search in Products by code or name" @submit="selectProduct" ref="autocomplete">
-		<template #result="{ result, props }">
-			<li v-bind="props" class="d-flex">
-				<b-avatar v-if="result.image" :src="`${BASE_URL}/images/products/${result.product}/${result.image}`"></b-avatar>
-				<div v-else class="p-3 border rounded text-center"><GalleryIcon scale="2.5" color="#999" /></div>
-				<div class="mx-3">
-					<h6 class="text-muted">{{ result.name }} - {{ result.code }}</h6>
-					<span class="text-muted" v-if="result.variantName">{{ result.variantName }}</span>
-				</div>
-			</li>
-		</template>
-	</Autocomplete>
+	<b-overlay :show="isBusy" spinner-small spinner-variant="primary">
+		<Autocomplete :search="autoSearch" placeholder="Search in Products by code or name" @submit="selectProduct" ref="autocomplete">
+			<template #result="{ result, props }">
+				<li v-bind="props" class="d-flex">
+					<b-avatar v-if="result.image" :src="`${BASE_URL}/images/products/${result.product}/${result.image}`"></b-avatar>
+					<div v-else class="p-3 border rounded text-center"><GalleryIcon scale="2.5" color="#999" /></div>
+					<div class="mx-3">
+						<h6 class="text-muted">{{ result.name }} - {{ result.code }}</h6>
+						<span class="text-muted" v-if="result.variantName">{{ result.variantName }}</span>
+					</div>
+				</li>
+			</template>
+		</Autocomplete>
+	</b-overlay>
 </template>
 
 <script>
@@ -24,7 +26,9 @@ export default {
 	props: {
 		invoice: { type: Object, required: true },
 
-		productOptions: { type: Array, required: true }
+		productOptions: { type: Array, required: true },
+
+		isBusy: { type: Boolean, required: false }
 	},
 
 	components: { Autocomplete, GalleryIcon },
