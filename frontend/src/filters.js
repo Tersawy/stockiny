@@ -69,3 +69,11 @@ Vue.filter("date", (date) => {
 
 	return date;
 });
+
+Vue.filter("toCapitalize", value => {
+	if (!value) return "";
+
+	return value.toString().replace(/\w\S*/g, function (txt) {
+		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+	});
+})
