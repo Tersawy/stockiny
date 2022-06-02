@@ -20,7 +20,7 @@
 
 					<template v-if="!isTransfer">
 						<!-- Payment Status -->
-						<b-form-group label-for="paymentStatus" label="Payment status">
+						<b-form-group label-for="paymentStatus" label="Payment status" v-if="!noPayment">
 							<BFormSelect id="paymentStatus" v-model="filter.paymentStatus" :options="paymentStatuses" />
 						</b-form-group>
 
@@ -76,7 +76,8 @@ export default {
 		suppliers: { type: Array, default: () => [] },
 		customers: { type: Array, default: () => [] },
 		warehouses: { type: Array, default: () => [] },
-		isTransfer: { type: Boolean, default: false }
+		isTransfer: { type: Boolean, default: false },
+		noPayment: { type: Boolean, default: false }
 	},
 
 	components: { FilterIcon },
