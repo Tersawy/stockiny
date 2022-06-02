@@ -114,8 +114,6 @@ export default (storeNamespace, amountType) => {
 						// !
 						// TODO:: choise default warehouse from settings instead
 						this.invoice.warehouse = data.options[0]._id;
-
-						this.getProductOptions({ warehouse: this.invoice.warehouse });
 					}
 				}
 			});
