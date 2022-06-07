@@ -222,6 +222,52 @@
 					</b-table>
 				</b-card>
 			</b-col>
+			<b-col class="mt-4">
+				<b-card class="invoice-card h-100">
+					<template #header>
+						<h6 class="mb-0">Adjustments</h6>
+					</template>
+
+					<div class="d-flex align-items-center justify-content-between border rounded-lg py-2 px-3 mb-2 mb-sm-4 shadow-sm bg-light">
+						<h6 class="text-muted mb-0">Statuses</h6>
+						<b-btn class="add-status-btn px-2 py-0" variant="outline-primary" size="sm" @click="openStatusForm(createAdjustmentStatus)">
+							<IconPlus color="var(--primary)" />
+							<span class="mx-1">add</span>
+						</b-btn>
+					</div>
+
+					<b-table
+						striped
+						stacked="sm"
+						hover
+						v-if="adjustmentStatuses && adjustmentStatuses.length"
+						:fields="fields"
+						:items="adjustmentStatuses"
+						small
+						class="status-table m-0"
+					>
+						<template #cell(name)="{ item }">
+							<InvoiceStatus :status="item" />
+						</template>
+
+						<template #cell(effected)="{ item }">
+							<b-form-checkbox v-model="item.effected" @change="setEffectedStatus(changeAdjustmentStatusEffected, item)" switch :disabled="item.effected" />
+						</template>
+
+						<template #cell(actions)="{ item }">
+							<div class="d-flex align-items-center">
+								<a @click="openStatusForm(updateAdjustmentStatus, item)" class="text-success">
+									<EditIcon />
+								</a>
+
+								<a v-if="!item.effected" @click="openDeleteStatusModal(deleteAdjustmentStatus, item)" class="text-danger ml-3">
+									<TrashIcon />
+								</a>
+							</div>
+						</template>
+					</b-table>
+				</b-card>
+			</b-col>
 		</b-row>
 
 		<StatusForm :statusHandler="statusHandler" :oldStatus="status" />
@@ -269,7 +315,8 @@ export default {
 			purchaseReturnStatuses: (state) => state.PurchasesReturn.statuses,
 			saleStatuses: (state) => state.Sales.statuses,
 			saleReturnStatuses: (state) => state.SalesReturn.statuses,
-			transferStatuses: (state) => state.Transfers.statuses
+			transferStatuses: (state) => state.Transfers.statuses,
+			adjustmentStatuses: (state) => state.Adjustments.statuses
 		})
 	},
 
@@ -303,7 +350,13 @@ export default {
 			createTransferStatus: "Transfers/createStatus",
 			updateTransferStatus: "Transfers/updateStatus",
 			changeTransferStatusEffected: "Transfers/changeEffectedStatus",
-			deleteTransferStatus: "Transfers/deleteStatus"
+			deleteTransferStatus: "Transfers/deleteStatus",
+
+			getAdjustmentStatuses: "Adjustments/getStatuses",
+			createAdjustmentStatus: "Adjustments/createStatus",
+			updateAdjustmentStatus: "Adjustments/updateStatus",
+			changeAdjustmentStatusEffected: "Adjustments/changeEffectedStatus",
+			deleteAdjustmentStatus: "Adjustments/deleteStatus"
 		}),
 
 		getAllStatuses() {
@@ -312,7 +365,8 @@ export default {
 				this.getPurchaseReturnStatuses(),
 				this.getSaleStatuses(),
 				this.getSaleReturnStatuses(),
-				this.getTransferStatuses()
+				this.getTransferStatuses(),
+				this.getAdjustmentStatuses()
 			]);
 		},
 

@@ -191,6 +191,30 @@ const routes = [
 		meta: { auth: true, permissions: ["show:transfers"] }
 	},
 	{
+		path: "/adjustments",
+		name: "Adjustments",
+		component: () => /* webpackChunkName: "Adjustments" */ import("@/views/Adjustments/index"),
+		meta: { auth: true, permissions: ["read:adjustments"] }
+	},
+	{
+		path: "/adjustments/create",
+		name: "AdjustmentCreate",
+		component: () => /* webpackChunkName: "AdjustmentCreate" */ import("@/views/Adjustments/adjustmentForm"),
+		meta: { auth: true, permissions: ["create:adjustments"] }
+	},
+	{
+		path: "/adjustments/:id/edit",
+		name: "AdjustmentEdit",
+		component: () => /* webpackChunkName: "AdjustmentEdit" */ import("@/views/Adjustments/adjustmentForm"),
+		meta: { auth: true, permissions: ["edit:adjustments"] }
+	},
+	{
+		path: "/adjustments/:id",
+		name: "Adjustment",
+		component: () => /* webpackChunkName: "Adjustment" */ import("@/views/Adjustments/adjustment"),
+		meta: { auth: true, permissions: ["show:adjustments"] }
+	},
+	{
 		path: "/invoices",
 		name: "Invoices",
 		component: () => /* webpackChunkName: "Invoices" */ import("@/views/Invoices/index"),
