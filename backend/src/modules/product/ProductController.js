@@ -118,12 +118,8 @@ let getPurchaseOptions = async (req, res) => {
 	let filteredVariant = {
 		_id: "$$filteredVariant._id",
 		name: "$$filteredVariant.name",
-		image: {
-			$arrayElemAt: ["$$filteredVariant.images", { $indexOfArray: ["$$filteredVariant.images.default", true] }],
-		},
-		stock: {
-			$arrayElemAt: ["$$filteredVariant.stock", { $indexOfArray: ["$$filteredVariant.stock.warehouse", warehouseId] }],
-		},
+		image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+		stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
 	};
 
 	let products = await Product.aggregate([
@@ -219,15 +215,8 @@ let getSaleOptions = async (req, res) => {
 			in: {
 				_id: "$$filteredVariant._id",
 				name: "$$filteredVariant.name",
-				image: {
-					$arrayElemAt: ["$$filteredVariant.images", { $indexOfArray: ["$$filteredVariant.images.default", true] }],
-				},
-				stock: {
-					$arrayElemAt: [
-						"$$filteredVariant.stock",
-						{ $indexOfArray: ["$$filteredVariant.stock.warehouse", warehouseId] },
-					],
-				},
+				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
 			},
 		},
 	};
@@ -332,15 +321,8 @@ let getPurchaseReturnOptions = async (req, res) => {
 			in: {
 				_id: "$$filteredVariant._id",
 				name: "$$filteredVariant.name",
-				image: {
-					$arrayElemAt: ["$$filteredVariant.images", { $indexOfArray: ["$$filteredVariant.images.default", true] }],
-				},
-				stock: {
-					$arrayElemAt: [
-						"$$filteredVariant.stock",
-						{ $indexOfArray: ["$$filteredVariant.stock.warehouse", warehouseId] },
-					],
-				},
+				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
 			},
 		},
 	};
@@ -433,12 +415,8 @@ let getSaleReturnOptions = async (req, res) => {
 	let filteredVariant = {
 		_id: "$$filteredVariant._id",
 		name: "$$filteredVariant.name",
-		image: {
-			$arrayElemAt: ["$$filteredVariant.images", { $indexOfArray: ["$$filteredVariant.images.default", true] }],
-		},
-		stock: {
-			$arrayElemAt: ["$$filteredVariant.stock", { $indexOfArray: ["$$filteredVariant.stock.warehouse", warehouseId] }],
-		},
+		image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+		stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
 	};
 
 	let products = await Product.aggregate([
@@ -529,15 +507,8 @@ let getTransferOptions = async (req, res) => {
 			in: {
 				_id: "$$filteredVariant._id",
 				name: "$$filteredVariant.name",
-				image: {
-					$arrayElemAt: ["$$filteredVariant.images", { $indexOfArray: ["$$filteredVariant.images.default", true] }],
-				},
-				stock: {
-					$arrayElemAt: [
-						"$$filteredVariant.stock",
-						{ $indexOfArray: ["$$filteredVariant.stock.warehouse", warehouseId] },
-					],
-				},
+				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
 			},
 		},
 	};
