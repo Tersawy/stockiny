@@ -100,27 +100,58 @@
 			<Adjustment v-if="printsControl.item" />
 		</div>
 
-		<default-modal id="quantityErrors" :showStayOpenBtn="false" :showOkBtn="false" title="Quantity Errors" :modalProps="{ headerClass: 'py-3', centered: true }">
+		<default-modal
+			id="quantityErrors"
+			:showStayOpenBtn="false"
+			:showOkBtn="false"
+			title="Quantity Errors"
+			:modalProps="{ headerClass: 'py-3', centered: true, size: 'xl', class: 'w-100' }"
+			class="w-100"
+		>
 			<template #btn-close="{ close }">
 				<b-btn variant="outline-primary" size="sm" @click="close">Close</b-btn>
 			</template>
-
-			<b-table :fields="quantityErrors.tableFields" :items="quantityErrors.errors">
-				<template #cell(productName)="row">
-					<div class="mb-2">
-						<strong>{{ row.value }}</strong>
-						<small class="text-nowrap text-muted"> ( {{ row.item.variantName }} ) </small>
-					</div>
-				</template>
-
-				<template #cell(stockBefore)="row">
-					<b-badge variant="outline-warning"> {{ row.value | floating }} {{ row.item.unitName }} </b-badge>
-				</template>
-
-				<template #cell(stockAfter)="row">
-					<b-badge variant="outline-danger"> {{ row.value | floating }} {{ row.item.unitName }} </b-badge>
-				</template>
-			</b-table>
+			<b-table-simple hover small responsive bordered>
+				<b-thead>
+					<b-tr>
+						<b-th rowspan="3" class="text-center" style="vertical-align: middle">Product</b-th>
+						<b-th colspan="3" class="text-center">Warehouse</b-th>
+						<b-th rowspan="3" class="text-center" style="vertical-align: middle">Quantity</b-th>
+					</b-tr>
+					<b-tr>
+						<b-th rowspan="2" class="text-center" style="vertical-align: middle">Name</b-th>
+						<b-th colspan="2" class="text-center">Stock</b-th>
+					</b-tr>
+					<b-tr>
+						<b-th class="text-center">Before</b-th>
+						<b-th class="text-center">After</b-th>
+					</b-tr>
+				</b-thead>
+				<b-tbody>
+					<b-tr v-for="(error, i) in quantityErrors" :key="i">
+						<b-th>
+							<div class="mb-2">
+								<strong class="text-nowrap"> {{ error.product.name }} </strong>
+								<small class="text-nowrap text-muted"> ( {{ error.variant.name }} ) </small>
+							</div>
+						</b-th>
+						<b-td variant="danger" class="font-weight-bold text-center text-nowrap">{{ error.warehouse.name }}</b-td>
+						<b-td class="text-center">
+							<b-badge :variant="`outline-${error.warehouse.stock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.warehouse.stock.before | floating }} {{ error.unit.name }}
+							</b-badge>
+						</b-td>
+						<b-td class="text-center">
+							<b-badge :variant="`outline-${error.warehouse.stock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.warehouse.stock.after | floating }} {{ error.unit.name }}
+							</b-badge>
+						</b-td>
+						<b-td class="text-center">
+							<b-badge variant="outline-danger"> {{ error.quantity | floating }} {{ error.unit.name }} </b-badge>
+						</b-td>
+					</b-tr>
+				</b-tbody>
+			</b-table-simple>
 		</default-modal>
 	</main-content>
 </template>
@@ -190,14 +221,7 @@ export default {
 			]
 		},
 
-		quantityErrors: {
-			tableFields: [
-				{ key: "productName", label: "Product" },
-				{ key: "stockBefore", label: "Stock Before" },
-				{ key: "stockAfter", label: "Stock After" }
-			],
-			errors: []
-		}
+		quantityErrors: []
 	}),
 
 	mounted() {
@@ -250,7 +274,7 @@ export default {
 				this.$store.commit("showMessage", { error: true });
 
 				if (e.status == 422 && e.type == "quantity") {
-					this.quantityErrors.errors = e.errors;
+					this.quantityErrors = e.errors;
 					this.$bvModal.show("quantityErrors");
 				}
 
