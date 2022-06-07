@@ -58,6 +58,16 @@ class Variant {
 		return null;
 	}
 
+	getInstockByWarehouse(warehouse) {
+		let stock = this.getStock(warehouse);
+
+		if (stock) {
+			return stock.quantity;
+		}
+
+		return 0;
+	}
+
 	addToStock({ warehouse, quantity }) {
 		let oldStock = this.getStock(warehouse);
 
