@@ -591,6 +591,73 @@ let getTransferOptions = async (req, res) => {
 
 	return res.json({ options: products });
 };
+/* 
+	{
+		name
+		code
+		image
+		amount => cost
+		unit ====> to get subunits in front end for select box
+		subUnit => purchaseUnit
+		tax
+		taxMethod
+		variants: [
+			{ // gets only variants has available for purchase
+				_id,
+				name,
+				image => variant default Image or productImage
+				stock: Number
+			}
+		]
+	}
+*/
+let getAdjustmentOptions = async (req, res) => {
+	let { warehouse } = req.query;
+
+	let warehouseId = mongoose.Types.ObjectId(warehouse);
+
+	let products = await Product.aggregate([
+		{
+			$match: { deletedAt: null },
+		},
+		{
+			$project: {
+				_id: 0,
+				product: "$_id",
+				name: 1,
+				code: 1,
+				image: 1,
+				unit: 1,
+				subUnit: "$purchaseUnit",
+				variants: {
+					$map: {
+						input: {
+							$map: {
+								input: "$variants",
+								as: "variantWithStock",
+								in: {
+									_id: "$$variantWithStock._id",
+									name: "$$variantWithStock.name",
+									image: { $arrayElemAt: [{ $filter: { input: "$$variantWithStock.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+									stock: { $arrayElemAt: [{ $filter: { input: "$$variantWithStock.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] },
+								},
+							},
+						},
+						as: "variant",
+						in: {
+							_id: "$$variant._id",
+							name: "$$variant.name",
+							image: { $ifNull: ["$$variant.image.name", "$image"] },
+							stock: { $ifNull: ["$$variant.stock.quantity", 0] },
+						},
+					},
+				},
+			},
+		},
+	]);
+
+	return res.json({ options: products });
+};
 
 exports.getOptions = (req, res) => {
 	let { type } = req.query;
@@ -601,6 +668,7 @@ exports.getOptions = (req, res) => {
 		purchaseReturn: getPurchaseReturnOptions,
 		saleReturn: getSaleReturnOptions,
 		transfer: getTransferOptions,
+		adjustment: getAdjustmentOptions,
 	}
 
 	return optionsMethods[type](req, res);

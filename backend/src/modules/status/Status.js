@@ -11,7 +11,7 @@ const statusSchema = new Schema({
 
     effected: { type: Boolean, default: false },
 
-    invoice: { type: String, required: true, enum: ["purchases", "purchasesReturn", "sales", "salesReturn", "transfers"] },
+    invoice: { type: String, required: true, enum: ["purchases", "purchasesReturn", "sales", "salesReturn", "transfers", "adjustments"] },
 
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
