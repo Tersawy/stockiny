@@ -236,7 +236,7 @@ exports.updateTransfer = async (req, res) => {
 	let productIds = details.map((detail) => detail.product);
 
 	// get products for new details
-	let productsQuery = Product.find({ _id: { $in: productIds } }, "name availableForTransfer unit variants._id variants.availableForTransfer variants.stock variants.name").populate("unit", "name");
+	let productsQuery = Product.find({ _id: { $in: productIds } }, "name unit variants._id variants.stock variants.name").populate("unit", "name");
 
 	let warehousesQuery = Warehouse.find({ _id: { $in: [fromWarehouse, toWarehouse] } });
 
