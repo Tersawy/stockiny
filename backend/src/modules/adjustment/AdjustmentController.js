@@ -390,7 +390,7 @@ exports.changeAdjustmentStatus = async (req, res) => {
 		if (stockAfter < 0) {
 			errors.push({
 				product: { _id: detail.product._id, name: detail.product.name },
-				variant: { _id: detail.variant, name: detail.variant.name },
+				variant: { _id: variant._id, name: variant.name },
 				warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, stock: { before: stockBefore, after: stockAfter } },
 				unit: { _id: detail.unit._id, name: detail.unit.name },
 				quantity,
