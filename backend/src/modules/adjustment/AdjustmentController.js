@@ -378,13 +378,23 @@ exports.changeAdjustmentStatus = async (req, res) => {
 		let quantity = detail.stock;
 
 		if (adjustment.status.effected) {
-			variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
-			stockAfter -= quantity;
+			if (detail.isAddition) {
+				variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
+				stockAfter -= quantity;
+			} else {
+				variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
+				stockAfter += quantity;
+			}
 		}
 
 		if (status.effected) {
-			variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
-			stockAfter += quantity;
+			if (detail.isAddition) {
+				variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
+				stockAfter += quantity;
+			} else {
+				variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
+				stockAfter -= quantity;
+			}
 		}
 
 		if (stockAfter < 0) {
