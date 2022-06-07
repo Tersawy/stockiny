@@ -42,7 +42,7 @@
 				<span class="mx-2 text-muted">Download PDF</span>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" v-if="!noEmail">
 				<b-icon icon="envelope" scale="0.8"></b-icon>
 				<span class="mx-2 text-muted">Send {{ invoiceName }} on Email</span>
 			</b-dropdown-item>
@@ -63,7 +63,8 @@ export default {
 		invoice: { type: Object, required: true },
 		namespace: { type: String, required: true },
 		invoiceName: { type: String, required: true },
-		noPayments: { type: Boolean, default: false }
+		noPayments: { type: Boolean, default: false },
+		noEmail: { type: Boolean, default: false }
 	},
 
 	computed: {
