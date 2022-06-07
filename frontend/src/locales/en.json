@@ -58,5 +58,8 @@
 		"effected": "This is Effected in Stock !",
 		"notFound": "{module} Is Not Found",
 		"wrong": "Something went wrong !"
+	},
+	"forms": {
+		"notEnoughStock": "{field} is not enough in stock"
 	}
 }
