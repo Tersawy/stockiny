@@ -18,12 +18,12 @@ module.exports = {
 	ErrorHandler,
 
 	/**
-	 	@param {Object | String} message e.g. "Something went wrong" | { message: "Something went wrong" }
+		@param {Object | String} message e.g. "Something went wrong" | { message: "Something went wrong" }
 		@param {Number} statusCode
 	*/
 	createError: (message, statusCode = 500) => new ErrorHandler(message, statusCode),
 
-	notFound: (field = "_id") => new ErrorHandler({ field, message: { type: "notFound" } }, 404),
+	notFound: (field = "_id", statusCode = 404) => new ErrorHandler({ field, message: { type: "notFound" } }, statusCode),
 
 	exists: (field = "name") => new ErrorHandler({ field, message: { type: "exists" } }, 409),
 
