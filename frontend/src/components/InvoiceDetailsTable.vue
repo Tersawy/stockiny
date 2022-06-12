@@ -61,7 +61,7 @@
 				</b-input-group>
 			</template>
 
-			<template #cell(discountUnitAmount)="row"> $ {{ row.item.discountUnitAmount | floating }} </template>
+			<template #cell(discountUnitAmount)="row"> $ {{ (row.item.discountUnitAmount * row.item.quantity) | floating }} </template>
 
 			<template #cell(netUnitTax)="row"> $ {{ (row.item.netUnitTax * row.item.quantity) | floating }} </template>
 
