@@ -18,7 +18,7 @@
 				</router-link>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="showPayments(invoice)" v-if="noPayments && hasPayments">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="showPayments(invoice)" v-if="!noPayments && hasPayments">
 				<b-icon icon="credit-card" scale="0.8"></b-icon>
 				<span class="mx-2 text-muted">Show Payments</span>
 			</b-dropdown-item>
