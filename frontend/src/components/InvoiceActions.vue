@@ -28,7 +28,7 @@
 				<span class="mx-2 text-muted">Create Payment</span>
 			</b-dropdown-item>
 
-			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="downloadPaymentsPDF(invoice)" v-if="noPayments && hasPayments">
+			<b-dropdown-item link-class="py-2 d-flex align-items-center" @click="downloadPaymentsPDF(invoice)" v-if="!noPayments && hasPayments">
 				<span class="d-flex" style="font-size: 13px">
 					<i class="far fa-file-pdf fa-fw font-weight-300"></i>
 				</span>
