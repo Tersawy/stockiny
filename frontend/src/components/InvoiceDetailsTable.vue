@@ -59,6 +59,7 @@
 						<b-btn :variant="row.item.incrementBtn" size="sm" class="font-default" @click="incrementQuantity(row)"> + </b-btn>
 					</b-input-group-append>
 				</b-input-group>
+				<input-error :namespace="namespace" :field="`details[${row.index}].quantity`" />
 			</template>
 
 			<template #cell(discountUnitAmount)="row"> $ {{ (row.item.discountUnitAmount * row.item.quantity) | floating }} </template>
@@ -90,6 +91,8 @@ import TrashIcon from "@/components/icons/trash";
 
 import GalleryIcon from "@/components/icons/gallery";
 
+import InputError from "@/components/InputError.vue";
+
 export default {
 	props: {
 		invoice: { type: Object },
@@ -105,7 +108,7 @@ export default {
 		unitLabel: { type: String }
 	},
 
-	components: { InvoiceDetailForm, EditIcon, TrashIcon, GalleryIcon },
+	components: { InvoiceDetailForm, EditIcon, TrashIcon, GalleryIcon, InputError },
 
 	data() {
 		return {
@@ -297,6 +300,8 @@ export default {
 		},
 
 		incrementQuantity(row) {
+			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
+
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
 				if (this.checkQuantity) {
 					if (row.item.quantity >= row.item.instock) {
@@ -328,6 +333,8 @@ export default {
 		},
 
 		decrementQuantity(row) {
+			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
+
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity) && row.item.quantity - 1 > 0) {
 				row.item.quantity -= 1;
 				row.value -= 1;
@@ -352,6 +359,8 @@ export default {
 		},
 
 		quantityChanged(row, value) {
+			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
+
 			let regex = /^\d+$|^\d+\.\d+$|^\.\d+$/;
 
 			let detail = JSON.parse(JSON.stringify(row.item));
