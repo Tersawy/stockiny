@@ -59,7 +59,7 @@ let createAdjustment = {
 		},
 
 		isFloat: {
-			errorMessage: { type: "minValue", gt: 0 },
+			errorMessage: { type: "mustGtValue", value: 0 },
 			options: { gt: 0 },
 		},
 	},

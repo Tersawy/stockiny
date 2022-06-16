@@ -162,7 +162,7 @@ let createTransfer = {
 		},
 
 		isFloat: {
-			errorMessage: { type: "minValue", gt: 0 },
+			errorMessage: { type: "mustGtValue", value: 0 },
 			options: { gt: 0 },
 		},
 	},
@@ -179,7 +179,7 @@ let createTransfer = {
 		},
 
 		isFloat: {
-			errorMessage: { type: "minValue", gt: 0 },
+			errorMessage: { type: "mustGtValue", value: 0 },
 			options: { gt: 0 },
 		},
 	},
