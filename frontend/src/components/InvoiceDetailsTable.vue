@@ -137,7 +137,11 @@ export default {
 				if (oldValue && newValue) {
 					let productOption = this.productOptions.find((opt) => opt.product == this.detail.product);
 
-					this.detail.amount = productOption.amount;
+					/*
+						mainAmount this becuase in update maybe the product that match this detail not found in productOptions and
+					 	the reason is that the product has been deleted, disabled or don't have instock
+					 */
+					this.detail.amount = productOption ? productOption.amount : this.detail.mainAmount;
 
 					this.detail.subUnitAmount = this.subUnitAmount(this.detail);
 				}

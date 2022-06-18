@@ -168,7 +168,7 @@ exports.getEditPurchaseReturn = async (req, res) => {
 
 	let select = "date warehouse supplier shipping tax discount discountMethod status reference details notes";
 
-	let purchaseReturn = await PurchaseReturn.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let purchaseReturn = await PurchaseReturn.findById(id, select).populate("details.product", "cost variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
 
 	if (!purchaseReturn) throw notFound();
 
@@ -177,6 +177,7 @@ exports.getEditPurchaseReturn = async (req, res) => {
 	purchaseReturn.details.forEach(detail => {
 		let _detail = {
 			amount: detail.unitAmount,
+			mainAmount: detail.product.cost, // mainAmount this becuase in update maybe the product that match this detail not found in productOptions and the reason is that the product has been deleted, disabled or don't have instock
 			quantity: detail.quantity,
 			tax: detail.tax,
 			taxMethod: detail.taxMethod,

@@ -178,7 +178,7 @@ exports.getEditTransfer = async (req, res) => {
 
 	let select = "date fromWarehouse toWarehouse shipping tax discount discountMethod status reference details notes";
 
-	let transfer = await Transfer.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let transfer = await Transfer.findById(id, select).populate("details.product", "cost variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
 
 	if (!transfer) throw notFound();
 
@@ -187,6 +187,7 @@ exports.getEditTransfer = async (req, res) => {
 	transfer.details.forEach(detail => {
 		let _detail = {
 			amount: detail.unitAmount,
+			mainAmount: detail.product.cost,
 			quantity: detail.quantity,
 			tax: detail.tax,
 			taxMethod: detail.taxMethod,

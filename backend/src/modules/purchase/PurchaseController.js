@@ -141,7 +141,7 @@ exports.getEditPurchase = async (req, res) => {
 
 	let select = "date warehouse supplier shipping tax discount discountMethod status reference details notes";
 
-	let purchase = await Purchase.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let purchase = await Purchase.findById(id, select).populate("details.product", "cost variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
 
 	if (!purchase) throw notFound();
 
@@ -150,6 +150,7 @@ exports.getEditPurchase = async (req, res) => {
 	purchase.details.forEach(detail => {
 		let _detail = {
 			amount: detail.unitAmount,
+			mainAmount: detail.product.cost,
 			quantity: detail.quantity,
 			tax: detail.tax,
 			taxMethod: detail.taxMethod,
