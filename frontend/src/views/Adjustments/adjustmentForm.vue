@@ -127,7 +127,7 @@
 			id="quantityErrors"
 			:showStayOpenBtn="false"
 			:showOkBtn="false"
-			title="Quantity Errors"
+			title=""
 			:modalProps="{ headerClass: 'py-3', centered: true, size: 'xl', class: 'w-100' }"
 			class="w-100"
 		>
