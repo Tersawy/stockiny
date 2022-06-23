@@ -55,7 +55,7 @@ exports.createAdjustment = async (req, res) => {
 	session.startTransaction();
 
 	// This fix => ParallelSaveError: Can't save() the same doc multiple times in parallel
-	let productsUpdated = [];
+	let updates = [];
 
 	let errors = [];
 
@@ -63,8 +63,7 @@ exports.createAdjustment = async (req, res) => {
 		let product = throwIfNotValidDetail(detail, products);
 
 		if (status.effected) {
-			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
-			let updatedProduct = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+			let updatedProduct = updates.find((p) => p._id.toString() === detail.product.toString());
 
 			product = updatedProduct || product;
 
@@ -95,14 +94,14 @@ exports.createAdjustment = async (req, res) => {
 				continue;
 			}
 
-			if (!updatedProduct) productsUpdated.push(product);
+			if (!updatedProduct) updates.push(product);
 		}
 	}
 
 	if (errors.length) throw createError({ type: "quantity", errors }, 422);
 
 	try {
-		await Promise.all([adjustment.save({ session }), ...productsUpdated.map((product) => product.save({ session }))]);
+		await Promise.all([adjustment.save({ session }), ...updates.map((product) => product.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -243,13 +242,13 @@ exports.updateAdjustment = async (req, res) => {
 	};
 	/* ===================================================================================================================== */
 
-	let productsUpdated = [];
+	let updates = [];
 
 	// if adjustment status effected, update stock
 	if (adjustment.status.effected) {
 		for (let detail of adjustment.details) {
 			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
-			let productUpdated = productsUpdated.find((p) => p._id.toString() === detail.product._id.toString());
+			let productUpdated = updates.find((p) => p._id.toString() === detail.product._id.toString());
 
 			let product = productUpdated || detail.product;
 
@@ -267,7 +266,7 @@ exports.updateAdjustment = async (req, res) => {
 				stockBefore.warehouse.stock.after += quantity;
 			}
 
-			if (!productUpdated) productsUpdated.push(product);
+			if (!productUpdated) updates.push(product);
 		}
 	}
 
@@ -286,7 +285,7 @@ exports.updateAdjustment = async (req, res) => {
 		for (let detail of adjustment.details) {
 			let product = products.find((p) => p._id.toString() === detail.product.toString());
 
-			let updatedProduct = productsUpdated.find((p) => p._id.toString() === product._id.toString());
+			let updatedProduct = updates.find((p) => p._id.toString() === product._id.toString());
 
 			product = updatedProduct || product;
 
@@ -304,13 +303,13 @@ exports.updateAdjustment = async (req, res) => {
 				stockBefore.warehouse.stock.after -= quantity;
 			}
 
-			if (!updatedProduct) productsUpdated.push(product);
+			if (!updatedProduct) updates.push(product);
 		}
 	}
 
 	let errors = [];
 
-	if (productsUpdated.length > 0) {
+	if (updates.length > 0) {
 		for (let stockBefore of stocksBefore) {
 			if (stockBefore.warehouse.stock.after < 0) {
 				errors.push(stockBefore);
@@ -325,7 +324,7 @@ exports.updateAdjustment = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		await Promise.all([adjustment.save({ session }), ...productsUpdated.map((product) => product.save({ session }))]);
+		await Promise.all([adjustment.save({ session }), ...updates.map((product) => product.save({ session }))]);
 
 		await session.commitTransaction();
 

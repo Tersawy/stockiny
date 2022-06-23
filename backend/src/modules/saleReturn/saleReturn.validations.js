@@ -1,11 +1,5 @@
 const mongoose = require("mongoose");
 
-const Customer = require("../customer/Customer");
-
-const Warehouse = require("../warehouse/Warehouse");
-
-const Status = require("../status/Status");
-
 const schema = require("./schemas/SaleReturnSchema").obj;
 
 const detailSchema = require("./schemas/DetailSchema").obj;
@@ -46,27 +40,7 @@ let createSaleReturn = {
 
 		isMongoId: {
 			errorMessage: { type: "mongoId" },
-		},
-
-		customSanitizer: {
-			options: (v) => {
-				return mongoose.Types.ObjectId.isValid(v) ? v : null;
-			},
-		},
-
-		custom: {
-			options: async (value, { req }) => {
-				if (!value) throw { type: "mongoId", value: "Warehouse" };
-
-				let warehouse = await Warehouse.findById(value);
-
-				if (!warehouse) throw { type: "notFound", value: "Warehouse" };
-
-				req.body.warehouseDoc = warehouse;
-
-				return true;
-			},
-		},
+		}
 	},
 
 	customer: {
@@ -82,25 +56,7 @@ let createSaleReturn = {
 
 		isMongoId: {
 			errorMessage: { type: "mongoId" },
-		},
-
-		customSanitizer: {
-			options: (v) => {
-				return mongoose.Types.ObjectId.isValid(v) ? v : null;
-			},
-		},
-
-		custom: {
-			options: async (value) => {
-				if (!value) throw { type: "mongoId", value: "Customer" };
-
-				let customer = await Customer.findById(value, "_id");
-
-				if (!customer) throw { type: "notFound", value: "Customer" };
-
-				return true;
-			},
-		},
+		}
 	},
 
 	tax: {
@@ -430,27 +386,7 @@ let createSaleReturn = {
 
 		isMongoId: {
 			errorMessage: { type: "mongoId" },
-		},
-
-		customSanitizer: {
-			options: (v) => {
-				return mongoose.Types.ObjectId.isValid(v) ? v : null;
-			},
-		},
-
-		custom: {
-			options: async (value, { req }) => {
-				if (!value) throw { type: "mongoId", value: "Status" };
-
-				let status = await Status.findOne({ invoice: "salesReturn", _id: value });
-
-				if (!status) throw { type: "notFound", value: "Status" };
-
-				req.body.statusDoc = status;
-
-				return true;
-			}
-		},
+		}
 	},
 
 	notes: {
@@ -531,27 +467,7 @@ exports.changeSaleReturnStatus = checkSchema({
 
 		isMongoId: {
 			errorMessage: { type: "mongoId" },
-		},
-
-		customSanitizer: {
-			options: (v) => {
-				return mongoose.Types.ObjectId.isValid(v) ? v : null;
-			}
-		},
-
-		custom: {
-			options: async (value, { req }) => {
-				if (!value) throw { type: "mongoId", value: "Status" };
-
-				let status = await Status.findOne({ invoice: "salesReturn", _id: value });
-
-				if (!status) throw { type: "notFound", value: "Status" };
-
-				req.body.status = status;
-
-				return true;
-			}
-		},
+		}
 	}
 });
 
