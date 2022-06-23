@@ -4,7 +4,9 @@ const Product = require("./Product");
 
 const fileMove = require("../../services/fileMove");
 
-const { notFound, exists } = require("../../errors/ErrorHandler");
+const { notFound } = require("../../errors/ErrorHandler");
+
+const Variant = require("../variant/Variant");
 
 exports.products = async (req, res) => {
 	let select = "name image code category brand unit price cost variants";
@@ -65,21 +67,6 @@ exports.getEdit = async (req, res) => {
 	let product = await Product.findById(id, select);
 
 	res.json({ doc: product });
-};
-
-exports.getVariantStocks = async (req, res) => {
-	let { id, variantId } = req.params;
-
-	let product = await Product.findOne({ _id: id }, "variants._id variants.stock").populate(
-		"variants.stock.warehouse",
-		"name"
-	);
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound();
-
-	return res.json({ doc: variant });
 };
 
 /* 
@@ -562,6 +549,7 @@ let getTransferOptions = async (req, res) => {
 
 	return res.json({ options: products });
 };
+
 /* 
 	{
 		name
@@ -757,7 +745,13 @@ exports.create = async (req, res) => {
 
 	product.createdBy = req.me._id;
 
-	product.variants = variants.length ? variants.map((variant) => ({ name: variant })) : [{ name: "default" }];
+	if (variants.length) {
+		variants = variants.map(variant => (new Variant({ name: variant, createdBy: req.me._id })));
+	} else {
+		variants = [new Variant({ name: "default", createdBy: req.me._id })];
+	}
+
+	product.variants = variants.map((variant) => variant._id);
 
 	if (images.length) {
 		let images = await Promise.all(
@@ -767,9 +761,23 @@ exports.create = async (req, res) => {
 		product.image = images[0] || "";
 	}
 
-	await product.save();
+	let session = await mongoose.startSession();
 
-	res.status(201).json({ _id: product._id });
+	session.startTransaction();
+
+	try {
+		await Promise.all([...variants.map(variant => variant.save()), product.save()]);
+
+		await session.commitTransaction();
+
+		res.status(201).json({ _id: product._id });
+	} catch (error) {
+		await session.abortTransaction();
+
+		throw error;
+	} finally {
+		session.endSession();
+	}
 };
 
 exports.update = async (req, res) => {
@@ -822,76 +830,31 @@ exports.delete = async (req, res) => {
 	res.json({});
 };
 
-exports.changeSaleAvailability = async (req, res) => {
-	const { id } = req.params;
+exports.changeAvailability = async (req, res) => {
+	let availabilities = ["availableForSale", "availableForSaleReturn", "availableForPurchase", "availableForPurchaseReturn"]
 
-	const { availableForSale } = req.body;
+	let action = { isAvailable: false };
 
-	let product = await Product.findById(id, "availableForSale");
+	availabilities.forEach(av => {
+		if (typeof req.body[av] !== "undefined") {
+			action.isAvailable = !!req.body[av];
+			action.name = av;
+		}
+	});
+
+	if (!action.name) throw notFound("action");
+
+	let product = await Product.findById(req.params.id, action.name);
 
 	if (!product) throw notFound();
 
-	product.availableForSale = availableForSale;
+	product[action.name] = action.isAvailable;
 
 	product.updatedBy = req.me._id;
 
 	await product.save();
 
-	res.json({ availableForSale: product.availableForSale });
-};
-
-exports.changeSaleReturnAvailability = async (req, res) => {
-	const { id } = req.params;
-
-	const { availableForSaleReturn } = req.body;
-
-	let product = await Product.findById(id, "availableForSaleReturn");
-
-	if (!product) throw notFound();
-
-	product.availableForSaleReturn = availableForSaleReturn;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	res.json({ availableForSaleReturn: product.availableForSaleReturn });
-};
-
-exports.changePurchaseAvailability = async (req, res) => {
-	const { id } = req.params;
-
-	const { availableForPurchase } = req.body;
-
-	let product = await Product.findById(id, "availableForPurchase");
-
-	if (!product) throw notFound();
-
-	product.availableForPurchase = availableForPurchase;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	res.json({ availableForPurchase: product.availableForPurchase });
-};
-
-exports.changePurchaseReturnAvailability = async (req, res) => {
-	const { id } = req.params;
-
-	const { availableForPurchaseReturn } = req.body;
-
-	let product = await Product.findById(id, "availableForPurchaseReturn");
-
-	if (!product) throw notFound();
-
-	product.availableForPurchaseReturn = availableForPurchaseReturn;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	res.json({ availableForPurchaseReturn: product.availableForPurchaseReturn });
+	res.json({ [action.name]: action.isAvailable });
 };
 
 exports.changeImage = async (req, res) => {
@@ -902,186 +865,6 @@ exports.changeImage = async (req, res) => {
 	let update = await Product.updateOne({ _id: id }, { image });
 
 	if (!update.matchedCount) throw notFound();
-
-	res.json({});
-};
-
-exports.addVariant = async (req, res) => {
-	const { id } = req.params;
-
-	let { name } = req.body;
-
-	let product = await Product.findById(id, "variants");
-
-	if (!product) throw notFound();
-
-	product.addVariant({ name });
-
-	product.updatedBy = req.me._id;
-
-	product = await product.save();
-
-	let variant = product.getVariantByName(name);
-
-	res.status(201).json({ variant });
-};
-
-exports.updateVariant = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { name } = req.body;
-
-	let product = await Product.findById(id, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantByName(name);
-
-	let variantHasSameName = variant && variant._id.toString() !== variantId;
-
-	if (variantHasSameName) throw exists("name");
-
-	variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.name = name;
-
-	product.updatedBy = req.me._id;
-
-	product = await product.save();
-
-	res.json({ variant });
-};
-
-exports.changeVariantSaleAvailability = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { availableForSale } = req.body;
-
-	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.availableForSale = availableForSale;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	res.json({ availableForSale: variant.availableForSale });
-};
-
-exports.changeVariantSaleReturnAvailability = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { availableForSaleReturn } = req.body;
-
-	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.availableForSaleReturn = availableForSaleReturn;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	res.json({ availableForSaleReturn: variant.availableForSaleReturn });
-};
-
-exports.changeVariantPurchaseAvailability = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { availableForPurchase } = req.body;
-
-	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.availableForPurchase = availableForPurchase;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	return res.json({ availableForPurchase: variant.availableForPurchase });
-};
-
-exports.changeVariantPurchaseReturnAvailability = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { availableForPurchaseReturn } = req.body;
-
-	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.availableForPurchaseReturn = availableForPurchaseReturn;
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
-
-	return res.json({ availableForPurchaseReturn: variant.availableForPurchaseReturn });
-};
-
-exports.changeVariantImages = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { images } = req.body;
-
-	if (images.length) {
-		images = images.map((image) => ({ name: image }));
-		images[0].default = true;
-	}
-
-	let update = await Product.updateOne(
-		{ _id: id, "variants._id": variantId },
-		{ "variants.$.images": images, updatedBy: req.me._id, "variants.$.updatedAt": new Date() }
-	);
-
-	if (!update.matchedCount) throw notFound("Variant");
-
-	res.json({});
-};
-
-exports.changeVariantDefaultImage = async (req, res) => {
-	const { id, variantId } = req.params;
-
-	let { image } = req.body;
-
-	let product = await Product.findOne({ _id: id, "variants.$._id": variantId }, "variants");
-
-	if (!product) throw notFound();
-
-	let variant = product.getVariantById(variantId);
-
-	if (!variant) throw notFound("Variant");
-
-	variant.updatedAt = new Date();
-
-	variant.setDefaultImage(image);
-
-	product.updatedBy = req.me._id;
-
-	await product.save();
 
 	res.json({});
 };

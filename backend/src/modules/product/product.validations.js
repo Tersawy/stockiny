@@ -12,7 +12,7 @@ const Category = require("../category/Category");
 
 const Unit = require("../unit/Unit");
 
-let variantSchema = require("./schemas/VariantSchema");
+let variantSchema = require("../variant/schemas/VariantSchema");
 
 variantSchema = variantSchema.obj;
 
@@ -512,174 +512,12 @@ exports.getOptions = checkSchema({
 
 exports.delete = checkSchema({ id: checkId });
 
-let controls = (controlName) => ({
-	id: checkId,
-
-	[controlName]: {
-		in: "body",
-
-		customSanitizer: { options: (v) => v == "true" || v == true },
-	},
-});
-
-exports.changeSaleAvailability = checkSchema(controls("availableForSale"));
-
-exports.changePurchaseAvailability = checkSchema(controls("availableForPurchase"));
-
-exports.changeSaleReturnAvailability = checkSchema(controls("availableForSaleReturn"));
-
-exports.changePurchaseReturnAvailability = checkSchema(controls("availableForPurchaseReturn"));
-
-exports.changeVariantSaleAvailability = checkSchema({ ...controls("availableForSale"), variantId: checkId });
-
-exports.changeVariantPurchaseAvailability = checkSchema({ ...controls("availableForPurchase"), variantId: checkId });
-
-exports.changeVariantSaleReturnAvailability = checkSchema({ ...controls("availableForSaleReturn"), variantId: checkId });
-
-exports.changeVariantPurchaseReturnAvailability = checkSchema({ ...controls("availableForPurchaseReturn"), variantId: checkId });
-
-exports.addVariant = checkSchema({
-	id: checkId,
-
-	name: {
-		in: "body",
-
-		exists: {
-			errorMessage: { type: "required" },
-		},
-
-		notEmpty: {
-			errorMessage: { type: "required" },
-		},
-
-		isString: {
-			errorMessage: { type: "string" },
-		},
-
-		toLowerCase: variantSchema.name.lowercase,
-
-		trim: variantSchema.name.trim,
-
-		isLength: {
-			options: { min: variantSchema.name.minlength, max: variantSchema.name.maxlength },
-			errorMessage: { type: "between", min: variantSchema.name.minlength, max: variantSchema.name.maxlength },
-		},
-	},
-});
+exports.changeAvailability = checkSchema({ id: checkId });
 
 exports.getVariantStocks = checkSchema({ id: checkId, variantId: checkId });
 
-exports.updateVariant = checkSchema({
-	id: checkId,
-
-	variantId: checkId,
-
-	name: {
-		in: "body",
-
-		exists: {
-			errorMessage: { type: "required" },
-		},
-
-		notEmpty: {
-			errorMessage: { type: "required" },
-		},
-
-		isString: {
-			errorMessage: { type: "string" },
-		},
-
-		toLowerCase: variantSchema.name.lowercase,
-
-		trim: variantSchema.name.trim,
-
-		isLength: {
-			options: { min: variantSchema.name.minlength, max: variantSchema.name.maxlength },
-			errorMessage: { type: "between", min: variantSchema.name.minlength, max: variantSchema.name.maxlength },
-		},
-	},
-});
-
 exports.changeImage = checkSchema({
 	id: checkId,
-
-	image: {
-		in: "body",
-
-		trim: true,
-
-		customSanitizer: {
-			options: (v, { req }) => {
-				let isString = !!v && typeof v === "string";
-
-				if (!isString) return "";
-
-				let imageNamePattern = /^[0-9]+_[a-z0-9]+.(jpg|png|jpeg)$/gi;
-
-				let isValid = imageNamePattern.test(v);
-
-				if (!isValid) throw { type: "invalid" };
-
-				let { getImagesPath } = req.app.locals.config;
-
-				let productPath = getImagesPath("products", req.params.id);
-
-				let imagePath = `${productPath}/${v}`;
-
-				if (!existsSync(imagePath)) throw { type: "notFound" };
-
-				return v;
-			},
-		},
-	},
-});
-
-exports.changeVariantImages = checkSchema({
-	id: checkId,
-
-	variantId: checkId,
-
-	images: {
-		in: "body",
-
-		customSanitizer: {
-			options: (v, { req }) => {
-				let { getImagesPath } = req.app.locals.config;
-
-				let productPath = getImagesPath("products", req.params.id);
-
-				v = Array.isArray(v) ? v : [v];
-
-				v = v.reduce((images, image) => {
-					let isString = !!image && typeof image === "string";
-
-					if (!isString) return images;
-
-					let imageNamePattern = /^[0-9]+_[a-z0-9]+.(jpg|png|jpeg)$/gi;
-
-					let isValid = imageNamePattern.test(image);
-
-					if (!isValid) return images;
-
-					let imagePath = `${productPath}/${image}`;
-
-					if (!existsSync(imagePath)) return images;
-
-					images.push(image);
-
-					return images;
-				}, []);
-
-				return v;
-			},
-		},
-	},
-});
-
-exports.changeVariantDefaultImage = checkSchema({
-	id: checkId,
-
-	variantId: checkId,
 
 	image: {
 		in: "body",
