@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 exports.randomChar = (num = 8) => {
 	let chars = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -43,3 +45,11 @@ exports.handleQueries = (req, Model, searchOptions = { isSearch: false, fields: 
 
 	return req.query;
 };
+
+exports.getID = data => {
+	if (!data) return null;
+
+	if (data instanceof mongoose.Document) return data._id || null;
+
+	return data;
+}
