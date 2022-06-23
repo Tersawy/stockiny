@@ -17,17 +17,17 @@ class Model {
 		return mongooseModel.find.call(this, query, ...args);
 	}
 
-	static findOne(query, ...args) {
+	static findOne(query = {}, ...args) {
 		query.deletedAt = null;
 		return mongooseModel.findOne.call(this, query, ...args);
 	}
 
-	static findOneDeleted(query, ...args) {
+	static findOneDeleted(query = {}, ...args) {
 		query.deletedAt = { $ne: null };
 		return mongooseModel.findOne.call(this, query, ...args);
 	}
 
-	static findOneWithDeleted(query, ...args) {
+	static findOneWithDeleted(query = {}, ...args) {
 		return mongooseModel.findOne.call(this, query, ...args);
 	}
 
