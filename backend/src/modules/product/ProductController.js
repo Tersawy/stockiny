@@ -630,6 +630,94 @@ let getAdjustmentOptions = async (req, res) => {
 	return res.json({ options: products });
 };
 
+/* 
+	{
+		name
+		code
+		image
+		amount => cost
+		unit ====> to get subunits in front end for select box
+		subUnit => purchaseUnit
+		tax
+		taxMethod
+		variants: [
+			{ // gets only variants has available for purchase
+				_id,
+				name,
+				image => variant default Image or productImage
+				stock: Number
+			}
+		]
+	}
+*/
+let getQuotationOptions = async (req, res) => {
+	let { warehouse } = req.query;
+
+	let warehouseId = mongoose.Types.ObjectId(warehouse);
+
+	let filterAvailableVariantsThatMatchesWarehouse = {
+		$filter: {
+			input: "$variants",
+			as: "variant",
+			cond: { $eq: ["$$variant.availableForSale", true] },
+		},
+	};
+
+	/*
+	 * Map on filtered variants to get stock element from stock array also image the same case
+	 */
+	let filteredVariant = {
+		$map: {
+			input: filterAvailableVariantsThatMatchesWarehouse,
+			as: "filteredVariant",
+			in: {
+				_id: "$$filteredVariant._id",
+				name: "$$filteredVariant.name",
+				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
+				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
+			},
+		},
+	};
+
+	let products = await Product.aggregate([
+		{
+			$match: {
+				deletedAt: null,
+				availableForSale: true,
+				"variants.availableForSale": true,
+			},
+		},
+		{
+			$project: {
+				_id: 0,
+				product: "$_id",
+				name: 1,
+				code: 1,
+				image: 1,
+				amount: "$price",
+				unit: 1,
+				subUnit: "$saleUnit",
+				tax: 1,
+				taxMethod: 1,
+				variants: {
+					$map: {
+						input: filteredVariant,
+						as: "variant",
+						in: {
+							_id: "$$variant._id",
+							name: "$$variant.name",
+							image: { $ifNull: ["$$variant.image.name", "$image"] },
+							stock: { $ifNull: ["$$variant.stock.quantity", 0] }
+						},
+					},
+				},
+			},
+		}
+	]);
+
+	return res.json({ options: products });
+};
+
 exports.getOptions = (req, res) => {
 	let { type } = req.query;
 
@@ -640,6 +728,7 @@ exports.getOptions = (req, res) => {
 		saleReturn: getSaleReturnOptions,
 		transfer: getTransferOptions,
 		adjustment: getAdjustmentOptions,
+		quotation: getQuotationOptions
 	}
 
 	return optionsMethods[type](req, res);

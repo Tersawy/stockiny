@@ -146,6 +146,8 @@
 </template>
 
 <script>
+import { getDate } from "@/helpers";
+
 import { invoiceMixin } from "@/mixins";
 
 export default {
@@ -159,15 +161,50 @@ export default {
 		};
 	},
 
+	async mounted() {
+		if (this.isQuotation) {
+			await this.getQuotation();
+
+			this.invoice.date = getDate(this.quotation.date);
+			this.invoice.customer = this.quotation.customer._id || this.quotation.customer;
+			this.invoice.warehouse = this.quotation.warehouse._id || this.quotation.warehouse;
+			this.invoice.shipping = this.quotation.shipping;
+			this.invoice.tax = this.quotation.tax;
+			this.invoice.discount = this.quotation.discount;
+			this.invoice.notes = this.quotation.notes;
+			this.invoice.status = this.quotation.status._id || this.quotation.status;
+
+			setTimeout(() => {
+				this.quotation.details.forEach((product) => this.$refs.invoiceDetailsTable.addDetail(product));
+			}, 300);
+		}
+	},
+
 	computed: {
 		productOptions() {
 			return this.$store.getters["Products/options"]("sale", this.invoice.warehouse);
+		},
+
+		quotationId() {
+			return this.$route.query.quotationId;
+		},
+
+		isQuotation() {
+			return !!this.quotationId;
+		},
+
+		quotation() {
+			return this.$store.state.Quotations.one;
 		}
 	},
 
 	methods: {
 		getProductOptions(payload) {
 			return this.$store.dispatch("Products/getOptions", { ...payload, type: "sale" });
+		},
+
+		getQuotation() {
+			return this.$store.dispatch("Quotations/getEdit", this.quotationId);
 		}
 	}
 };

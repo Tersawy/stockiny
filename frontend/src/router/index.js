@@ -215,6 +215,30 @@ const routes = [
 		meta: { auth: true, permissions: ["show:adjustments"] }
 	},
 	{
+		path: "/quotations",
+		name: "Quotations",
+		component: () => /* webpackChunkName: "Quotations" */ import("@/views/Quotations/index"),
+		meta: { auth: true, permissions: ["read:quotations"] }
+	},
+	{
+		path: "/quotations/create",
+		name: "QuotationCreate",
+		component: () => /* webpackChunkName: "QuotationCreate" */ import("@/views/Quotations/quotationForm"),
+		meta: { auth: true, permissions: ["create:quotations"] }
+	},
+	{
+		path: "/quotations/:id/edit",
+		name: "QuotationEdit",
+		component: () => /* webpackChunkName: "QuotationEdit" */ import("@/views/Quotations/quotationForm"),
+		meta: { auth: true, permissions: ["edit:quotations"] }
+	},
+	{
+		path: "/quotations/:id",
+		name: "Quotation",
+		component: () => /* webpackChunkName: "Quotation" */ import("@/views/Quotations/quotation"),
+		meta: { auth: true, permissions: ["show:quotations"] }
+	},
+	{
 		path: "/invoices",
 		name: "Invoices",
 		component: () => /* webpackChunkName: "Invoices" */ import("@/views/Invoices/index"),

@@ -1,12 +1,8 @@
-import { QUOTATION_SENT, QUOTATION_PENDING } from "@/helpers/constants";
-
 export default {
 	prefix: "quotations",
-	statusOptions: [
-		{ text: "Sent", value: QUOTATION_SENT },
-		{ text: "Pending", value: QUOTATION_PENDING }
-	],
+	statuses: [],
 	all: { docs: [], total: 0 },
-	one: {},
+	one: { payments: [] },
+	oldPayment: null,
 	error: { field: "", message: { type: "" } }
 };

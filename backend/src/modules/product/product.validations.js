@@ -500,7 +500,7 @@ exports.getOptions = checkSchema({
 		// must be one of the following
 		custom: {
 			options: (value) => {
-				let types = ["sale", "purchase", "saleReturn", "purchaseReturn", "transfer", "adjustment"];
+				let types = ["sale", "purchase", "saleReturn", "purchaseReturn", "transfer", "adjustment", "quotation"];
 
 				if (types.includes(value)) return true;
 

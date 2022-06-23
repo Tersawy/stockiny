@@ -48,6 +48,7 @@ let routes = {
 	"sales-return": "saleReturn",
 	transfers: "transfer",
 	adjustments: "adjustment",
+	quotations: "quotation"
 };
 
 for (let route in routes) {
