@@ -734,9 +734,7 @@ exports.create = async (req, res) => {
 	product.variants = variants.map((variant) => variant._id);
 
 	if (images.length) {
-		let images = await Promise.all(
-			images.map((image) => fileMove(image, { dir: getImagesPath("products", product._id) }))
-		);
+		images = await Promise.all(images.map((image) => fileMove(image, { dir: getImagesPath("products", product._id) })));
 
 		product.image = images[0] || "";
 	}
