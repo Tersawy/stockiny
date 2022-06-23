@@ -94,28 +94,25 @@ let getPurchaseOptions = async (req, res) => {
 
 	let warehouseId = mongoose.Types.ObjectId(warehouse);
 
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		input: "$variants",
-		as: "variant",
-		cond: {
-			$and: [{ $eq: ["$$variant.availableForPurchase", true] }],
-		},
-	};
-
-	let filteredVariant = {
-		_id: "$$filteredVariant._id",
-		name: "$$filteredVariant.name",
-		image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-		stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null, availableForPurchase: true } },
 		{
-			$match: {
-				deletedAt: null,
-				availableForPurchase: true,
-				"variants.availableForPurchase": true,
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$availableForPurchase", true] }] } } },
+					{
+						$project: {
+							_id: 1,
+							name: 1,
+							stock: { $ifNull: [{ $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }, 0] },
+							images: { $ifNull: [{ $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }, "$$productImage"] },
+						}
+					},
+				]
+			}
 		},
 		{
 			$project: {
@@ -129,24 +126,7 @@ let getPurchaseOptions = async (req, res) => {
 				subUnit: "$purchaseUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: {
-							$map: {
-								input: { $filter: filterAvailableVariantsThatMatchesWarehouse },
-								as: "filteredVariant",
-								in: filteredVariant,
-							},
-						},
-						as: "variant",
-						in: {
-							_id: "$$variant._id",
-							name: "$$variant.name",
-							image: { $ifNull: ["$$variant.image.name", "$image"] },
-							stock: { $ifNull: ["$$variant.stock.quantity", 0] },
-						},
-					},
-				},
+				variants: 1
 			},
 		},
 	]);
@@ -723,7 +703,7 @@ exports.getOptions = (req, res) => {
 }
 
 exports.create = async (req, res) => {
-	const { name, code, variants } = req.body;
+	let { name, code, variants } = req.body;
 
 	const { getImagesPath } = req.app.locals.config;
 
