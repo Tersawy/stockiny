@@ -576,8 +576,6 @@ export default {
 			try {
 				let data = await action({ ...this.adjustment, details });
 
-				console.log(data);
-
 				this.$router.push({ name: "Adjustment", params: { id: data._id } });
 
 				let message = this.isUpdate ? "messages.updated" : "messages.created";
