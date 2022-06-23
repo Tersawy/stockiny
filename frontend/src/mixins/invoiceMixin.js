@@ -67,15 +67,7 @@ export default (storeNamespace, amountType) => {
 
 				isBusy: false,
 
-				quantityErrors: {
-					tableFields: [
-						{ key: "productName", label: "Product" },
-						{ key: "stockBefore", label: "Stock Before" },
-						{ key: "stockAfter", label: "Stock After" },
-						{ key: "warehouseName", label: "Warehouse" }
-					],
-					errors: []
-				}
+				quantityErrors: []
 			};
 		},
 
@@ -260,12 +252,7 @@ export default (storeNamespace, amountType) => {
 					showMessage({ message: this.$t(message) });
 				} catch (err) {
 					if (err.status == 422 && err.type == "quantity") {
-						this.quantityErrors.errors = err.errors;
-
-						if (!this.isUpdate) {
-							// remove warehouse in create because the invoice has only one warehouse
-							this.quantityErrors.tableFields = this.quantityErrors.tableFields.filter((field) => field.key != "warehouseName");
-						}
+						this.quantityErrors = err.errors;
 
 						this.$bvModal.show("quantityErrors");
 					} else {
