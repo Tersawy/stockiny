@@ -6,8 +6,6 @@ const ObjectId = Schema.Types.ObjectId;
 
 const Model = require("../../plugins/Model");
 
-const { exists } = require("../../errors/ErrorHandler");
-
 const productSchema = new Schema(
 	{
 		name: { type: String, required: true, lowercase: true, trim: true, minlength: 3, maxlength: 54 }, // Unique
