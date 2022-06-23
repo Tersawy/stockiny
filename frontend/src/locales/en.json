@@ -26,6 +26,7 @@
 		"required": "{field} is required",
 		"requiredIf": "{field} is required",
 		"minLength": "{field} must be greater than or equal {min} characters",
+		"mustGtValue": "must be greater than {value}",
 		"maxLength": "{field} must be less than or equal {max} characters",
 		"minValue": "{field} should be greater than or equal {min}",
 		"maxValue": "{field} should be less than or equal {max}",
