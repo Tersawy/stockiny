@@ -81,6 +81,10 @@ class Product extends Model {
 		];
 	}
 
+	get isUpdated() {
+		return this.updatedAt && (this.updatedAt.getTime() - this.createdAt.getTime()) !== 0
+	}
+
 	get instock() {
 		return this.variants.reduce((total, curr) => total + +curr.instock, 0);
 	}
