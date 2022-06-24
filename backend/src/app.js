@@ -38,6 +38,7 @@ let routes = {
 	expenses: "expense",
 	units: "unit",
 	products: "product",
+	variants: "variant",
 	roles: "role",
 	permissions: "permission",
 	gallery: "gallery",
