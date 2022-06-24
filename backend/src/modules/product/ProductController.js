@@ -30,30 +30,21 @@ exports.products = async (req, res) => {
 };
 
 exports.product = async (req, res) => {
-	const { id } = req.params;
-
-	let product = await Product.findById(id).populate(
+	let product = await Product.findById(req.params.id).populate(
 		"category brand unit createdBy updatedBy saleUnit purchaseUnit",
 		"name username shortName"
 	);
 
 	product = product.toJSON();
 
-	if (!product.updatedAt || product.updatedAt.getTime() - product.createdAt.getTime() === 0) {
-		delete product.updatedAt;
-		delete product.updatedBy;
+	if (!product.isUpdated) {
+		product.updatedAt = undefined;
+		product.updatedBy = undefined;
 	}
 
-	if (product.variants && product.variants.length) {
-		product.variants.forEach((variant) => {
-			if (!variant.updatedAt || variant.updatedAt.getTime() - variant.createdAt.getTime() === 0) {
-				delete variant.updatedAt;
-				delete variant.updatedBy;
-			}
-
-			variant.stock = variant.stock.reduce((acc, stock) => acc + stock.quantity, 0);
-		});
-	}
+	product.deletedAt = undefined;
+	product.deletedBy = undefined;
+	product.__v = undefined;
 
 	res.json({ doc: product });
 };
