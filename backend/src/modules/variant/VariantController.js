@@ -6,6 +6,23 @@ const Product = require("../product/Product");
 
 const { notFound } = require("../../errors/ErrorHandler");
 
+exports.variants = async (req, res) => {
+	let { product } = req.query;
+
+	let variants = await Variant.find({ product }, "name stocks images updatedAt createdAt updatedBy createdBy").populate("stocks.warehouse", "name");
+
+	variants.forEach((variant) => {
+		if (!variant.isUpdated) {
+			delete variant._doc.updatedAt;
+			delete variant._doc.updatedBy;
+		}
+
+		variant.instock = variant.instock;
+	});
+
+	res.json({ variants });
+};
+
 exports.create = async (req, res) => {
 	let product = await Product.findById(req.body.productId, "variants");
 

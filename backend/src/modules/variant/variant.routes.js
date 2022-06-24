@@ -10,6 +10,8 @@ const validation = require("./variant.validations");
 
 const validationHandler = require("../../middlewares/validationHandler");
 
+router.get("/", authForAny("show:products"), validation.variants, validationHandler, Controller.variants);
+
 router.post("/", authForAny("edit:products"), validation.create, validationHandler, Controller.create);
 
 router.put("/:id", authForAny("edit:products"), validation.update, validationHandler, Controller.update);

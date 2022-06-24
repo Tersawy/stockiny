@@ -94,6 +94,24 @@ exports.update = checkSchema({
 	},
 });
 
+exports.variants = checkSchema({
+	product: {
+		in: "query",
+
+		exists: {
+			errorMessage: { type: "required" },
+		},
+
+		notEmpty: {
+			errorMessage: { type: "required" },
+		},
+
+		isMongoId: {
+			errorMessage: { type: "mongoId" },
+		},
+	}
+});
+
 exports.stocks = checkSchema({ id: checkId });
 
 exports.changeAvailability = checkSchema({ id: checkId });
