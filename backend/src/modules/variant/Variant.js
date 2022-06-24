@@ -19,6 +19,10 @@ class Variant extends Model {
 		return null;
 	}
 
+	get isUpdated() {
+		return this.updatedAt && (this.updatedAt.getTime() - this.createdAt.getTime()) !== 0
+	}
+
 	setDefaultImage(name) {
 		if (this.images.length > 0) {
 			this.images.forEach((image) => {
