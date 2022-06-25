@@ -58,7 +58,7 @@ export default {
 	},
 
 	async getVariantStocks({ commit }, payload) {
-		let data = await axios.get(`//variants/${payload.variantId}/stocks`);
+		let data = await axios.get(`/variants/${payload.variantId}/stocks`);
 
 		data.productId = payload.productId;
 
