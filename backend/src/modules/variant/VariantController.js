@@ -66,7 +66,7 @@ exports.update = async (req, res) => {
 };
 
 exports.stocks = async (req, res) => {
-	let variant = await Variant.findById(req.params.id, "stock").populate("stock.warehouse", "name");
+	let variant = await Variant.findById(req.params.id, "stocks").populate("stocks.warehouse", "name");
 
 	if (!variant) throw notFound();
 
