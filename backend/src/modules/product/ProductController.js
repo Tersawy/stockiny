@@ -823,7 +823,7 @@ exports.changeAvailability = async (req, res) => {
 
 	await product.save();
 
-	res.json({ [action.name]: action.isAvailable });
+	res.json({ action });
 };
 
 exports.changeImage = async (req, res) => {

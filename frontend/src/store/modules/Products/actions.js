@@ -7,98 +7,38 @@ export default {
 		return data;
 	},
 
-	async changeSaleAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/change-sale-availability`, payload);
+	async changeAvailability({ commit }, payload) {
+		let data = await axios.post(`/products/${payload.productId}/change-availability`, { [payload.action.name]: payload.action.isAvailable });
 
 		data.productId = payload.productId;
 
-		commit("setSaleAvailability", data);
+		commit("setAvailability", data);
 
 		return data;
 	},
 
-	async changePurchaseAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/change-purchase-availability`, payload);
+	async changeVariantAvailability({ commit }, payload) {
+		let data = await axios.post(`/variants/${payload.variantId}/change-availability`, { [payload.action.name]: payload.action.isAvailable });
 
 		data.productId = payload.productId;
 
-		commit("setPurchaseAvailability", data);
+		commit("setVariantAvailability", data);
 
 		return data;
 	},
 
-	async changeSaleReturnAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/change-sale-return-availability`, payload);
+	async createVariant({ commit }, payload) {
+		let data = await axios.post("/variants", payload);
 
 		data.productId = payload.productId;
 
-		commit("setSaleReturnAvailability", data);
-
-		return data;
-	},
-
-	async changePurchaseReturnAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/change-purchase-return-availability`, payload);
-
-		data.productId = payload.productId;
-
-		commit("setPurchaseReturnAvailability", data);
-
-		return data;
-	},
-
-	async changeVariantSaleAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-sale-availability`, payload);
-
-		data.productId = payload.productId;
-
-		commit("setVariantSaleAvailability", data);
-
-		return data;
-	},
-
-	async changeVariantPurchaseAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-purchase-availability`, payload);
-
-		data.productId = payload.productId;
-
-		commit("setVariantPurchaseAvailability", data);
-
-		return data;
-	},
-
-	async changeVariantSaleReturnAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-sale-return-availability`, payload);
-
-		data.productId = payload.productId;
-
-		commit("setVariantSaleReturnAvailability", data);
-
-		return data;
-	},
-
-	async changeVariantPurchaseReturnAvailability({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/variants/${payload.variantId}/change-purchase-return-availability`, payload);
-
-		data.productId = payload.productId;
-
-		commit("setVariantPurchaseReturnAvailability", data);
-
-		return data;
-	},
-
-	async addVariant({ commit }, payload) {
-		let data = await axios.post(`/products/${payload.productId}/variants`, payload);
-
-		data.productId = payload.productId;
-
-		commit("addVariant", data);
+		commit("createVariant", data);
 
 		return data;
 	},
 
 	async updateVariant({ commit }, payload) {
-		let data = await axios.put(`/products/${payload.productId}/variants/${payload._id}`, payload);
+		let data = await axios.put(`/variants/${payload._id}`, payload);
 
 		data.productId = payload.productId;
 
@@ -107,8 +47,18 @@ export default {
 		return data;
 	},
 
+	async getVariants({ commit }, productId) {
+		let data = await axios.get(`/variants?product=${productId}`);
+
+		data.productId = productId;
+
+		commit("setVariants", data);
+
+		return data;
+	},
+
 	async getVariantStocks({ commit }, payload) {
-		let data = await axios.get(`/products/${payload.productId}/variants/${payload.variantId}/stocks`, payload);
+		let data = await axios.get(`//variants/${payload.variantId}/stocks`);
 
 		data.productId = payload.productId;
 
@@ -127,10 +77,8 @@ export default {
 		return true;
 	},
 
-	async changeProductVariantImages({ commit }, payload) {
-		let url = `/products/${payload.productId}/variants/${payload.variantId}/change-images`;
-
-		await axios.put(url, payload);
+	async changeVariantImages({ commit }, payload) {
+		await axios.put(`/variants/${payload.variantId}/change-images`, payload);
 
 		commit("setVariantImages", payload);
 
@@ -138,9 +86,7 @@ export default {
 	},
 
 	async changeVariantDefaultImage({ commit }, payload) {
-		let url = `/products/${payload.productId}/variants/${payload.variantId}/change-default-image`;
-
-		await axios.put(url, payload);
+		await axios.put(`variants/${payload.variantId}/change-default-image`, payload);
 
 		commit("setVariantDefaultImage", payload);
 

@@ -98,25 +98,45 @@
 
 					<!-- Product Controls -->
 					<b-card header="Product Controls" class="mt-4">
-						<p>Is Available For </p>
+						<p>Is Available For</p>
 						<b-row cols="1" cols-sm="2" cols-md="4" cols-lg="2">
 							<b-col class="mb-3">
-								<b-form-checkbox @change="changeSaleAvailability" v-model="product.availableForSale" switch class="mr-3 text-nowrap">
+								<b-form-checkbox
+									@change="changeAvailability({ name: 'availableForSale', isAvailable: $event })"
+									v-model="product.availableForSale"
+									switch
+									class="mr-3 text-nowrap"
+								>
 									Sale ?
 								</b-form-checkbox>
 							</b-col>
 							<b-col class="mb-3">
-								<b-form-checkbox @change="changePurchaseAvailability" v-model="product.availableForPurchase" switch class="mr-3 text-nowrap">
+								<b-form-checkbox
+									@change="changeAvailability({ name: 'availableForPurchase', isAvailable: $event })"
+									v-model="product.availableForPurchase"
+									switch
+									class="mr-3 text-nowrap"
+								>
 									Purchase ?
 								</b-form-checkbox>
 							</b-col>
 							<b-col class="mb-3">
-								<b-form-checkbox @change="changeSaleReturnAvailability" v-model="product.availableForSaleReturn" switch class="mr-3 text-nowrap">
+								<b-form-checkbox
+									@change="changeAvailability({ name: 'availableForSaleReturn', isAvailable: $event })"
+									v-model="product.availableForSaleReturn"
+									switch
+									class="mr-3 text-nowrap"
+								>
 									Sale Return ?
 								</b-form-checkbox>
 							</b-col>
 							<b-col lg="12" xl="6">
-								<b-form-checkbox @change="changePurchaseReturnAvailability" v-model="product.availableForPurchaseReturn" switch class="mr-3 text-nowrap">
+								<b-form-checkbox
+									@change="changeAvailability({ name: 'availableForPurchaseReturn', isAvailable: $event })"
+									v-model="product.availableForPurchaseReturn"
+									switch
+									class="mr-3 text-nowrap"
+								>
 									Purchase Return ?
 								</b-form-checkbox>
 							</b-col>
@@ -129,7 +149,7 @@
 			<b-col>
 				<b-row cols="1" class="mb-3">
 					<b-col v-for="variant in product.variants" :key="variant._id" class="mt-4">
-						<b-card>
+						<b-card v-if="variant._id">
 							<template #header>
 								<div class="d-flex justify-content-between align-items-center">
 									<div class="title">
@@ -191,22 +211,40 @@
 										<b-col class="py-2 product-field d-flex striped-md" :class="{ striped: variant.updatedAt }">
 											<span class="font-weight-bold mr-5 mr-md-3 pr-4 pr-md-0"> Available For Sale: </span>
 											<!-- eslint-disable-next-line -->
-											<b-form-checkbox @change="changeVariantSaleAvailability($event, variant)" v-model="variant.availableForSale" switch />
+											<b-form-checkbox
+												@change="changeVariantAvailability({ name: 'availableForSale', isAvailable: $event }, variant)"
+												v-model="variant.availableForSale"
+												switch
+											/>
 										</b-col>
 										<b-col class="py-2 product-field d-flex" :class="{ 'striped striped-md': !variant.updatedAt }">
 											<span class="font-weight-bold mr-2 mr-md-3 pr-4 pr-md-0"> Available For Purchase: </span>
 											<!-- eslint-disable-next-line -->
-											<b-form-checkbox class="ml-1 ml-md-0" @change="changeVariantPurchaseAvailability($event, variant)" v-model="variant.availableForPurchase" switch />
+											<b-form-checkbox
+												class="ml-1 ml-md-0"
+												@change="changeVariantAvailability({ name: 'availableForPurchase', isAvailable: $event }, variant)"
+												v-model="variant.availableForPurchase"
+												switch
+											/>
 										</b-col>
 										<b-col class="py-2 product-field d-flex" :class="{ 'striped striped-md-none': variant.updatedAt }">
 											<span class="font-weight-bold mr-5 mr-md-3 pr-4 pr-md-0"> Available For Sale Return: </span>
 											<!-- eslint-disable-next-line -->
-											<b-form-checkbox @change="changeVariantSaleReturnAvailability($event, variant)" v-model="variant.availableForSaleReturn" switch />
+											<b-form-checkbox
+												@change="changeVariantAvailability({ name: 'availableForSaleReturn', isAvailable: $event }, variant)"
+												v-model="variant.availableForSaleReturn"
+												switch
+											/>
 										</b-col>
 										<b-col class="py-2 product-field d-flex" :class="{ 'striped striped-md-none': !variant.updatedAt, 'striped-md': variant.updatedAt }">
 											<span class="font-weight-bold mr-2 mr-md-3 pr-4 pr-md-0"> Available For Purchase Return: </span>
 											<!-- eslint-disable-next-line -->
-											<b-form-checkbox class="ml-1 ml-md-0" @change="changeVariantPurchaseReturnAvailability($event, variant)" v-model="variant.availableForPurchaseReturn" switch />
+											<b-form-checkbox
+												class="ml-1 ml-md-0"
+												@change="changeVariantAvailability({ name: 'availableForPurchaseReturn', isAvailable: $event }, variant)"
+												v-model="variant.availableForPurchaseReturn"
+												switch
+											/>
 										</b-col>
 									</b-row>
 									<template v-if="Array.isArray(variant.stock)">
@@ -280,537 +318,462 @@
 </template>
 
 <script>
-	import { mapActions, mapMutations, mapState } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 
-	import GalleryIcon from "@/components/icons/gallery.vue";
+import GalleryIcon from "@/components/icons/gallery.vue";
 
-	import VariantIcon from "@/components/icons/variant.vue";
+import VariantIcon from "@/components/icons/variant.vue";
 
-	import EditIcon from "@/components/icons/edit.vue";
+import EditIcon from "@/components/icons/edit.vue";
 
-	import EyeIcon from "@/components/icons/eye.vue";
+import EyeIcon from "@/components/icons/eye.vue";
 
-	const DateStr = () => import ("@/components/DateStr.vue");
+const DateStr = () => import("@/components/DateStr.vue");
 
-	const VuePerfectScrollbar = () => import("vue-perfect-scrollbar");
+const VuePerfectScrollbar = () => import("vue-perfect-scrollbar");
 
-	const GalleryModal = () => import("@/components/Gallery");
+const GalleryModal = () => import("@/components/Gallery");
 
-	const VariantFormModal = () => import("@/components/forms/ProductVariantForm");
+const VariantFormModal = () => import("@/components/forms/ProductVariantForm");
 
-	const Barcode = () => import("vue-barcode");
+const Barcode = () => import("vue-barcode");
 
-	export default {
-		components: { Barcode, GalleryModal, VariantFormModal, VuePerfectScrollbar, DateStr, EditIcon, GalleryIcon, VariantIcon, EyeIcon },
+export default {
+	components: { Barcode, GalleryModal, VariantFormModal, VuePerfectScrollbar, DateStr, EditIcon, GalleryIcon, VariantIcon, EyeIcon },
 
-		data() {
+	data() {
+		return {
+			breads: [{ title: "Dashboard", link: "/" }, { title: "Products", link: "/products" }, { title: "Show" }],
+
+			gallery: { isMultipleSelect: false, hideOldSelectedView: true, hideSaveBtn: false, hideDeleteBtn: false, title: "Gallery" },
+
+			variant: null,
+
+			isBusy: false,
+
+			barcodeTypeFlat: false
+		};
+	},
+
+	async mounted() {
+		try {
+			// wait to get product cause if variants has been got first that will be empty variants in store cause setProduct will override it
+			await this.getProduct(this.$route.params.productId);
+			this.getVariants(this.$route.params.productId);
+		} catch {
+			this.$router.push("/products");
+		}
+	},
+
+	computed: {
+		...mapState({
+			product: (state) => state.Products.one
+		}),
+
+		productId() {
+			return this.$route.params.productId;
+		},
+
+		productData() {
+			let p = this.product;
+
+			let data = {
+				name: p.name,
+				code: p.code,
+				barcodeType: p.barcodeType,
+				price: p.price,
+				cost: p.cost,
+				tax: p.tax + "%",
+				taxMethod: p.taxMethod,
+				category: p.category?.name || "Unknown",
+				brand: p.brand?.name || "Unknown",
+				unit: p.unit?.name || "Unknown",
+				purchaseUnit: p.purchaseUnit?.name || "Unknown",
+				saleUnit: p.saleUnit?.name || "Unknown",
+				createdAt: this.getDate(p.createdAt),
+				createdBy: p.createdBy?.username || "Unknown",
+				minimumStock: p.minimumStock
+			};
+
+			if (p.updatedAt) {
+				data.updatedAt = this.getDate(p.updatedAt);
+				data.updatedBy = p.updatedBy?.username || "Unknown";
+			}
+
+			return data;
+		},
+
+		showBarcodeTypeFlatBtn() {
+			return ["UPC", "EAN8", "EAN13"].includes(this.product.barcodeType);
+		},
+
+		galleryUrl() {
+			return `/gallery/products/${this.$route.params.productId}`;
+		},
+
+		usedImages() {
+			let variantsImages = this.product.variants.reduce((acc, v) => {
+				if (v.images && v.images.length) {
+					acc = acc.concat(v.images.map((i) => i.name));
+				}
+
+				return acc;
+			}, []);
+
+			return this.product.image ? variantsImages.concat(this.product.image) : variantsImages;
+		},
+
+		defaultOldSelected() {
+			if (this.variant) {
+				return this.variant.images?.find((i) => i.default)?.name || "";
+			}
+
+			return this.product.image || "";
+		},
+
+		oldSelected() {
+			if (this.gallery.hideSaveBtn) return [];
+
+			if (this.variant) {
+				return this.variant.images?.map((i) => i.name) || [];
+			}
+
+			return this.product.image ? [this.product.image] : [];
+		},
+
+		variantImageIconHeight() {
+			return "180px";
+		},
+
+		productImageIconHeight() {
+			//  Without barcode
+			// let { updatedAt, notes } = this.product;
+
+			// if (updatedAt && notes) return "200px";
+
+			// if (notes) return "193px";
+
+			// if (updatedAt) return "154px";
+
+			// return "120px";
+
+			let { updatedAt } = this.product;
+
+			if (!updatedAt) return "260px";
+
+			return "296px";
+		}
+	},
+
+	methods: {
+		...mapActions({
+			getProduct: "Products/getOne",
+			changeProductImage: "Products/changeProductImage",
+			changeVariantImages: "Products/changeVariantImages",
+			changeVariantDefaultImage: "Products/changeVariantDefaultImage",
+			getVariants: "Products/getVariants",
+			getVariantStocks: "Products/getVariantStocks"
+		}),
+
+		...mapMutations("Products", ["resetErrorByField", "setError", "resetError", "setOne"]),
+
+		async changeAvailability(action) {
+			try {
+				let data = { productId: this.productId, action };
+
+				await this.$store.dispatch("Products/changeAvailability", data);
+
+				this.$store.commit("showMessage");
+			} catch (error) {
+				console.log(error);
+				this.$store.commit("showMessage", { error: true });
+			}
+		},
+
+		async changeVariantAvailability(action, variant) {
+			try {
+				let data = { productId: this.productId, variantId: variant._id, action };
+
+				await this.$store.dispatch("Products/changeVariantAvailability", data);
+
+				this.$store.commit("showMessage");
+			} catch (error) {
+				console.log(error);
+				this.$store.commit("showMessage", { error: true });
+			}
+		},
+
+		effectUnit(detail) {
+			let unit = this.units.find((u) => +u.id == +detail.unit_id);
+
+			if (!unit) return detail;
+
+			detail.unit = { ...unit };
+
+			let isDivide = unit.operator == "/";
+
+			let { operator_value } = unit;
+
+			detail.stocky = isDivide ? detail.stock / operator_value : detail.stock * operator_value;
+
+			return detail;
+		},
+
+		getDate(date) {
+			if (!date) return "*- - -";
+
+			date = new Date(date);
+
+			let dateString = date.toLocaleDateString();
+
+			let timeString = date.toLocaleTimeString().replace(/:\d+ /, " ");
+
+			let day = date.toDateString().split(" ")[0];
+
+			date = day + ", " + dateString + ", " + timeString;
+
+			return date;
+		},
+
+		striped(i) {
 			return {
-				breads: [{ title: "Dashboard", link: "/" }, { title: "Products", link: "/products" }, { title: "Show" }],
-
-				gallery: { isMultipleSelect: false, hideOldSelectedView: true, hideSaveBtn: false, hideDeleteBtn: false, title: "Gallery" },
-
-				variant: null,
-
-				isBusy: false,
-
-				barcodeTypeFlat: false
+				sm: i == 0 || i % 4 == 0 || (i + 1) % 4 == 0,
+				mobile: i % 2
 			};
 		},
 
-		async mounted() {
+		openVariantForm(variant) {
+			this.variant = variant;
+
+			this.$nextTick(() => {
+				this.$bvModal.show("variantFormModal");
+			});
+		},
+
+		openGallery() {
+			this.$refs.galleryModal?.$reset();
+
+			this.variant = null;
+
+			this.gallery = { isMultipleSelect: true, hideOldSelectedView: true, hideSaveBtn: true, title: "Gallery", hideDeleteBtn: false };
+
+			this.$nextTick(this.$refs.galleryModal.open);
+		},
+
+		openProductGallery() {
+			this.variant = null;
+
+			this.gallery = { isMultipleSelect: false, hideOldSelectedView: true, hideSaveBtn: false, title: "Product Image", hideDeleteBtn: true };
+
+			this.$nextTick(this.$refs.galleryModal.open);
+		},
+
+		openVariantGallery(variant) {
+			this.variant = JSON.parse(JSON.stringify(variant));
+
+			this.gallery = { isMultipleSelect: true, hideOldSelectedView: false, hideSaveBtn: false, title: "Variant Images", hideDeleteBtn: true };
+
+			this.$nextTick(this.$refs.galleryModal.open);
+		},
+
+		galleryImageFormatter(image) {
+			return `${this.BASE_URL}/images/products/${this.productId}/${image}`;
+		},
+
+		beforeDeleteImagesFromGallery(selected, prevent) {
+			let isAnyOfUsedImagesInDeleted = selected.some((image) => this.usedImages.includes(image));
+
+			if (isAnyOfUsedImagesInDeleted) {
+				this.$store.commit("showToast", { variant: "danger", message: "You cannot delete selected images because there are images used in the product." });
+
+				return prevent();
+			}
+		},
+
+		async handleChangeImages(selected, loading) {
+			let data = { productId: this.$route.params.productId },
+				action = this.changeProductImage;
+
+			let field = "Product Image";
+
+			let isVariant = this.variant && this.variant._id;
+
+			/* Change Variant Images */
+			if (isVariant) {
+				data.images = selected;
+
+				data.variantId = this.variant._id;
+
+				action = this.changeVariantImages;
+
+				field = "Variant Images";
+			} else {
+				/* Change Product Image */
+				data.image = selected[0] || "";
+			}
+
+			loading.saveLoading = true;
+
 			try {
-				await this.getProduct(this.$route.params.productId);
-			} catch {
-				this.$router.push("/products");
-			}
-		},
+				await action(data);
 
-		computed: {
-			...mapState({
-				product: (state) => state.Products.one
-			}),
+				let message = this.$t("actions.updated", { module: field });
 
-			productId() {
-				return this.$route.params.productId;
-			},
+				this.$store.commit("showToast", message);
 
-			productData() {
-				let p = this.product;
-
-				let data = {
-					name: p.name,
-					code: p.code,
-					barcodeType: p.barcodeType,
-					price: p.price,
-					cost: p.cost,
-					tax: p.tax + "%",
-					taxMethod: p.taxMethod,
-					category: p.category?.name || "Unknown",
-					brand: p.brand?.name || "Unknown",
-					unit: p.unit?.name || "Unknown",
-					purchaseUnit: p.purchaseUnit?.name || "Unknown",
-					saleUnit: p.saleUnit?.name || "Unknown",
-					createdAt: this.getDate(p.createdAt),
-					createdBy: p.createdBy?.username || "Unknown",
-					minimumStock: p.minimumStock
-				};
-
-				if (p.updatedAt) {
-					data.updatedAt = this.getDate(p.updatedAt);
-					data.updatedBy = p.updatedBy?.username || "Unknown";
-				}
-
-				return data;
-			},
-
-			showBarcodeTypeFlatBtn() {
-				return ["UPC", "EAN8", "EAN13"].includes(this.product.barcodeType);
-			},
-
-			galleryUrl() {
-				return `/gallery/products/${this.$route.params.productId}`;
-			},
-
-			usedImages() {
-				let variantsImages = this.product.variants.reduce((acc, v) => {
-					if (v.images && v.images.length) {
-						acc = acc.concat(v.images.map((i) => i.name));
-					}
-
-					return acc;
-				}, []);
-
-				return this.product.image ? variantsImages.concat(this.product.image) : variantsImages;
-			},
-
-			defaultOldSelected() {
-				if (this.variant) {
-					return this.variant.images?.find((i) => i.default)?.name || "";
-				}
-
-				return this.product.image || "";
-			},
-
-			oldSelected() {
-				if (this.gallery.hideSaveBtn) return [];
-
-				if (this.variant) {
-					return this.variant.images?.map((i) => i.name) || [];
-				}
-
-				return this.product.image ? [this.product.image] : [];
-			},
-
-			variantImageIconHeight() {
-				return "180px";
-			},
-
-			productImageIconHeight() {
-				//  Without barcode
-				// let { updatedAt, notes } = this.product;
-
-				// if (updatedAt && notes) return "200px";
-
-				// if (notes) return "193px";
-
-				// if (updatedAt) return "154px";
-
-				// return "120px";
-
-				let { updatedAt } = this.product;
-
-				if (!updatedAt) return "260px";
-
-				return "296px";
-			}
-		},
-
-		methods: {
-			...mapActions({
-				getProduct: "Products/getOne",
-				changeProductImage: "Products/changeProductImage",
-				changeProductVariantImages: "Products/changeProductVariantImages",
-				changeVariantDefaultImage: "Products/changeVariantDefaultImage",
-				getVariantStocks: "Products/getVariantStocks"
-			}),
-
-			...mapMutations("Products", ["resetErrorByField", "setError", "resetError", "setOne"]),
-
-			async changeSaleAvailability(availableForSale) {
-				try {
-					let data = { availableForSale, productId: this.productId };
-
-					await this.$store.dispatch("Products/changeSaleAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changePurchaseAvailability(availableForPurchase) {
-				try {
-					let data = { availableForPurchase, productId: this.productId };
-
-					await this.$store.dispatch("Products/changePurchaseAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changeSaleReturnAvailability(availableForSaleReturn) {
-				try {
-					let data = { availableForSaleReturn, productId: this.productId };
-
-					await this.$store.dispatch("Products/changeSaleReturnAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changePurchaseReturnAvailability(availableForPurchaseReturn) {
-				try {
-					let data = { availableForPurchaseReturn, productId: this.productId };
-
-					await this.$store.dispatch("Products/changePurchaseReturnAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changeVariantSaleAvailability(availableForSale, variant) {
-				try {
-					let data = { availableForSale, productId: this.productId, variantId: variant._id };
-
-					await this.$store.dispatch("Products/changeVariantSaleAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changeVariantPurchaseAvailability(availableForPurchase, variant) {
-				try {
-					let data = { availableForPurchase, productId: this.productId, variantId: variant._id };
-
-					await this.$store.dispatch("Products/changeVariantPurchaseAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changeVariantSaleReturnAvailability(availableForSaleReturn, variant) {
-				try {
-					let data = { availableForSaleReturn, productId: this.productId, variantId: variant._id };
-
-					await this.$store.dispatch("Products/changeVariantSaleReturnAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			async changeVariantPurchaseReturnAvailability(availableForPurchaseReturn, variant) {
-				try {
-					let data = { availableForPurchaseReturn, productId: this.productId, variantId: variant._id };
-
-					await this.$store.dispatch("Products/changeVariantPurchaseReturnAvailability", data);
-
-					this.$store.commit("showMessage");
-				} catch (error) {
-					console.log(error);
-					this.$store.commit("showMessage", { error: true });
-				}
-			},
-
-			effectUnit(detail) {
-				let unit = this.units.find((u) => +u.id == +detail.unit_id);
-
-				if (!unit) return detail;
-
-				detail.unit = { ...unit };
-
-				let isDivide = unit.operator == "/";
-
-				let { operator_value } = unit;
-
-				detail.stocky = isDivide ? detail.stock / operator_value : detail.stock * operator_value;
-
-				return detail;
-			},
-
-			getDate(date) {
-				if (!date) return "*- - -";
-
-				date = new Date(date);
-
-				let dateString = date.toLocaleDateString();
-
-				let timeString = date.toLocaleTimeString().replace(/:\d+ /, " ");
-
-				let day = date.toDateString().split(" ")[0];
-
-				date = day + ", " + dateString + ", " + timeString;
-
-				return date;
-			},
-
-			striped(i) {
-				return {
-					sm: i == 0 || i % 4 == 0 || (i + 1) % 4 == 0,
-					mobile: i % 2
-				};
-			},
-
-			openVariantForm(variant) {
-				this.variant = variant;
-
-				this.$nextTick(() => {
-					this.$bvModal.show("variantFormModal");
-				});
-			},
-
-			openGallery() {
-				this.$refs.galleryModal?.$reset();
-
-				this.variant = null;
-
-				this.gallery = { isMultipleSelect: true, hideOldSelectedView: true, hideSaveBtn: true, title: "Gallery", hideDeleteBtn: false };
-
-				this.$nextTick(this.$refs.galleryModal.open);
-			},
-
-			openProductGallery() {
-				this.variant = null;
-
-				this.gallery = { isMultipleSelect: false, hideOldSelectedView: true, hideSaveBtn: false, title: "Product Image", hideDeleteBtn: true };
-
-				this.$nextTick(this.$refs.galleryModal.open);
-			},
-
-			openVariantGallery(variant) {
-				this.variant = JSON.parse(JSON.stringify(variant));
-
-				this.gallery = { isMultipleSelect: true, hideOldSelectedView: false, hideSaveBtn: false, title: "Variant Images", hideDeleteBtn: true };
-
-				this.$nextTick(this.$refs.galleryModal.open);
-			},
-
-			galleryImageFormatter(image) {
-				return `${this.BASE_URL}/images/products/${this.productId}/${image}`;
-			},
-
-			beforeDeleteImagesFromGallery(selected, prevent) {
-				let isAnyOfUsedImagesInDeleted = selected.some((image) => this.usedImages.includes(image));
-
-				if (isAnyOfUsedImagesInDeleted) {
-					this.$store.commit("showToast", { variant: "danger", message: "You cannot delete selected images because there are images used in the product." });
-
-					return prevent();
-				}
-			},
-
-			async handleChangeImages(selected, loading) {
-				let data = { productId: this.$route.params.productId },
-					action = this.changeProductImage;
-
-				let field = "Product Image";
-
-				let isVariant = this.variant && this.variant._id;
-
-				/* Change Variant Images */
 				if (isVariant) {
-					data.images = selected;
+					loading.saveLoading = false;
 
-					data.variantId = this.variant._id;
+					this.$nextTick(() => {
+						this.variant = this.product.variants.find((v) => v._id == this.variant._id);
+					});
 
-					action = this.changeProductVariantImages;
-
-					field = "Variant Images";
+					this.$refs.galleryModal.$nextTick(() => this.$refs.galleryModal.changeTab("oldSelected"));
 				} else {
-					/* Change Product Image */
-					data.image = selected[0] || "";
-				}
-
-				loading.saveLoading = true;
-
-				try {
-					await action(data);
-
-					let message = this.$t("actions.updated", { module: field });
-
-					this.$store.commit("showToast", message);
-
-					if (isVariant) {
-						loading.saveLoading = false;
-
-						this.$nextTick(() => {
-							this.variant = this.product.variants.find((v) => v._id == this.variant._id);
-						});
-
-						this.$refs.galleryModal.$nextTick(() => this.$refs.galleryModal.changeTab("oldSelected"));
-					} else {
-						this.$nextTick(this.$refs.galleryModal.close);
-					}
-				} catch (err) {
-					console.log(err);
-				} finally {
-					loading.saveLoading = false;
-				}
-			},
-
-			async handleSetVariantDefaultImage(defaultSelected, loading) {
-				let data = { productId: this.$route.params.productId, variantId: this.variant._id, image: defaultSelected };
-
-				loading.saveLoading = true;
-
-				try {
-					await this.changeVariantDefaultImage(data);
-
-					let message = this.$t("actions.updated", { module: "Variant Image" });
-
-					this.$store.commit("showToast", message);
-
 					this.$nextTick(this.$refs.galleryModal.close);
-				} catch (err) {
-					console.log(err);
-				} finally {
-					loading.saveLoading = false;
 				}
-			},
-
-			defaultVariantImage(variant) {
-				return variant.images.find((image) => image.default);
-			},
-
-			async showVariantStocks(variant) {
-				try {
-					await this.getVariantStocks({ productId: this.productId, variantId: variant._id });
-				} catch (err) {
-					console.log(err);
-				}
-			},
-
-			sumVariantStocks(variant) {
-				if (!Array.isArray(variant.stock)) return +variant.stock || 0;
-
-				return variant.stock.reduce((total, curr) => total + +curr.quantity, 0);
-			},
-
-			handleCancel() {
-				this.reset();
-
-				this.$router.push({ name: "Products" });
-			},
-
-			reset() {
-				this.resetError();
-
-				this.setOne({});
+			} catch (err) {
+				console.log(err);
+			} finally {
+				loading.saveLoading = false;
 			}
+		},
+
+		async handleSetVariantDefaultImage(defaultSelected, loading) {
+			let data = { productId: this.$route.params.productId, variantId: this.variant._id, image: defaultSelected };
+
+			loading.saveLoading = true;
+
+			try {
+				await this.changeVariantDefaultImage(data);
+
+				let message = this.$t("actions.updated", { module: "Variant Image" });
+
+				this.$store.commit("showToast", message);
+
+				this.$nextTick(this.$refs.galleryModal.close);
+			} catch (err) {
+				console.log(err);
+			} finally {
+				loading.saveLoading = false;
+			}
+		},
+
+		defaultVariantImage(variant) {
+			return variant.images.find((image) => image.default);
+		},
+
+		async showVariantStocks(variant) {
+			try {
+				await this.getVariantStocks({ productId: this.productId, variantId: variant._id });
+			} catch (err) {
+				console.log(err);
+			}
+		},
+
+		sumVariantStocks(variant) {
+			if (!Array.isArray(variant.stock)) return +variant.stock || 0;
+
+			return variant.stock.reduce((total, curr) => total + +curr.quantity, 0);
+		},
+
+		handleCancel() {
+			this.reset();
+
+			this.$router.push({ name: "Products" });
+		},
+
+		reset() {
+			this.resetError();
+
+			this.setOne({});
 		}
-	};
+	}
+};
 </script>
 
 <style lang="scss">
-	.striped {
+.striped {
+	background-color: var(--light);
+}
+
+@media (max-width: 576px) {
+	.striped-mobile {
 		background-color: var(--light);
 	}
+}
 
-	@media (max-width: 576px) {
-		.striped-mobile {
-			background-color: var(--light);
-		}
+@media (min-width: 576px) {
+	.striped-sm {
+		background-color: var(--light);
 	}
+}
 
-	@media (min-width: 576px) {
-		.striped-sm {
-			background-color: var(--light);
-		}
+@media (min-width: 768px) {
+	.striped-md {
+		background-color: var(--light);
 	}
-
-	@media (min-width: 768px) {
-		.striped-md {
-			background-color: var(--light);
-		}
-		.striped-md-none {
-			background-color: transparent;
-		}
+	.striped-md-none {
+		background-color: transparent;
 	}
+}
 
-	// .product-field:nth-child(5n + 1) {
-	// 	background-color: var(--light);
-	// }
-	// .product-field:nth-child(5n) {
-	// 	background-color: var(--light);
-	// }
-	// .product-field {
-	// 	// &:nth-child(3n - 1),
-	// 	// &:nth-child(5n + 5) {
-	// 	&:nth-child(4n - 1),
-	// 	&:nth-child(4n) {
-	// 		background-color: var(--light);
-	// 	}
-	// }
-	// .product-field:nth-child(4n) {
-	// 	background-color: var(--light);
-	// }
+// .product-field:nth-child(5n + 1) {
+// 	background-color: var(--light);
+// }
+// .product-field:nth-child(5n) {
+// 	background-color: var(--light);
+// }
+// .product-field {
+// 	// &:nth-child(3n - 1),
+// 	// &:nth-child(5n + 5) {
+// 	&:nth-child(4n - 1),
+// 	&:nth-child(4n) {
+// 		background-color: var(--light);
+// 	}
+// }
+// .product-field:nth-child(4n) {
+// 	background-color: var(--light);
+// }
 
-	.gallery-btn {
+.gallery-btn {
+	svg.gallery-btn-icon path {
+		transition: fill 0.3s ease;
+	}
+	&.btn-outline-primary {
 		svg.gallery-btn-icon path {
-			transition: fill 0.3s ease;
+			fill: var(--primary);
 		}
-		&.btn-outline-primary {
-			svg.gallery-btn-icon path {
-				fill: var(--primary);
-			}
+	}
+	&.btn-outline-success {
+		svg.gallery-btn-icon path {
+			fill: var(--success);
 		}
-		&.btn-outline-success {
-			svg.gallery-btn-icon path {
-				fill: var(--success);
-			}
+	}
+	&:hover {
+		svg.gallery-btn-icon path {
+			fill: var(--white);
 		}
-		&:hover {
-			svg.gallery-btn-icon path {
-				fill: var(--white);
-			}
-			&.edit-btn {
-				svg.gallery-btn-icon {
-					polygon,
-					path:nth-child(1),
-					path:nth-child(2),
-					path:nth-child(3),
-					path:nth-child(4) {
-						fill: var(--white) !important;
-					}
+		&.edit-btn {
+			svg.gallery-btn-icon {
+				polygon,
+				path:nth-child(1),
+				path:nth-child(2),
+				path:nth-child(3),
+				path:nth-child(4) {
+					fill: var(--white) !important;
 				}
 			}
 		}
 	}
+}
 
-	.product-field {
-		&:hover {
-			background-color: #e7e7e7;
-		}
+.product-field {
+	&:hover {
+		background-color: #e7e7e7;
 	}
-	.scroll-area {
-		height: 100%;
-	}
+}
+.scroll-area {
+	height: 100%;
+}
 </style>

@@ -72,7 +72,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions("Products", ["addVariant", "updateVariant"]),
+		...mapActions("Products", ["createVariant", "updateVariant"]),
 
 		isOpened() {
 			this.productVariant = { ...(this.variant || this.productVariant) };
@@ -98,7 +98,7 @@ export default {
 			this.isBusy = true;
 
 			try {
-				let action = this.isUpdate ? this.updateVariant : this.addVariant;
+				let action = this.isUpdate ? this.updateVariant : this.createVariant;
 
 				let data = { ...this.productVariant, productId: this.product._id };
 

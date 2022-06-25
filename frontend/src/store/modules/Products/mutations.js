@@ -1,71 +1,17 @@
 export default {
-	setSaleAvailability(state, data) {
+	setAvailability(state, data) {
 		if (state.one._id == data.productId) {
 			this.commit("Products/updateOne", { availableForSale: data.availableForSale });
 		}
 	},
 
-	setPurchaseAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			this.commit("Products/updateOne", { availableForPurchase: data.availableForPurchase });
-		}
-	},
-
-	setSaleReturnAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			this.commit("Products/updateOne", { availableForSaleReturn: data.availableForSaleReturn });
-		}
-	},
-
-	setPurchaseReturnAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			this.commit("Products/updateOne", { availableForPurchaseReturn: data.availableForPurchaseReturn });
-		}
-	},
-
-	setVariantSaleAvailability(state, data) {
+	setVariantAvailability(state, data) {
 		if (state.one._id == data.productId) {
 			let oldVariantIndex = state.one?.variants?.findIndex((variant) => variant._id == data.variantId);
 
 			if ([-1, undefined].includes(oldVariantIndex)) return;
 
-			state.one.variants[oldVariantIndex].availableForSale = data.availableForSale;
-
-			this.commit("Products/updateOne");
-		}
-	},
-
-	setVariantPurchaseAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			let oldVariantIndex = state.one?.variants?.findIndex((variant) => variant._id == data.variantId);
-
-			if ([-1, undefined].includes(oldVariantIndex)) return;
-
-			state.one.variants[oldVariantIndex].availableForPurchase = data.availableForPurchase;
-
-			this.commit("Products/updateOne");
-		}
-	},
-
-	setVariantSaleReturnAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			let oldVariantIndex = state.one?.variants?.findIndex((variant) => variant._id == data.variantId);
-
-			if ([-1, undefined].includes(oldVariantIndex)) return;
-
-			state.one.variants[oldVariantIndex].availableForSaleReturn = data.availableForSaleReturn;
-
-			this.commit("Products/updateOne");
-		}
-	},
-
-	setVariantPurchaseReturnAvailability(state, data) {
-		if (state.one._id == data.productId) {
-			let oldVariantIndex = state.one?.variants?.findIndex((variant) => variant._id == data.variantId);
-
-			if ([-1, undefined].includes(oldVariantIndex)) return;
-
-			state.one.variants[oldVariantIndex].availableForPurchaseReturn = data.availableForPurchaseReturn;
+			state.one.variants[oldVariantIndex][data.action.name] = data.action.isAvailable;
 
 			this.commit("Products/updateOne");
 		}
@@ -77,7 +23,7 @@ export default {
 		}
 	},
 
-	addVariant(state, data) {
+	createVariant(state, data) {
 		data.variant.stock = 0;
 		// data.variant.stocks = [];
 
@@ -101,6 +47,12 @@ export default {
 			state.one.variants[oldVariantIndex] = data.variant;
 
 			this.commit("Products/updateOne");
+		}
+	},
+
+	setVariants(state, data) {
+		if (state.one?._id == data.productId) {
+			state.one.variants = data.variants;
 		}
 	},
 
