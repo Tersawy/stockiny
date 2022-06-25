@@ -44,10 +44,6 @@ exports.product = async (req, res) => {
 		product.updatedBy = undefined;
 	}
 
-	product.deletedAt = undefined;
-	product.deletedBy = undefined;
-	product.__v = undefined;
-
 	res.json({ doc: product });
 };
 
