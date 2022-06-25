@@ -30,7 +30,9 @@ exports.products = async (req, res) => {
 };
 
 exports.product = async (req, res) => {
-	let product = await Product.findById(req.params.id).populate(
+	let select = "name code barcodeType price cost tax taxMethod category brand unit purchaseUnit saleUnit createdAt createdBy updatedAt updatedBy minimumStock image availableForSale availableForSaleReturn availableForPurchase availableForPurchaseReturn notes";
+
+	let product = await Product.findById(req.params.id, select).populate(
 		"category brand unit createdBy updatedBy saleUnit purchaseUnit",
 		"name username shortName"
 	);
