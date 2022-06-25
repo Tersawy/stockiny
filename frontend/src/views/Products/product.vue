@@ -192,10 +192,10 @@
 												<b-col cols="4" class="font-weight-bold"> In-Stock: </b-col>
 												<b-col>
 													<div class="d-flex align-items-center">
-														<b-badge :variant="'outline-' + (+variant.stock <= product.minimumStock ? 'danger' : 'success')">
+														<b-badge :variant="'outline-' + (+variant.stocks <= product.minimumStock ? 'danger' : 'success')">
 															{{ sumVariantStocks(variant) }} {{ product.unit.shortName }}
 														</b-badge>
-														<a v-if="variant.stock != 0 && !Array.isArray(variant.stock)" class="text-info mx-3" @click="showVariantStocks(variant)">
+														<a v-if="variant.stocks != 0 && !Array.isArray(variant.stocks)" class="text-info mx-3" @click="showVariantStocks(variant)">
 															<EyeIcon />
 														</a>
 													</div>
@@ -247,7 +247,7 @@
 											/>
 										</b-col>
 									</b-row>
-									<template v-if="Array.isArray(variant.stock)">
+									<template v-if="Array.isArray(variant.stocks)">
 										<table class="table table-bordered table-hover mt-4">
 											<thead>
 												<tr>
@@ -256,11 +256,11 @@
 												</tr>
 											</thead>
 											<tbody>
-												<template v-for="(stock, i) of variant.stock">
+												<template v-for="(stock, i) of variant.stocks">
 													<tr :key="i" v-if="stock.quantity != 0">
 														<th>{{ stock.warehouse.name }}</th>
 														<th>
-															<b-badge :variant="'outline-' + (+variant.stock <= product.minimumStock ? 'danger' : 'success')">
+															<b-badge :variant="'outline-' + (+variant.stocks <= product.minimumStock ? 'danger' : 'success')">
 																{{ stock.quantity }} {{ product.unit.shortName }}
 															</b-badge>
 														</th>
@@ -672,9 +672,9 @@ export default {
 		},
 
 		sumVariantStocks(variant) {
-			if (!Array.isArray(variant.stock)) return +variant.stock || 0;
+			if (!Array.isArray(variant.stocks)) return +variant.stocks || 0;
 
-			return variant.stock.reduce((total, curr) => total + +curr.quantity, 0);
+			return variant.stocks.reduce((total, curr) => total + +curr.quantity, 0);
 		},
 
 		handleCancel() {
