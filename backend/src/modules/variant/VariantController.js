@@ -9,15 +9,21 @@ const { notFound } = require("../../errors/ErrorHandler");
 exports.variants = async (req, res) => {
 	let { product } = req.query;
 
-	let variants = await Variant.find({ product }, "name stocks images updatedAt createdAt updatedBy createdBy").populate("stocks.warehouse", "name");
+	let variants = await Variant.find({ product }, "name stocks images updatedAt createdAt updatedBy createdBy");
 
-	variants.forEach((variant) => {
-		if (!variant.isUpdated) {
-			delete variant._doc.updatedAt;
-			delete variant._doc.updatedBy;
+	variants = variants.map((variant) => {
+		let stocks = variant.instock;
+
+		return {
+			_id: variant._id,
+			name: variant.name,
+			stocks,
+			images: variant.images,
+			createdAt: variant.createdAt,
+			createdBy: variant.createdBy,
+			updatedAt: variant.isUpdated ? variant.updatedAt : undefined,
+			updatedBy: variant.isUpdated ? variant.updatedBy : undefined
 		}
-
-		variant.instock = variant.instock;
 	});
 
 	res.json({ variants });
