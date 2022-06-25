@@ -1,4 +1,8 @@
 export default {
+	setOne(state, doc) {
+		state.one = { ...doc, variants: [] };
+	},
+
 	setAvailability(state, data) {
 		if (state.one._id == data.productId) {
 			this.commit("Products/updateOne", { availableForSale: data.availableForSale });
