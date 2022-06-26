@@ -37,7 +37,7 @@
 
 			<template #cell(netUnitAmount)="row"> $ {{ row.item.netUnitAmount | floating }} </template>
 
-			<template #cell(instock)="row">
+			<template #cell(instockBySubUnit)="row">
 				<b-badge :variant="row.item.stockVariant"> {{ row.value | floating }} {{ subUnit(row.item).shortName }} </b-badge>
 			</template>
 
@@ -118,7 +118,7 @@ export default {
 				{ key: "image", label: "Image" },
 				{ key: "name", label: "Name" },
 				{ key: "netUnitAmount", label: `Net Unit ${this.amountType}` },
-				{ key: "instock", label: "Instock" },
+				{ key: "instockBySubUnit", label: "Instock" },
 				{ key: "quantity", label: "Quantity" },
 				{ key: "discountUnitAmount", label: "Discount" },
 				{ key: "netUnitTax", label: "Tax" },
@@ -139,7 +139,7 @@ export default {
 
 					/*
 						mainAmount this becuase in update maybe the product that match this detail not found in productOptions and
-					 	the reason is that the product has been deleted, disabled or don't have instock
+					 	the reason is that the product has been deleted, disabled or don't have instockBySubUnit
 					 */
 					this.detail.amount = productOption ? productOption.amount : this.detail.mainAmount;
 
@@ -192,7 +192,7 @@ export default {
 			if (!this.invoice.warehouse && !this.invoice.fromWarehouse) return alert("Please choose the warehouse first");
 
 			if (typeof product.quantity === "undefined") {
-				product.quantity = this.instock(product) < 1 && product.stock > 0 ? this.instock(product) : 1;
+				product.quantity = this.instockBySubUnit(product) < 1 && product.instock > 0 ? this.instockBySubUnit(product) : 1;
 			}
 
 			let detail = this.net(product);
@@ -275,20 +275,20 @@ export default {
 			return this.totalUnitAmount(product) * product.quantity;
 		},
 
-		instock(product) {
-			// this stock depended on main unit and it is come from api;
-			let instock = +product.stock;
+		instockBySubUnit(product) {
+			// this instock depended on main unit and it is come from api;
+			let instockBySubUnit = +product.instock;
 
-			if (!instock) return 0;
+			if (!instockBySubUnit) return 0;
 
 			let subUnit = this.subUnit(product);
 
-			//? reverse operator if sub unit is not main unit to get right stock value
+			//? reverse operator if sub unit is not main unit to get right instock value
 			let isMultiple = subUnit.operator === "*" && subUnit._id == product.unit;
 
-			instock = isMultiple ? instock * +subUnit.value : instock / +subUnit.value;
+			instockBySubUnit = isMultiple ? instockBySubUnit * +subUnit.value : instockBySubUnit / +subUnit.value;
 
-			return instock;
+			return instockBySubUnit;
 		},
 
 		net(product) {
@@ -298,7 +298,7 @@ export default {
 			product.discountUnitAmount = this.discountUnitAmount(product);
 			product.totalUnitAmount = this.totalUnitAmount(product);
 			product.subtotalUnitAmount = this.subtotalUnitAmount(product);
-			product.instock = this.instock(product);
+			product.instockBySubUnit = this.instockBySubUnit(product);
 
 			return product;
 		},
@@ -308,7 +308,7 @@ export default {
 
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
 				if (this.checkQuantity) {
-					if (row.item.quantity >= row.item.instock) {
+					if (row.item.quantity >= row.item.instockBySubUnit) {
 						if (row.item.timeout) clearTimeout(row.item.timeout);
 						row.item.stockVariant = "outline-danger";
 						row.item.incrementBtn = "danger";
@@ -317,9 +317,9 @@ export default {
 							row.item.incrementBtn = "primary";
 							this.updateDetail(row.item);
 						}, 300);
-					} else if (row.item.quantity + 1 > row.item.instock) {
-						row.item.quantity = row.item.instock;
-						row.value = row.item.instock;
+					} else if (row.item.quantity + 1 > row.item.instockBySubUnit) {
+						row.item.quantity = row.item.instockBySubUnit;
+						row.value = row.item.instockBySubUnit;
 					} else {
 						row.item.quantity += 1;
 						row.value += 1;
@@ -329,8 +329,8 @@ export default {
 					row.value += 1;
 				}
 			} else {
-				row.item.quantity = row.item.instock || 1;
-				row.value = row.item.instock || 1;
+				row.item.quantity = row.item.instockBySubUnit || 1;
+				row.value = row.item.instockBySubUnit || 1;
 			}
 
 			this.updateDetail(row.item);
@@ -343,7 +343,7 @@ export default {
 				row.item.quantity -= 1;
 				row.value -= 1;
 			} else {
-				if (row.item.quantity == 1 || row.item.quantity == row.item.instock) {
+				if (row.item.quantity == 1 || row.item.quantity == row.item.instockBySubUnit) {
 					if (row.item.timeout) clearTimeout(row.item.timeout);
 
 					row.item.decrementBtn = "danger";
@@ -354,8 +354,8 @@ export default {
 						this.updateDetail(row.item);
 					}, 300);
 				} else {
-					row.item.quantity = row.item.instock || 1;
-					row.value = row.item.instock || 1;
+					row.item.quantity = row.item.instockBySubUnit || 1;
+					row.value = row.item.instockBySubUnit || 1;
 				}
 			}
 
@@ -374,9 +374,9 @@ export default {
 
 			let isValid = regex.test(detail.quantity);
 
-			if (!isValid || (this.checkQuantity && detail.instock < detail.quantity)) {
-				detail.quantity = detail.instock || 1;
-				row.value = detail.instock || 1;
+			if (!isValid || (this.checkQuantity && detail.instockBySubUnit < detail.quantity)) {
+				detail.quantity = detail.instockBySubUnit || 1;
+				row.value = detail.instockBySubUnit || 1;
 			}
 
 			this.updateDetail(detail);

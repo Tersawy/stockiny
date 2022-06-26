@@ -77,7 +77,7 @@
 									<b-badge variant="outline-info"> {{ row.item.code }} </b-badge>
 								</template>
 
-								<template #cell(instock)="row">
+								<template #cell(instockBySubUnit)="row">
 									<!-- <b-badge :variant="row.item.stockVariant"> {{ row.value | floating }} {{ subUnit(row.item).shortName }} </b-badge> -->
 									<b-btn :variant="row.item.stockVariant" size="sm" @click="changeSubUnit(row.item)" class="font-weight-bold">
 										{{ row.value | floating }} {{ subUnit(row.item).shortName | toCapitalize }}
@@ -236,7 +236,7 @@ export default {
 			fields: [
 				{ key: "image", label: "Image", tdClass: "text-lg-center", thClass: "text-lg-center" },
 				{ key: "name", label: "Name" },
-				{ key: "instock", label: "Instock", tdClass: "text-lg-center", thClass: "text-lg-center" },
+				{ key: "instockBySubUnit", label: "Instock", tdClass: "text-lg-center", thClass: "text-lg-center" },
 				{ key: "quantity", label: "Quantity", tdClass: "text-lg-center", thClass: "text-lg-center" },
 				{ key: "type", label: "Type", tdClass: "text-lg-center", thClass: "text-lg-center" },
 				{ key: "actions", label: "Actions", tdClass: "text-lg-center", thClass: "text-lg-center" }
@@ -357,8 +357,8 @@ export default {
 				subUnit: product.subUnit,
 				unit: product.unit,
 				quantity: product.quantity || 1,
-				stock: product.stock,
-				instock: this.instock(product),
+				instock: product.instock,
+				instockBySubUnit: this.instockBySubUnit(product),
 				type: product.type || "addition", // subtraction, addition
 				stockVariant: "primary",
 				decrementBtn: "primary",
@@ -373,7 +373,7 @@ export default {
 
 			details = details.map((oldDetail) => {
 				if (oldDetail.product == detail.product && oldDetail.variantId == detail.variantId) {
-					return { ...oldDetail, instock: this.instock(oldDetail) };
+					return { ...oldDetail, instockBySubUnit: this.instockBySubUnit(oldDetail) };
 				}
 
 				return oldDetail;
@@ -400,27 +400,27 @@ export default {
 			return subUnit;
 		},
 
-		instock(product) {
-			// this stock depended on main unit and it is come from api;
-			let instock = +product.stock;
+		instockBySubUnit(product) {
+			// this instock depended on main unit and it is come from api;
+			let instockBySubUnit = +product.instock;
 
-			if (!instock) return 0;
+			if (!instockBySubUnit) return 0;
 
 			let subUnit = this.subUnit(product);
 
-			//? reverse operator if sub unit is not main unit to get right stock value
+			//? reverse operator if sub unit is not main unit to get right instock value
 			let isMultiple = subUnit.operator === "*" && subUnit._id == product.unit;
 
-			instock = isMultiple ? instock * +subUnit.value : instock / +subUnit.value;
+			instockBySubUnit = isMultiple ? instockBySubUnit * +subUnit.value : instockBySubUnit / +subUnit.value;
 
-			return instock;
+			return instockBySubUnit;
 		},
 
 		incrementQuantity(row) {
 			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
 				if (!this.isUpdate || (this.isUpdate && this.oldAdjustment.warehouse != this.adjustment.warehouse)) {
 					if (row.item.type == "subtraction") {
-						if (row.item.quantity >= row.item.instock) {
+						if (row.item.quantity >= row.item.instockBySubUnit) {
 							if (row.item.timeout) clearTimeout(row.item.timeout);
 
 							row.item.stockVariant = row.item.incrementBtn = "danger";
@@ -432,8 +432,8 @@ export default {
 							return;
 						}
 
-						if (row.item.quantity + 1 > row.item.instock) {
-							return (row.item.quantity = row.item.instock);
+						if (row.item.quantity + 1 > row.item.instockBySubUnit) {
+							return (row.item.quantity = row.item.instockBySubUnit);
 						}
 					}
 				}
@@ -441,7 +441,7 @@ export default {
 				return (row.item.quantity += 1);
 			}
 
-			row.item.quantity = row.item.instock || 1;
+			row.item.quantity = row.item.instockBySubUnit || 1;
 		},
 
 		decrementQuantity(row) {
@@ -451,7 +451,7 @@ export default {
 				return (row.item.quantity -= 1);
 			}
 
-			if (row.item.quantity == 1 || row.item.quantity == row.item.instock) {
+			if (row.item.quantity == 1 || row.item.quantity == row.item.instockBySubUnit) {
 				if (row.item.timeout) clearTimeout(row.item.timeout);
 
 				row.item.decrementBtn = "danger";
@@ -460,7 +460,7 @@ export default {
 				return;
 			}
 
-			row.item.quantity = row.item.instock || 1;
+			row.item.quantity = row.item.instockBySubUnit || 1;
 		},
 
 		quantityChanged(row, value) {
@@ -471,13 +471,13 @@ export default {
 			let isValid = regex.test(row.item.quantity);
 
 			if (!isValid || row.item.quantity <= 0) {
-				row.item.quantity = row.item.instock || 1;
+				row.item.quantity = row.item.instockBySubUnit || 1;
 				return;
 			}
 
 			if (!this.isUpdate || (this.isUpdate && this.oldAdjustment.warehouse != this.adjustment.warehouse)) {
-				if (!isValid || row.item.quantity <= 0 || (row.item.type == "subtraction" && row.item.instock < row.item.quantity)) {
-					row.item.quantity = row.item.instock || 1;
+				if (!isValid || row.item.quantity <= 0 || (row.item.type == "subtraction" && row.item.instockBySubUnit < row.item.quantity)) {
+					row.item.quantity = row.item.instockBySubUnit || 1;
 				}
 			}
 		},
@@ -488,7 +488,7 @@ export default {
 
 		typeVariant(detail) {
 			if (detail.type == "subtraction") {
-				if (detail.quantity > detail.instock) return "danger";
+				if (detail.quantity > detail.instockBySubUnit) return "danger";
 				return "warning";
 			} else {
 				return "success";
@@ -504,13 +504,13 @@ export default {
 			detail.type = isAddition ? "subtraction" : "addition";
 
 			if (isAddition) {
-				if (detail.instock <= 0) {
+				if (detail.instockBySubUnit <= 0) {
 					detail._rowVariant = "danger";
 					detail.stockVariant = "danger";
 				}
 
-				if (detail.quantity > detail.instock) {
-					detail.quantity = detail.instock || 1;
+				if (detail.quantity > detail.instockBySubUnit) {
+					detail.quantity = detail.instockBySubUnit || 1;
 				}
 			}
 		},
@@ -536,10 +536,10 @@ export default {
 				}
 			}
 
-			detail.instock = this.instock(detail);
+			detail.instockBySubUnit = this.instockBySubUnit(detail);
 
-			if (detail.type == "subtraction" && detail.instock < detail.quantity) {
-				detail.quantity = detail.instock || 1;
+			if (detail.type == "subtraction" && detail.instockBySubUnit < detail.quantity) {
+				detail.quantity = detail.instockBySubUnit || 1;
 			}
 		},
 
@@ -556,7 +556,7 @@ export default {
 				if (detail.type == "subtraction") {
 					if (!this.isUpdate || (this.isUpdate && this.oldAdjustment.warehouse != this.adjustment.warehouse)) {
 						let message = this.$t("forms.notEnoughStock", { field: detail.name });
-						if (detail.quantity > detail.instock) return showMessage({ message, error: true });
+						if (detail.quantity > detail.instockBySubUnit) return showMessage({ message, error: true });
 					}
 				}
 
