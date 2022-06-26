@@ -34,7 +34,7 @@ exports.create = async (req, res) => {
 
 	if (!product) throw notFound("product");
 
-	let variant = new Variant({ name: req.body.name, createdBy: req.me._id });
+	let variant = new Variant({ name: req.body.name, createdBy: req.me._id, product: req.body.productId });
 
 	product.variants.push(variant._id);
 
