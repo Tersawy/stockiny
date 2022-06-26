@@ -14,6 +14,8 @@ const variantSchema = new Schema(
 
 		stocks: [stockSchema],
 
+		product: { type: ObjectId, ref: "Product", required: true },
+
 		images: [imageSchema],
 
 		availableForSale: { type: Boolean, default: false },
