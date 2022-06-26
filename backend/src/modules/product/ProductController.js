@@ -94,12 +94,12 @@ let getPurchaseOptions = async (req, res) => {
 					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$availableForPurchase", true] }] } } },
 					{
 						$project: {
-							_id: 1,
 							name: 1,
-							stock: { $ifNull: [{ $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }, 0] },
-							images: { $ifNull: [{ $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }, "$$productImage"] },
-						}
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
 					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
 				]
 			}
 		},
