@@ -66,7 +66,7 @@ export default {
 
 			if ([-1, undefined].includes(oldVariantIndex)) return;
 
-			state.one.variants[oldVariantIndex].stock = data.doc.stock;
+			state.one.variants[oldVariantIndex].stocks = data.doc.stocks;
 		}
 	},
 

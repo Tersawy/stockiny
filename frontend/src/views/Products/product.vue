@@ -257,11 +257,11 @@
 											</thead>
 											<tbody>
 												<template v-for="(stock, i) of variant.stocks">
-													<tr :key="i" v-if="stock.quantity != 0">
+													<tr :key="i" v-if="stock.instock != 0">
 														<th>{{ stock.warehouse.name }}</th>
 														<th>
 															<b-badge :variant="'outline-' + (+variant.stocks <= product.minimumStock ? 'danger' : 'success')">
-																{{ stock.quantity }} {{ product.unit.shortName }}
+																{{ stock.instock }} {{ product.unit.shortName }}
 															</b-badge>
 														</th>
 													</tr>
@@ -674,7 +674,7 @@ export default {
 		sumVariantStocks(variant) {
 			if (!Array.isArray(variant.stocks)) return +variant.stocks || 0;
 
-			return variant.stocks.reduce((total, curr) => total + +curr.quantity, 0);
+			return variant.stocks.reduce((total, curr) => total + +curr.instock, 0);
 		},
 
 		handleCancel() {
