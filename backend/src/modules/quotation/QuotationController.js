@@ -110,7 +110,7 @@ exports.getQuotation = async (req, res) => {
 exports.getEditQuotation = async (req, res) => {
 	let select = "date warehouse customer shipping tax discount discountMethod status reference details notes";
 
-	let quotation = await Quotation.findById(req.params.id, select).populate("details.product", "price code name image").populate("details.product", "name images stocks").populate("details.subUnit", "value operator");
+	let quotation = await Quotation.findById(req.params.id, select).populate("details.product", "price code name image").populate("details.variant", "name images stocks").populate("details.subUnit", "value operator");
 
 	if (!quotation) throw notFound();
 
@@ -131,7 +131,7 @@ exports.getEditQuotation = async (req, res) => {
 			mainAmount: detail.product.price,
 			variantName: detail.variant.name,
 			image: detail.variant.defaultImage || detail.product.image,
-			stock: detail.variant.getInstockByWarehouse(quotation.warehouse)
+			instock: detail.variant.getInstockByWarehouse(quotation.warehouse)
 		};
 	});
 
