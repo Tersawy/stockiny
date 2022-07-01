@@ -108,18 +108,20 @@ let getSaleOptions = async (req, res) => {
 				as: "variants",
 				let: { productId: "$_id", productImage: "$image" },
 				pipeline: [
-					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForSale", true] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForSale", true] }] } } },
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse), { $gt: ["$$stock.instock", 0] }] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
-					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } },
+					{ $match: { instock: { $gt: 0 } } }
 				]
 			}
 		},
+		{ $match: { $expr: { $gt: [{ $size: "$variants" }, 0] } } },
 		{
 			$project: {
 				_id: 0,
@@ -149,18 +151,20 @@ let getPurchaseReturnOptions = async (req, res) => {
 				as: "variants",
 				let: { productId: "$_id", productImage: "$image" },
 				pipeline: [
-					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForPurchaseReturn", true] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForPurchaseReturn", true] }] } } },
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $and: [{ $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] }, { $gt: ["$$stock.instock", 0] }] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
-					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } },
+					{ $match: { instock: { $gt: 0 } } }
 				]
 			}
 		},
+		{ $match: { $expr: { $gt: [{ $size: "$variants" }, 0] } } },
 		{
 			$project: {
 				_id: 0,
@@ -231,18 +235,20 @@ let getTransferOptions = async (req, res) => {
 				as: "variants",
 				let: { productId: "$_id", productImage: "$image" },
 				pipeline: [
-					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }] } } },
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse), { $gt: ["$stock.instock", 0] }] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
-					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } },
+					{ $match: { instock: { $gt: 0 } } }
 				]
 			}
 		},
+		{ $match: { $expr: { $gt: [{ $size: "$variants" }, 0] } } },
 		{
 			$project: {
 				_id: 0,
