@@ -56,7 +56,10 @@ export default {
 
 	setVariants(state, data) {
 		if (state.one?._id == data.productId) {
-			state.one.variants = data.variants;
+			state.one.variants = data.variants.map(variant => {
+				variant.stocks = variant.stocks || [];
+				return variant;
+			});
 		}
 	},
 

@@ -192,10 +192,10 @@
 												<b-col cols="4" class="font-weight-bold"> In-Stock: </b-col>
 												<b-col>
 													<div class="d-flex align-items-center">
-														<b-badge :variant="'outline-' + (+variant.stocks <= product.minimumStock ? 'danger' : 'success')">
-															{{ sumVariantStocks(variant) }} {{ product.unit.shortName }}
+														<b-badge :variant="'outline-' + (+variant.instock <= product.minimumStock ? 'danger' : 'success')">
+															{{ variant.instock }} {{ product.unit.shortName }}
 														</b-badge>
-														<a v-if="variant.stocks != 0 && !Array.isArray(variant.stocks)" class="text-info mx-3" @click="showVariantStocks(variant)">
+														<a v-if="variant.instock != 0 && !variant.stocks.length" class="text-info mx-3" @click="showVariantStocks(variant)">
 															<EyeIcon />
 														</a>
 													</div>
@@ -247,7 +247,7 @@
 											/>
 										</b-col>
 									</b-row>
-									<template v-if="Array.isArray(variant.stocks)">
+									<template v-if="variant.stocks.length">
 										<table class="table table-bordered table-hover mt-4">
 											<thead>
 												<tr>
@@ -669,12 +669,6 @@ export default {
 			} catch (err) {
 				console.log(err);
 			}
-		},
-
-		sumVariantStocks(variant) {
-			if (!Array.isArray(variant.stocks)) return +variant.stocks || 0;
-
-			return variant.stocks.reduce((total, curr) => total + +curr.instock, 0);
 		},
 
 		handleCancel() {
