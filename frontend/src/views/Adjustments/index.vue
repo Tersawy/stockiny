@@ -137,13 +137,13 @@
 						</b-th>
 						<b-td variant="danger" class="font-weight-bold text-center text-nowrap">{{ error.warehouse.name }}</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.warehouse.stock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.warehouse.stock.before | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.warehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.warehouse.instock.before | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.warehouse.stock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.warehouse.stock.after | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.warehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.warehouse.instock.after | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td class="text-center">
