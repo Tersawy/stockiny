@@ -4,11 +4,7 @@ const { createError, notFound } = require("../../errors/ErrorHandler");
 
 const Transfer = require("./Transfer");
 
-const Product = require("../product/Product");
-
 const Status = require("../status/Status");
-
-const Warehouse = require("../warehouse/Warehouse");
 
 exports.getTransfers = async (req, res) => {
 	let select = "date reference fromWarehouse toWarehouse status total";
@@ -30,86 +26,79 @@ exports.getTransfers = async (req, res) => {
 };
 
 exports.createTransfer = async (req, res) => {
-	let { details, fromWarehouse: fromWarehouseId, toWarehouse: toWarehouseId, status: statusId } = req.body;
+	if (req.body.fromWarehouse === req.body.toWarehouse) throw createError("warehouse", 400);
 
-	if (fromWarehouseId === toWarehouseId) throw createError("warehouse", 400);
+	let transfer = new Transfer().fill(req.body).addDetails(req.body.details).by(req.me._id);
 
-	let transferQuery = new Transfer().fill(req.body).addDetails(details).by(req.me._id);
+	await transfer.populate("fromWarehouse toWarehouse status details.product details.variant details.subUnit");
 
-	let productSelect = "name unit variants._id variants.stock variants.name";
+	if (!transfer.fromWarehouse || transfer.fromWarehouse.deletedAt != null) throw createError({ field: "fromWarehouse", type: "notFound" }, 422);
 
-	let productIds = details.map((detail) => detail.product);
+	if (!transfer.toWarehouse || transfer.toWarehouse.deletedAt != null) throw createError({ field: "toWarehouse", type: "notFound" }, 422);
 
-	let productsQuery = Product.find({ _id: { $in: productIds } }, productSelect).populate("unit", "name");
+	if (!transfer.status || transfer.status.deletedAt != null) throw createError({ field: "status", type: "notFound" }, 422);
 
-	transferQuery = transferQuery.populate("details.subUnit", "value operator base");
-
-	let warehousesQuery = Warehouse.find({ _id: { $in: [fromWarehouseId, toWarehouseId] } });
-
-	let statusQuery = Status.findOne({ _id: status, invoice: "transfers" });
-
-	let [products, transfer, warehouses, status] = await Promise.all([productsQuery, transferQuery, warehousesQuery, statusQuery]);
-
-	let fromWarehouse = warehouses.find(warehouse => warehouse._id.toString() === fromWarehouseId.toString());
-
-	if (!fromWarehouse) throw createError({ field: "fromWarehouse", type: "notFound" }, 422);
-
-	let toWarehouse = warehouses.find(warehouse => warehouse._id.toString() === toWarehouseId.toString());
-
-	if (!toWarehouse) throw createError({ field: "toWarehouse", type: "notFound" }, 422);
-
-	if (!status) throw createError({ field: "status", type: "notFound" }, 422);
-
-	let session = await mongoose.startSession();
-
-	session.startTransaction();
-
-	// This fix => ParallelSaveError: Can't save() the same doc multiple times in parallel
-	let updates = [];
+	let variants = [];
 
 	let errors = [];
 
-	for (let detail of transfer.details) {
-		let product = throwIfNotValidDetail(detail, products);
+	for (let index in transfer.details) {
+		let detail = transfer.details[index];
 
-		let updatedProduct = updates.find((p) => p._id.toString() === detail.product.toString());
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-		product = updatedProduct || product;
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-		let variant = product.getVariantById(detail.variant);
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-		let instockFrom = variant.getInstockByWarehouse(fromWarehouseId);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-		let instockTo = variant.getInstockByWarehouse(toWarehouseId);
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-		let quantity = detail.stock;
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
 
-		if (!instockFrom || instockFrom < quantity) {
-			errors.push({
-				product: { _id: product._id, name: product.name },
-				variant: { _id: variant._id, name: variant.name },
-				fromWarehouse: { name: fromWarehouse.name, stock: { before: instockFrom, after: instockFrom - quantity } },
-				toWarehouse: { name: toWarehouse.name, stock: { before: instockTo, after: instockTo + quantity } },
-				unit: { _id: product.unit._id, name: product.unit.name },
-				quantity
-			});
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-			continue;
-		}
+		detail.unit = detail.product.unit;
 
-		if (status.effected) {
-			variant.subtractFromStock({ warehouse: fromWarehouseId, quantity });
+		if (transfer.status.effected) {
+			let instockFrom = detail.variant.getInstockByWarehouse(transfer.fromWarehouse._id),
+				instockTo = detail.variant.getInstockByWarehouse(transfer.toWarehouse._id);
 
-			variant.addToStock({ warehouse: toWarehouseId, quantity });
+			instockFrom = { before: instockFrom, after: instockFrom };
 
-			if (!updatedProduct) updates.push(product);
+			instockTo = { before: instockTo, after: instockTo };
+
+			let quantity = detail.instockBySubUnit;
+
+			if (instockFrom < quantity) {
+				errors.push({
+					product: { _id: detail.product._id, name: detail.product.name },
+					variant: { _id: detail.variant._id, name: detail.variant.name },
+					fromWarehouse: { _id: transfer.fromWarehouse._id, name: transfer.fromWarehouse.name, instock: { before: instockFrom, after: instockFrom - quantity } },
+					toWarehouse: { _id: transfer.toWarehouse._id, name: transfer.toWarehouse.name, instock: { before: instockFrom, after: instockFrom + quantity } },
+					unit: detail.product.unit,
+					quantity
+				});
+				continue;
+			}
+
+			detail.variant.addToStock({ warehouse: transfer.toWarehouse._id, quantity });
+
+			detail.variant.subtractFromStock({ warehouse: transfer.fromWarehouse._id, quantity });
+
+			variants.push(detail.variant);
 		}
 	}
 
 	if (errors.length) throw createError({ type: "quantity", errors }, 422);
 
+	let session = await mongoose.startSession();
+
+	session.startTransaction();
+
 	try {
-		await Promise.all([transfer.save({ session }), ...updates.map((product) => product.save({ session }))]);
+		await Promise.all([transfer.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -127,212 +116,188 @@ exports.getTransfer = async (req, res) => {
 	let transfer = await Transfer.findById(req.params.id, "tax discount discountMethod shipping paid date details createdBy status fromWarehouse toWarehouse total reference createdAt")
 		.populate("fromWarehouse toWarehouse", "name email phone zipCode address city country")
 		.populate("details.subUnit", "name")
-		.populate("details.product", "name code variants._id variants.name")
+		.populate("details.product", "name code")
+		.populate("details.variant", "name")
 		.populate("status", "name color")
 		.populate("createdBy", "fullname");
 
 	if (!transfer) throw notFound();
 
-	let details = transfer.details.map((detail) => {
-		let variant = detail.product.getVariantById(detail.variant);
-		return {
-			amount: detail.amount,
-			quantity: detail.quantity,
-			tax: detail.tax,
-			taxMethod: detail.taxMethod,
-			discount: detail.discount,
-			discountMethod: detail.discountMethod,
-			unit: detail.unit,
-			variantId: detail.variant,
-			total: detail.total,
-			subUnit: detail.subUnit,
-			product: detail.product._id,
-			name: detail.product.name,
-			code: detail.product.code,
-			variantName: variant.name
-		};
-	});
+	let details = transfer.details.map((detail) => ({
+		amount: detail.amount,
+		quantity: detail.quantity,
+		tax: detail.tax,
+		taxMethod: detail.taxMethod,
+		discount: detail.discount,
+		discountMethod: detail.discountMethod,
+		unit: detail.unit,
+		variantId: detail.variant._id,
+		total: detail.total,
+		subUnit: detail.subUnit,
+		product: detail.product._id,
+		name: detail.product.name,
+		code: detail.product.code,
+		variantName: detail.variant.name
+	}));
 
 	res.json({ doc: { ...transfer.toJSON(), details } });
 }
 
 exports.getEditTransfer = async (req, res) => {
-	let { id } = req.params;
-
 	let select = "date fromWarehouse toWarehouse shipping tax discount discountMethod status reference details notes";
 
-	let transfer = await Transfer.findById(id, select).populate("details.product", "cost variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let transfer = await Transfer.findById(req.params.id, select).populate("details.product", "cost code name image").populate("details.variant", "name images stocks").populate("details.subUnit", "value operator");
 
 	if (!transfer) throw notFound();
 
-	let details = transfer.details.map(detail => {
-		let variant = detail.product.getVariantById(detail.variant);
-		return {
-			amount: detail.unitAmount,
-			mainAmount: detail.product.cost,
-			quantity: detail.quantity,
-			tax: detail.tax,
-			taxMethod: detail.taxMethod,
-			discount: detail.discount,
-			discountMethod: detail.discountMethod,
-			unit: detail.unit,
-			subUnit: detail.subUnit._id,
-			variantId: detail.variant,
-			product: detail.product._id,
-			name: detail.product.name,
-			code: detail.product.code,
-			variantName: variant.name,
-			image: variant.defaultImage || detail.product.image,
-			stock: variant.getInstockByWarehouse(transfer.warehouse)
-		};
-	});
+	let details = transfer.details.map(detail => ({
+		amount: detail.unitAmount,
+		mainAmount: detail.product.cost,
+		quantity: detail.quantity,
+		tax: detail.tax,
+		taxMethod: detail.taxMethod,
+		discount: detail.discount,
+		discountMethod: detail.discountMethod,
+		unit: detail.unit,
+		subUnit: detail.subUnit._id,
+		variantId: detail.variant._id,
+		product: detail.product._id,
+		name: detail.product.name,
+		code: detail.product.code,
+		variantName: detail.variant.name,
+		image: detail.variant.defaultImage || detail.product.image,
+		instock: detail.variant.getInstockByWarehouse(transfer.warehouse)
+	}));
 
 	res.json({ doc: { ...transfer.toJSON(), details } });
 };
 
 exports.updateTransfer = async (req, res) => {
-	let { details, fromWarehouse: fromWarehouseId, toWarehouse: toWarehouseId, status: statusId } = req.body;
+	if (req.body.fromWarehouse === req.body.toWarehouse) throw createError("warehouse", 400);
 
-	if (fromWarehouseId === toWarehouseId) throw createError("warehouse", 400);
+	let oldTransferQuery = Transfer.findById(req.params.id).populate("fromWarehouse toWarehouse status details.variant details.product details.subUnit details.unit");
 
-	// get product in detail to update stock if status effected
-	let transferQuery = Transfer.findById(req.params.id)
-		.populate("details.subUnit", "operator value")
-		.populate("details.unit", "name")
-		.populate("details.product", "name variants._id variants.stock variants.name")
-		.populate("status", "effected")
-		.populate("fromWarehouse toWarehouse", "name");
+	let transfer = new Transfer().fill(req.body).addDetails(req.body.details);
 
-	let productIds = details.map((detail) => detail.product);
+	let [oldTransfer] = await Promise.all([oldTransferQuery, transfer.populate("fromWarehouse toWarehouse status details.variant details.product details.subUnit")]);
 
-	// get products for new details
-	let productsQuery = Product.find({ _id: { $in: productIds } }, "name unit variants._id variants.stock variants.name").populate("unit", "name");
+	if (!oldTransfer) throw notFound();
 
-	let warehousesQuery = Warehouse.find({ _id: { $in: [fromWarehouseId, toWarehouseId] } });
+	if (!transfer.fromWarehouse || transfer.fromWarehouse.deletedAt != null) throw createError({ field: "fromWarehouse", type: "notFound" }, 422);
 
-	let statusQuery = Status.findOne({ _id: statusId, invoice: "transfers" });
+	if (!transfer.toWarehouse || transfer.toWarehouse.deletedAt != null) throw createError({ field: "toWarehouse", type: "notFound" }, 422);
 
-	let [transfer, products, warehouses, status] = await Promise.all([transferQuery, productsQuery, warehousesQuery, statusQuery]);
+	if (!transfer.status || transfer.status.deletedAt != null) throw createError({ field: "status", type: "notFound" }, 422);
 
-	if (!transfer) throw notFound();
+	let variants = [];
 
-	let fromWarehouse = warehouses.find(warehouse => warehouse._id.toString() === fromWarehouseId.toString());
-
-	if (!fromWarehouse) throw createError({ field: "fromWarehouse", type: "notFound" }, 422);
-
-	let toWarehouse = warehouses.find(warehouse => warehouse._id.toString() === toWarehouseId.toString());
-
-	if (!toWarehouse) throw createError({ field: "toWarehouse", type: "notFound" }, 422);
-
-	if (!status) throw createError({ field: "status", type: "notFound" }, 422);
-
-	/* ================================================= Get Initial Stock ================================================= */
-	// get initial stock to send stock before update in errors if final stock is less than 0 after save
 	let stocks = [];
 
-	let getStockBefore = ({ productId, variantId }) => {
-		return stocks.find(s => s.product._id.toString() == productId.toString() && s.variant._id.toString() == variantId.toString());
-	}
+	for (let index in transfer.details) {
+		let detail = transfer.details[index];
 
-	let updates = [];
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-	if (transfer.status.effected) {
-		for (let detail of transfer.details) {
-			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
-			let updatedProduct = updates.find((p) => p._id.toString() === detail.product._id.toString());
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-			product = updatedProduct || detail.product;
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-			let variant = product.getVariantById(detail.variant);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-			let instockFrom = variant.getInstockByWarehouse(transfer.fromWarehouse._id);
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-			let instockTo = variant.getInstockByWarehouse(transfer.toWarehouse._id);
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
 
-			let quantity = detail.stock;
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
+
+		detail.unit = detail.product.unit;
+
+		if (transfer.status.effected) {
+			let instockFrom = detail.variant.getInstockByWarehouse(transfer.fromWarehouse._id),
+				instockTo = detail.variant.getInstockByWarehouse(transfer.toWarehouse._id);
+
+			instockFrom = { before: instockFrom, after: instockFrom };
+
+			instockTo = { before: instockTo, after: instockTo };
+
+			let quantity = detail.instockBySubUnit;
 
 			stocks.push({
-				product: { _id: product._id, name: product.name },
-				variant: { _id: variant._id, name: variant.name },
-				fromWarehouse: { _id: transfer.fromWarehouse._id, name: transfer.fromWarehouse.name, stock: { before: instockFrom, after: instockFrom + quantity } },
-				toWarehouse: { _id: transfer.toWarehouse._id, name: transfer.toWarehouse.name, stock: { before: instockTo, after: instockTo - quantity } },
-				unit: { _id: detail.unit._id, name: detail.unit.name },
+				product: { _id: detail.product._id, name: detail.product.name },
+				variant: { _id: detail.variant._id, name: detail.variant.name },
+				fromWarehouse: { _id: transfer.fromWarehouse._id, name: transfer.fromWarehouse.name, instock: { before: instockFrom, after: instockFrom - quantity } },
+				toWarehouse: { _id: transfer.toWarehouse._id, name: transfer.toWarehouse.name, instock: { before: instockTo, after: instockTo + quantity } },
+				unit: detail.unit,
 				quantity
-			});
+			})
 
-			variant.addToStock({ warehouse: transfer.fromWarehouse._id, quantity });
+			variant.addToStock({ warehouse: transfer.toWarehouse._id, quantity });
 
-			variant.subtractFromStock({ warehouse: transfer.toWarehouse._id, quantity });
+			variant.subtractFromStock({ warehouse: transfer.fromWarehouse._id, quantity });
 
-			if (!updatedProduct) updates.push(product);
-		};
+			variants.push(detail.variant);
+		}
 	}
 
-	// update transfer and details
-	transfer.fill(req.body).addDetails(details);
+	if (oldTransfer.status.effected) {
+		for (let index in oldTransfer.details) {
+			let detail = oldTransfer.details[index];
 
-	// get subUnits for new details and check units and variants
-	await transfer.populate("details.subUnit", "operator value base");
+			let sameVariant = variants.find(variant => variant._id.toString() == detail.variant._id.toString());
+
+			let variant = sameVariant || detail.variant;
+
+			let instockFrom = detail.variant.getInstockByWarehouse(oldTransfer.fromWarehouse._id),
+				instockTo = detail.variant.getInstockByWarehouse(oldTransfer.toWarehouse._id);
+
+			instockFrom = { before: instockFrom, after: instockFrom };
+
+			instockTo = { before: instockTo, after: instockTo };
+
+			let stock = stocks.find(stock => stock.product._id.toString() == detail.product._id.toString() && stock.variant._id.toString() == variant._id.toString());
+
+			let quantity = detail.instockBySubUnit;
+
+			if (!stock) {
+				stock = {
+					product: { _id: detail.product._id, name: detail.product.name },
+					variant: { _id: detail.variant._id, name: detail.variant.name },
+					fromWarehouse: { _id: oldTransfer.fromWarehouse._id, name: oldTransfer.fromWarehouse.name, instock: instockFrom },
+					toWarehouse: { _id: oldTransfer.toWarehouse._id, name: oldTransfer.toWarehouse.name, instock: instockTo },
+					unit: { _id: detail.unit._id, name: detail.unit.name },
+					quantity
+				};
+
+				stocks.push(stock);
+			}
+
+			if (oldTransfer.fromWarehouse._id.toString() === stock.fromWarehouse._id.toString()) {
+				stock.fromWarehouse.instock.after -= quantity;
+			} else if (oldTransfer.fromWarehouse._id.toString() === stock.toWarehouse._id.toString()) {
+				stock.toWarehouse.instock.after -= quantity;
+			}
+
+			if (oldTransfer.toWarehouse._id.toString() === stock.toWarehouse._id.toString()) {
+				stock.toWarehouse.instock.after -= quantity;
+			} else if (oldTransfer.toWarehouse._id.toString() === stock.fromWarehouse._id.toString()) {
+				stock.fromWarehouse.instock.after -= quantity;
+			}
+
+			variant.subtractFromStock({ warehouse: oldTransfer.toWarehouse._id, quantity });
+
+			variant.addToStock({ warehouse: oldTransfer.fromWarehouse._id, quantity });
+
+			if (!sameVariant) variants.push(variant);
+		}
+	}
 
 	let errors = [];
 
-	for (let detail of transfer.details) {
-		let product = throwIfNotValidDetail(detail, products);
-
-		let updatedProduct = updates.find((p) => p._id.toString() === detail.product.toString());
-
-		product = updatedProduct || product;
-
-		let variant = product.getVariantById(detail.variant);
-
-		let instockFrom = variant.getInstockByWarehouse(fromWarehouseId);
-
-		let instockTo = variant.getInstockByWarehouse(toWarehouseId);
-
-		let stock = getStockBefore({ productId: product._id, variantId: variant._id });
-
-		let quantity = detail.stock;
-
-		if (!stock) {
-			stocks.push({
-				product: { _id: product._id, name: product.name },
-				variant: { _id: variant._id, name: variant.name },
-				fromWarehouse: { _id: fromWarehouse._id, name: fromWarehouse.name, stock: { before: instockFrom, after: instockFrom - quantity } },
-				toWarehouse: { _id: toWarehouse._id, name: toWarehouse.name, stock: { before: instockTo, after: instockTo + quantity } },
-				unit: { _id: product.unit._id, name: product.unit.name },
-				quantity
-			});
-		}
-
-		if (status.effected) {
-			variant.subtractFromStock({ warehouse: fromWarehouseId, quantity });
-
-			variant.addToStock({ warehouse: toWarehouseId, quantity });
-
-			if (!updatedProduct) updates.push(product);
-
-			if (stock.fromWarehouse._id.toString() === fromWarehouseId.toString()) {
-				stock.fromWarehouse.stock.after -= quantity;
+	if (variants.length > 0) {
+		for (let stock of stocks) {
+			if (stock.fromWarehouse.instock.after < 0 || stock.toWarehouse.instock.after < 0) {
+				errors.push(stock);
 			}
-
-			if (stock.toWarehouse._id.toString() === toWarehouseId.toString()) {
-				stock.toWarehouse.stock.after += quantity;
-			}
-
-			if (stock.fromWarehouse._id.toString() === toWarehouseId.toString()) {
-				stock.fromWarehouse.stock.after += quantity;
-			}
-
-			if (stock.toWarehouse._id.toString() === fromWarehouseId.toString()) {
-				stock.toWarehouse.stock.after -= quantity;
-			}
-		}
-	}
-
-	// check if final stock is less than 0
-	for (let stock of stocks) {
-		if (stock.fromWarehouse.stock.after < 0 || stock.toWarehouse.stock.after < 0) {
-			errors.push(stock);
 		}
 	}
 
@@ -343,11 +308,11 @@ exports.updateTransfer = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		await Promise.all([transfer.save({ session }), ...updates.map((product) => product.save({ session }))]);
+		await Promise.all([oldTransfer.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
-		res.json({ _id: transfer._id });
+		res.json({ _id: oldTransfer._id });
 	} catch (error) {
 		await session.abortTransaction();
 
@@ -358,17 +323,9 @@ exports.updateTransfer = async (req, res) => {
 };
 
 exports.changeTransferStatus = async (req, res) => {
-	const { statusId } = req.body;
+	let transferQuery = Transfer.findById(req.params.id).populate("toWarehouse fromWarehouse status details.product details.variant details.unit details.subUnit");
 
-	// get product in detail to update stock
-	let transferQuery = Transfer.findById(req.params.id)
-		.populate("details.subUnit", "operator value")
-		.populate("details.unit", "name")
-		.populate("details.product", "name variants._id variants.stock variants.name")
-		.populate("toWarehouse fromWarehouse", "name")
-		.populate("status", "effected");
-
-	let statusQuery = Status.findOne({ _id: statusId, invoice: "transfers" });
+	let statusQuery = Status.findOne({ _id: req.body.statusId, invoice: "transfers" });
 
 	let [transfer, status] = await Promise.all([transferQuery, statusQuery]);
 
@@ -376,69 +333,70 @@ exports.changeTransferStatus = async (req, res) => {
 
 	if (!status) throw notFound("status", 422);
 
-	// this is fix thius error ------> ** Can't save() the same doc multiple times in parallel.
-	// because maybe the same product is in the details array more than one time with different variant
-	let updates = [];
+	let variants = [];
 
 	let errors = [];
 
 	for (let detail of transfer.details) {
-		let product = updates.find((p) => p._id.toString() === detail.product._id.toString());
+		let sameVariant = variants.find((variant) => variant._id.toString() === detail.variant._id.toString());
 
-		let updatedProduct = product || detail.product;
-
-		let variant = updatedProduct.getVariantById(detail.variant);
+		let variant = sameVariant || detail.variant;
 
 		let instockFrom = variant.getInstockByWarehouse(transfer.fromWarehouse._id);
 
+		instockFrom = { before: instockFrom, after: instockFrom };
+
 		let instockTo = variant.getInstockByWarehouse(transfer.toWarehouse._id);
 
-		let quantity = detail.stock;
+		instockTo = { before: instockTo, after: instockTo };
 
-		let error = {
-			product: { _id: updatedProduct._id, name: updatedProduct.name },
-			variant: { _id: variant._id, name: variant.name },
-			fromWarehouse: { _id: transfer.fromWarehouse._id, name: transfer.fromWarehouse.name, stock: { before: instockFrom, after: instockFrom } },
-			toWarehouse: { _id: transfer.toWarehouse._id, name: transfer.toWarehouse.name, stock: { before: instockTo, after: instockTo } },
-			unit: { _id: detail.unit._id, name: detail.unit.name },
-			quantity
-		};
+		let quantity = detail.instockBySubUnit;
 
-		if (transfer.status && transfer.status.effected) {
-			variant.subtractFromStock({ warehouse: transfer.toWarehouse._id, quantity });
+		if (transfer.status.effected) {
 			variant.addToStock({ warehouse: transfer.fromWarehouse._id, quantity });
 
-			error.toWarehouse.stock.after -= quantity;
-			error.fromWarehouse.stock.after += quantity;
+			variant.subtractFromStock({ warehouse: transfer.toWarehouse._id, quantity });
+
+			instockFrom.after += quantity;
+
+			instockTo.after -= quantity;
 		}
 
 		if (status.effected) {
 			variant.subtractFromStock({ warehouse: transfer.fromWarehouse._id, quantity });
+
 			variant.addToStock({ warehouse: transfer.toWarehouse._id, quantity });
 
-			error.fromWarehouse.stock.after -= quantity;
-			error.toWarehouse.stock.after += quantity;
+			instockFrom.after -= quantity;
+
+			instockTo.after += quantity;
 		}
 
-		if (error.fromWarehouse.stock.after < 0 || error.toWarehouse.stock.after < 0) {
-			errors.push(error);
+		if (instockTo.after < 0 || instockFrom.after < 0) {
+			errors.push({
+				product: { _id: detail.product._id, name: detail.product.name },
+				variant: { _id: variant._id, name: variant.name },
+				fromWarehouse: { _id: transfer.fromWarehouse._id, name: transfer.fromWarehouse.name, instock: instockFrom },
+				toWarehouse: { _id: transfer.toWarehouse._id, name: transfer.toWarehouse.name, instock: instockTo },
+				unit: { _id: detail.unit._id, name: detail.unit.name },
+				quantity
+			});
+			continue;
 		}
 
-		if (!product) updates.push(updatedProduct);
+		if (!sameVariant) variants.push(variant);
 	}
 
 	if (errors.length > 0) throw createError({ type: "quantity", errors }, 422);
 
-	transfer.status = statusId;
+	transfer.status = status._id;
 
 	let session = await mongoose.startSession();
 
 	session.startTransaction();
 
 	try {
-		// MongoServerError: Transaction numbers are only allowed on a replica set member or mongos
-		// https://stackoverflow.com/questions/51461952/mongodb-v4-0-transaction-mongoerror-transaction-numbers-are-only-allowed-on-a
-		await Promise.all([transfer.save({ session }), ...updates.map((p) => p.save({ session }))]);
+		await Promise.all([transfer.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -453,9 +411,7 @@ exports.changeTransferStatus = async (req, res) => {
 };
 
 exports.deleteTransfer = async (req, res) => {
-	let { id } = req.params;
-
-	let transfer = await Transfer.findById(id, "status").populate("status", "effected");
+	let transfer = await Transfer.findById(req.params.id, "status").populate("status", "effected");
 
 	if (!transfer) throw notFound();
 
@@ -467,40 +423,3 @@ exports.deleteTransfer = async (req, res) => {
 
 	res.json({});
 };
-
-let throwIfNotValidDetail = (detail, products) => {
-	let { product, variant, subUnit, unit } = detail;
-
-	let e = (field, type = "notFound") => {
-		return createError({ field: `details.${field}`, type, product, variant }, 422);
-	};
-
-	product = products.find((p) => p._id.toString() === product.toString());
-
-	if (!product) throw e("product");
-
-	if (detail.unit) { // in update we get unit with detail so we don't need to set it again from product
-		unit = detail.unit._id || detail.unit;
-	} else {
-		unit = detail.unit = (product.unit._id || product.unit);
-	}
-
-	variant = product.getVariantById(detail.variant);
-
-	if (!variant) throw e("variant", "notFound");
-
-	let mainUnitId = unit.toString();
-
-	let subUnitId = subUnit._id && subUnit._id.toString();
-
-	if (!mainUnitId) throw e("unit", "notFound");
-
-	if (!subUnitId) throw e("subUnit", "notFound");
-
-	let subUnitDoNotMatchProductUnits = subUnitId !== mainUnitId && subUnit.base.toString() !== mainUnitId;
-
-	if (subUnitDoNotMatchProductUnits) throw e("subUnit", "notMatch");
-
-	return product;
-};
-

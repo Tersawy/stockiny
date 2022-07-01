@@ -19,7 +19,7 @@ module.exports = {
 
 	/**
 		@param {Object | String} message e.g. "Something went wrong" | { message: "Something went wrong" }
-		@param {Number} statusCode
+		@param {Number} statusCode e.g. 500
 	*/
 	createError: (message, statusCode = 500) => new ErrorHandler(message, statusCode),
 

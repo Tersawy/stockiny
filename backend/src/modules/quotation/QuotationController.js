@@ -1,12 +1,6 @@
 const { createError, notFound } = require("../../errors/ErrorHandler");
 
-const Product = require("../product/Product");
-
 const Status = require("../status/Status");
-
-const Warehouse = require("../warehouse/Warehouse");
-
-const Customer = require("../customer/Customer");
 
 const Quotation = require("./Quotation");
 
@@ -40,28 +34,38 @@ exports.getQuotations = async (req, res) => {
 };
 
 exports.createQuotation = async (req, res) => {
-	let { details, warehouse: warehouseId, status: statusId } = req.body;
+	let quotation = new Quotation().fill(req.body).addDetails(req.body.details).by(req.me._id);
 
-	let quotation = new Quotation().fill(req.body).addDetails(details).by(req.me._id);
+	await quotation.populate("customer warehouse status details.subUnit details.variant details.product");
 
-	let productDocs = Product.find({ _id: { $in: details.map((detail) => detail.product) } }, "name availableForSale unit variants._id variants.availableForSale");
+	if (!quotation.customer || quotation.customer.deletedAt != null) throw notFound("customer", 422);
 
-	let statusQuery = Status.findOne({ _id: statusId, invoice: "sales" }, "_id");
+	if (!quotation.warehouse || quotation.warehouse.deletedAt != null) throw notFound("warehouse", 422);
 
-	let warehouseQuery = Warehouse.findById(warehouseId, "_id");
+	if (!quotation.status || quotation.status.deletedAt != null) throw notFound("status", 422);
 
-	let customerQuery = Customer.findById(req.body.customer, "_id");
+	for (let index in quotation.details) {
+		let detail = quotation.details[index];
 
-	let [products, status, warehouse, customer] = await Promise.all([productDocs, statusQuery, warehouseQuery, customerQuery, quotation.populate("details.subUnit", "base")]);
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-	if (!status) throw notFound("status", 422);
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-	if (!warehouse) throw notFound("warehouse", 422);
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-	if (!customer) throw notFound("customer", 422);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-	for (let detail of quotation.details) {
-		throwIfNotValidDetail(detail, products);
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
+
+		if (!detail.product.availableForSale) throw createError({ field: `details[${index}].product`, type: "notAvailable" }, 422);
+
+		if (!detail.variant.availableForSale) throw createError({ field: `details[${index}].variant`, type: "notAvailable" }, 422);
+
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
+
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
+
+		detail.unit = detail.product.unit;
 	}
 
 	await quotation.save()
@@ -74,7 +78,8 @@ exports.getQuotation = async (req, res) => {
 		.populate("customer", "name email phone zipCode address city country")
 		.populate("warehouse", "name email phone zipCode address city country")
 		.populate("details.subUnit", "name")
-		.populate("details.product", "name code variants._id variants.name")
+		.populate("details.product", "name code")
+		.populate("details.variant", "name")
 		.populate("status", "name color")
 		.populate("createdBy", "fullname");
 
@@ -89,13 +94,13 @@ exports.getQuotation = async (req, res) => {
 			discount: detail.discount,
 			discountMethod: detail.discountMethod,
 			unit: detail.unit,
-			variantId: detail.variant,
+			variantId: detail.variant._id,
 			total: detail.total,
 			subUnit: detail.subUnit,
 			product: detail.product._id,
 			name: detail.product.name,
 			code: detail.product.code,
-			variantName: detail.product.getVariantById(detail.variant).name
+			variantName: detail.variant.name
 		};
 	});
 
@@ -103,16 +108,13 @@ exports.getQuotation = async (req, res) => {
 }
 
 exports.getEditQuotation = async (req, res) => {
-	let { id } = req.params;
-
 	let select = "date warehouse customer shipping tax discount discountMethod status reference details notes";
 
-	let quotation = await Quotation.findById(id, select).populate("details.product", "price variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let quotation = await Quotation.findById(req.params.id, select).populate("details.product", "price code name image").populate("details.product", "name images stocks").populate("details.subUnit", "value operator");
 
 	if (!quotation) throw notFound();
 
 	let details = quotation.details.map(detail => {
-		let variant = detail.product.getVariantById(detail.variant);
 		return {
 			amount: detail.unitAmount,
 			quantity: detail.quantity,
@@ -122,14 +124,14 @@ exports.getEditQuotation = async (req, res) => {
 			discountMethod: detail.discountMethod,
 			unit: detail.unit,
 			subUnit: detail.subUnit._id,
-			variantId: detail.variant,
+			variantId: detail.variant._id,
 			product: detail.product._id,
 			name: detail.product.name,
 			code: detail.product.code,
 			mainAmount: detail.product.price,
-			variantName: variant.name,
-			image: variant.defaultImage || detail.product.image,
-			stock: variant.getInstockByWarehouse(quotation.warehouse)
+			variantName: detail.variant.name,
+			image: detail.variant.defaultImage || detail.product.image,
+			stock: detail.variant.getInstockByWarehouse(quotation.warehouse)
 		};
 	});
 
@@ -137,51 +139,55 @@ exports.getEditQuotation = async (req, res) => {
 };
 
 exports.updateQuotation = async (req, res) => {
-	let { details, status: statusId, warehouse: warehouseId } = req.body;
+	let oldQuotationQuery = Quotation.findById(req.params.id).populate("status warehouse details.variant details.product details.subUnit details.unit");
 
-	// get product in detail to update stock if status effected
-	let quotationQuery = Quotation.findById(req.params.id);
+	let quotation = new Quotation().fill(req.body).addDetails(req.body.details);
 
-	// get products for new details
-	let productsQuery = Product.find({ _id: { $in: details.map((detail) => detail.product) } }, "name availableForSale unit variants._id variants.availableForSale");
+	let [oldQuotation] = await Promise.all([oldQuotationQuery, quotation.populate("customer status warehouse details.variant details.product details.subUnit")]);
 
-	let statusQuery = Status.findOne({ _id: statusId, invoice: "sales" }, "_id");
+	if (!oldQuotation) throw notFound();
 
-	let warehouseQuery = Warehouse.findById(warehouseId, "_id");
+	if (!quotation.customer || quotation.customer.deletedAt != null) throw notFound("customer", 422);
 
-	let customerQuery = Customer.findById(req.body.customer, "_id");
+	if (!quotation.warehouse || quotation.warehouse.deletedAt != null) throw notFound("warehouse", 422);
 
-	let [quotation, products, status, warehouse, customer] = await Promise.all([quotationQuery, productsQuery, statusQuery, warehouseQuery, customerQuery]);
+	if (!quotation.status || quotation.status.deletedAt != null) throw notFound("status", 422);
 
-	if (!quotation) throw notFound();
+	for (let index in quotation.details) {
+		let detail = quotation.details[index];
 
-	if (!status) throw notFound("status", 422);
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-	if (!warehouse) throw notFound("warehouse", 422);
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-	if (!customer) throw notFound("customer", 422);
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-	// update quotation and details
-	quotation.fill(req.body).addDetails(details).by(req.me._id);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-	// // get subUnits for new details and check units and variants
-	await quotation.populate("details.subUnit", "base");
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-	for (let detail of quotation.details) {
-		throwIfNotValidDetail(detail, products);
+		if (!detail.product.availableForSale) throw createError({ field: `details[${index}].product`, type: "notAvailable" }, 422);
+
+		if (!detail.variant.availableForSale) throw createError({ field: `details[${index}].variant`, type: "notAvailable" }, 422);
+
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
+
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
+
+		detail.unit = detail.product.unit;
 	}
 
-	await quotation.save();
+	oldQuotation.fill(req.body).addDetails(quotation.details).by(req.me._id);
 
-	res.json({ _id: quotation._id });
+	await oldQuotation.save();
+
+	res.json({ _id: oldQuotation._id });
 };
 
 exports.changeQuotationStatus = async (req, res) => {
-	const { statusId } = req.body;
-
 	let quotationQuery = Quotation.findById(req.params.id, "status");
 
-	let statusQuery = Status.findOne({ _id: statusId, invoice: "sales" }, "_id");
+	let statusQuery = Status.findOne({ invoice: "sales", _id: req.body.statusId });
 
 	let [quotation, status] = await Promise.all([quotationQuery, statusQuery]);
 
@@ -197,9 +203,7 @@ exports.changeQuotationStatus = async (req, res) => {
 };
 
 exports.deleteQuotation = async (req, res) => {
-	let { id } = req.params;
-
-	let quotation = await Quotation.findById(id, "deletedAt deletedBy");
+	let quotation = await Quotation.findById(req.params.id, "deletedAt deletedBy");
 
 	if (!quotation) throw notFound();
 
@@ -251,43 +255,3 @@ exports.deletePayment = async (req, res) => {
 
 	res.json({});
 }
-
-let throwIfNotValidDetail = (detail, products) => {
-	let { product, variant, subUnit, unit } = detail;
-
-	let e = (field, type = "notFound") => {
-		return createError({ field: `details.${field}`, type, product, variant }, 422);
-	};
-
-	product = products.find((p) => p._id.toString() === product.toString());
-
-	if (!product) throw e("product");
-
-	if (!product.availableForSale) throw e("product");
-
-	if (detail.unit) { // in update we get unit with detail so we don't need to set it again from product
-		unit = detail.unit;
-	} else {
-		unit = detail.unit = product.unit;
-	}
-
-	variant = product.getVariantById(detail.variant);
-
-	if (!variant) throw e("variant", "notFound");
-
-	if (!variant.availableForSale) throw e("variant", "notAvailable");
-
-	let mainUnitId = unit.toString();
-
-	let subUnitId = subUnit._id && subUnit._id.toString();
-
-	if (!mainUnitId) throw e("unit", "notFound");
-
-	if (!subUnitId) throw e("subUnit", "notFound");
-
-	let subUnitDoNotMatchProductUnits = subUnitId !== mainUnitId && subUnit.base.toString() !== mainUnitId;
-
-	if (subUnitDoNotMatchProductUnits) throw e("subUnit", "notMatch");
-
-	return product;
-};

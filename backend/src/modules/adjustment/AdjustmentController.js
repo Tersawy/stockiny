@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const { createError, notFound } = require("../../errors/ErrorHandler");
 
-const Product = require("../product/Product");
-
-const Warehouse = require("../warehouse/Warehouse");
-
 const Status = require("../status/Status");
 
 const Adjustment = require("./Adjustment");
@@ -30,78 +26,77 @@ exports.getAdjustments = async (req, res) => {
 };
 
 exports.createAdjustment = async (req, res) => {
-	let { details, warehouse: warehouseId, status: statusId } = req.body;
+	let adjustment = new Adjustment().fill(req.body).addDetails(req.body.details).by(req.me._id);
 
-	let adjustment = new Adjustment().fill(req.body).addDetails(details).by(req.me._id);
+	await adjustment.populate("warehouse status details.subUnit details.variant details.product");
 
-	let productSelect = "name unit variants._id variants.name variants.stock";
+	if (!adjustment.warehouse || adjustment.warehouse.deletedAt != null) throw notFound("warehouse", 422);
 
-	let productIds = details.map((detail) => detail.product);
+	if (!adjustment.status || adjustment.status.deletedAt != null) throw notFound("status", 422);
 
-	let productsQuery = Product.find({ _id: { $in: productIds } }, productSelect).populate("unit", "name");
-
-	let statusQuery = Status.findOne({ invoice: "adjustments", _id: statusId }, "effected");
-
-	let warehouseQuery = Warehouse.findById(warehouseId, "name");
-
-	let [products, status, warehouse] = await Promise.all([productsQuery, statusQuery, warehouseQuery, adjustment.populate("details.subUnit", "value operator base")]);
-
-	if (!status) throw notFound("status", 422);
-
-	if (!warehouse) throw notFound("warehouse", 422);
-
-	let session = await mongoose.startSession();
-
-	session.startTransaction();
-
-	// This fix => ParallelSaveError: Can't save() the same doc multiple times in parallel
-	let updates = [];
+	let variants = [];
 
 	let errors = [];
 
-	for (let detail of adjustment.details) {
-		let product = throwIfNotValidDetail(detail, products);
+	for (let index in adjustment.details) {
+		let detail = adjustment.details[index];
 
-		if (status.effected) {
-			let updatedProduct = updates.find((p) => p._id.toString() === detail.product.toString());
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-			product = updatedProduct || product;
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-			let variant = product.getVariantById(detail.variant);
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-			let instock = variant.getInstockByWarehouse(warehouseId);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-			let quantity = detail.stock;
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-			let error = {
-				product: { _id: product._id, name: product.name },
-				variant: { _id: variant._id, name: variant.name },
-				warehouse: { _id: warehouseId, name: warehouse.name, stock: { before: instock, after: instock } },
-				unit: { _id: product.unit._id, name: product.unit.name },
-				quantity
-			}
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
+
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
+
+		detail.unit = detail.product.unit;
+
+		if (adjustment.status.effected) {
+			let instock = detail.variant.getInstockByWarehouse(adjustment.warehouse._id);
+
+			instock = { before: instock, after: instock };
+
+			let quantity = detail.instockBySubUnit;
 
 			if (detail.isAddition) {
-				variant.addToStock({ warehouse: warehouse._id, quantity });
-				error.warehouse.stock.after += quantity;
+				detail.variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
+				instock.after += quantity;
 			} else {
-				variant.subtractFromStock({ warehouse: warehouse._id, quantity });
-				error.warehouse.stock.after -= quantity;
+				detail.variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
+				instock.after -= quantity;
 			}
 
-			if (error.warehouse.stock.after < 0) {
-				errors.push(error);
+			if (instock.after < 0) {
+				errors.push({
+					product: { _id: detail.product._id, name: detail.product.name },
+					variant: { _id: detail.variant._id, name: detail.variant.name },
+					warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, instock },
+					unit: detail.unit,
+					quantity
+				});
 				continue;
 			}
 
-			if (!updatedProduct) updates.push(product);
+			detail.variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
+
+			variants.push(detail.variant);
 		}
 	}
 
 	if (errors.length) throw createError({ type: "quantity", errors }, 422);
 
+	let session = await mongoose.startSession();
+
+	session.startTransaction();
+
 	try {
-		await Promise.all([adjustment.save({ session }), ...updates.map((product) => product.save({ session }))]);
+		await Promise.all([adjustment.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -119,7 +114,8 @@ exports.getAdjustment = async (req, res) => {
 	let adjustment = await Adjustment.findById(req.params.id, "date details status warehouse reference createdBy createdAt")
 		.populate("warehouse", "name email phone zipCode address city country")
 		.populate("details.subUnit", "name")
-		.populate("details.product", "name code variants._id variants.name")
+		.populate("details.product", "name code")
+		.populate("details.variant", "name")
 		.populate("status", "name color")
 		.populate("createdBy", "fullname");
 
@@ -127,208 +123,165 @@ exports.getAdjustment = async (req, res) => {
 
 	let details = adjustment.details.map((detail) => ({
 		_id: detail._id,
-		product: { _id: detail.product._id, name: detail.product.name, code: detail.product.code },
-		variant: detail.product.getVariantById(detail.variant),
+		product: detail.product,
+		variant: detail.variant,
 		subUnit: detail.subUnit,
 		quantity: detail.quantity,
-		type: detail.type,
+		type: detail.type
 	}));
 
 	res.json({ doc: { ...adjustment.toJSON(), details } });
 }
 
 exports.getEditAdjustment = async (req, res) => {
-	let { id } = req.params;
-
 	let select = "date warehouse status reference details notes";
 
-	let adjustment = await Adjustment.findById(id, select).populate("details.product", "variants._id variants.name variants.images variants.stock code name image").populate("details.subUnit", "value operator");
+	let adjustment = await Adjustment.findById(req.params.id, select).populate("details.product", "code name image").populate("details.variant", "name images stocks").populate("details.subUnit", "value operator");
 
 	if (!adjustment) throw notFound();
 
-	let details = adjustment.details.map(detail => {
-		let variant = detail.product.getVariantById(detail.variant);
-
-		return {
-			product: detail.product._id,
-			variantId: detail.variant,
-			code: detail.product.code,
-			name: detail.product.name,
-			variantName: variant.name,
-			type: detail.type,
-			image: variant.defaultImage || detail.product.image,
-			quantity: detail.quantity,
-			stock: variant.getInstockByWarehouse(adjustment.warehouse),
-			unit: detail.unit,
-			subUnit: detail.subUnit._id
-		};
-	});
+	let details = adjustment.details.map(detail => ({
+		product: detail.product._id,
+		variantId: detail.variant,
+		code: detail.product.code,
+		name: detail.product.name,
+		variantName: detail.variant.name,
+		type: detail.type,
+		image: detail.variant.defaultImage || detail.product.image,
+		quantity: detail.quantity,
+		instock: detail.variant.getInstockByWarehouse(adjustment.warehouse),
+		unit: detail.unit,
+		subUnit: detail.subUnit._id
+	}));
 
 	res.json({ doc: { ...adjustment.toJSON(), details } });
 };
 
 exports.updateAdjustment = async (req, res) => {
-	let { details, warehouse: warehouseId, status: statusId } = req.body;
+	let oldAdjustmentQuery = Adjustment.findById(req.params.id).populate("status warehouse details.variant details.product details.subUnit details.unit");
 
-	// get product in detail to update stock if status effected
-	let adjustmentQuery = Adjustment.findById(req.params.id)
-		.populate("details.subUnit", "operator value")
-		.populate("details.unit", "name")
-		.populate("details.product", "name variants._id variants.stock variants.name")
-		.populate("status", "effected")
-		.populate("warehouse", "name");
+	let adjustment = new Adjustment().fill(req.body).addDetails(req.body.details);
 
-	let productIds = details.map((detail) => detail.product);
+	let [oldAdjustment] = await Promise.all([oldAdjustmentQuery, adjustment.populate("status warehouse details.variant details.product details.subUnit")]);
 
-	// get products for new details
-	let productsQuery = Product.find({ _id: { $in: productIds } }, "name unit variants._id variants.stock variants.name").populate("unit", "name");
+	if (!oldAdjustment) throw notFound();
 
-	let warehouseQuery = Warehouse.findById(warehouseId, "name");
+	if (!adjustment.warehouse || adjustment.warehouse.deletedAt != null) throw notFound("warehouse", 422);
 
-	let statusQuery = Status.findOne({ invoice: "adjustments", _id: statusId }, "effected");
+	if (!adjustment.status || adjustment.status.deletedAt != null) throw notFound("status", 422);
 
-	let [adjustment, products, warehouse, status] = await Promise.all([adjustmentQuery, productsQuery, warehouseQuery, statusQuery]);
+	let variants = [];
 
-	if (!adjustment) throw notFound();
+	let stocks = [];
 
-	if (!status) throw notFound("status", 422);
+	for (let index in adjustment.details) {
+		let detail = adjustment.details[index];
 
-	if (!warehouse) throw notFound("warehouse", 422);
+		if (!detail.subUnit || detail.subUnit.deletedAt != null) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-	/* ================================================= Get Initial Stock ================================================= */
-	// get initial stock to send stock before update in errors if final stock is less than 0 after save
-	let stocksBefore = [];
+		if (!detail.product || detail.product.deletedAt != null) throw createError({ field: `details[${index}].product`, type: "notFound" }, 422);
 
-	let getStockBefore = ({ productId, variantId, warehouseId }) => {
-		return stocksBefore.find(s => s.product._id.toString() == productId.toString() && s.variant._id.toString() == variantId.toString() && s.warehouse._id.toString() == warehouseId.toString());
-	}
+		if (!detail.variant || detail.variant.deletedAt != null) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-	for (let detail of adjustment.details) {
-		let variant = detail.product.getVariantById(detail.variant);
+		let isVariantRelatedWithProduct = detail.product.variants.includes(detail.variant._id.toString());
 
-		let instock = variant.getInstockByWarehouse(adjustment.warehouse._id);
+		if (!isVariantRelatedWithProduct) throw createError({ field: `details[${index}].variant`, type: "notFound" }, 422);
 
-		stocksBefore.push({
-			product: { _id: detail.product._id, name: detail.product.name },
-			variant: { _id: variant._id, name: variant.name },
-			warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, stock: { before: instock, after: instock } },
-			unit: { _id: detail.unit._id, name: detail.unit.name },
-			quantity: detail.quantity
-		});
-	}
+		let subUnitIsMainUnit = detail.subUnit._id.toString() == detail.product.unit.toString();
 
-	for (let detail of details) {
-		let product = products.find((p) => p._id.toString() === detail.product.toString());
+		if (!subUnitIsMainUnit && detail.subUnit.base.toString() !== detail.product.unit.toString()) throw createError({ field: `details[${index}].subUnit`, type: "notFound" }, 422);
 
-		if (product) {
-			let variant = product.getVariantById(detail.variant);
+		detail.unit = detail.product.unit;
 
-			if (variant) {
-				let stockBefore = getStockBefore({ productId: detail.product, variantId: detail.variant, warehouseId });
+		if (adjustment.status.effected) {
+			let instock = detail.variant.getInstockByWarehouse(adjustment.warehouse._id);
 
-				if (stockBefore) continue;
+			instock = { before: instock, after: instock };
 
-				let instock = variant.getInstockByWarehouse(warehouseId);
-
-				stocksBefore.push({
-					product: { _id: product._id, name: product.name },
-					variant: { _id: variant._id, name: variant.name },
-					warehouse: { _id: warehouse._id, name: warehouse.name, stock: { before: instock, after: instock } },
-					unit: { _id: product.unit._id, name: product.unit.name },
-					quantity: detail.quantity
-				});
-			}
-		}
-	};
-	/* ===================================================================================================================== */
-
-	let updates = [];
-
-	// if adjustment status effected, update stock
-	if (adjustment.status.effected) {
-		for (let detail of adjustment.details) {
-			// TODO:: handle if product is not found, mybe this is a bug will not happen because we don't allow to delete products
-			let productUpdated = updates.find((p) => p._id.toString() === detail.product._id.toString());
-
-			let product = productUpdated || detail.product;
-
-			let variant = product.getVariantById(detail.variant);
-
-			let quantity = detail.stock; // detail.stock is the new quantity to add to stock getted from detail schema (not from request)
-
-			let stockBefore = getStockBefore({ productId: detail.product._id, variantId: detail.variant, warehouseId: adjustment.warehouse._id });
+			let quantity = detail.instockBySubUnit;
 
 			if (detail.isAddition) {
-				variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockBefore.warehouse.stock.after -= quantity;
+				detail.variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
+				instock.after += quantity;
 			} else {
-				variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockBefore.warehouse.stock.after += quantity;
+				detail.variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
+				instock.after -= quantity;
 			}
 
-			if (!productUpdated) updates.push(product);
+			stocks.push({
+				product: { _id: detail.product._id, name: detail.product.name },
+				variant: { _id: detail.variant._id, name: detail.variant.name },
+				warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, instock },
+				unit: detail.unit,
+				quantity
+			})
+
+			variants.push(detail.variant);
 		}
 	}
 
-	// update adjustment and details
-	adjustment.fill(req.body).addDetails(details).by(req.me._id);
+	if (oldAdjustment.status.effected) {
+		for (let index in oldAdjustment.details) {
+			let detail = oldAdjustment.details[index];
 
-	// // get subUnits for new details and check units and variants
-	await adjustment.populate("details.subUnit", "operator value base");
+			let sameVariant = variants.find(variant => variant._id.toString() == detail.variant._id.toString());
 
-	for (let detail of adjustment.details) {
-		throwIfNotValidDetail(detail, products);
-	}
+			let variant = sameVariant || detail.variant;
 
-	// if adjustment status effected, update stock
-	if (status.effected) {
-		for (let detail of adjustment.details) {
-			let product = products.find((p) => p._id.toString() === detail.product.toString());
+			let instock = variant.getInstockByWarehouse(oldAdjustment.warehouse._id);
 
-			let updatedProduct = updates.find((p) => p._id.toString() === product._id.toString());
+			let stock = stocks.find(stock => stock.product._id.toString() == detail.product._id.toString() && stock.variant._id.toString() == variant._id.toString() && stock.warehouse._id.toString() == oldAdjustment.warehouse._id.toString());
 
-			product = updatedProduct || product;
+			let quantity = detail.instockBySubUnit;
 
-			let variant = product.getVariantById(detail.variant);
+			if (!stock) {
+				stock = {
+					product: { _id: detail.product._id, name: detail.product.name },
+					variant: { _id: detail.variant._id, name: detail.variant.name },
+					warehouse: { _id: oldAdjustment.warehouse._id, name: oldAdjustment.warehouse.name, instock: { before: instock, after: instock } },
+					unit: { _id: detail.unit._id, name: detail.unit.name },
+					quantity
+				};
 
-			let quantity = detail.stock; // detail.stock is the new quantity to add to stock getted from detail schema (not from request)
-
-			let stockBefore = getStockBefore({ productId: detail.product._id, variantId: detail.variant, warehouseId });
-
-			if (detail.isAddition) {
-				variant.addToStock({ warehouse: warehouseId, quantity });
-				stockBefore.warehouse.stock.after += quantity;
-			} else {
-				variant.subtractFromStock({ warehouse: warehouseId, quantity });
-				stockBefore.warehouse.stock.after -= quantity;
+				stocks.push(stock);
 			}
 
-			if (!updatedProduct) updates.push(product);
+			if (detail.isAddition) {
+				detail.variant.subtractFromStock({ warehouse: oldAdjustment.warehouse._id, quantity });
+				stock.warehouse.after -= quantity;
+			} else {
+				detail.variant.addToStock({ warehouse: oldAdjustment.warehouse._id, quantity });
+				stock.warehouse.after += quantity;
+			}
+
+			if (!sameVariant) variants.push(variant);
 		}
 	}
 
 	let errors = [];
 
-	if (updates.length > 0) {
-		for (let stockBefore of stocksBefore) {
-			if (stockBefore.warehouse.stock.after < 0) {
-				errors.push(stockBefore);
+	if (variants.length > 0) {
+		for (let stock of stocks) {
+			if (stock.warehouse.instock.after < 0) {
+				errors.push(stock);
 			}
 		}
 	}
 
 	if (errors.length > 0) throw createError({ type: "quantity", errors }, 422);
 
+	oldAdjustment.fill(req.body).addDetails(adjustment.details).by(req.me._id);
+
 	let session = await mongoose.startSession();
 
 	session.startTransaction();
 
 	try {
-		await Promise.all([adjustment.save({ session }), ...updates.map((product) => product.save({ session }))]);
+		await Promise.all([oldAdjustment.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
-		res.json({ _id: adjustment._id });
+		res.json({ _id: oldAdjustment._id });
 	} catch (error) {
 		await session.abortTransaction();
 
@@ -339,17 +292,9 @@ exports.updateAdjustment = async (req, res) => {
 };
 
 exports.changeAdjustmentStatus = async (req, res) => {
-	const { statusId } = req.body;
+	let adjustmentQuery = Adjustment.findById(req.params.id).populate("warehouse status details.product details.variant details.unit details.subUnit");
 
-	// get product in detail to update stock
-	let adjustmentQuery = Adjustment.findById(req.params.id)
-		.populate("details.subUnit", "operator value")
-		.populate("details.unit", "name")
-		.populate("details.product", "name variants._id variants.stock variants.name")
-		.populate("warehouse", "name")
-		.populate("status", "effected");
-
-	let statusQuery = Status.findOne({ _id: statusId, type: "adjustments" });
+	let statusQuery = Status.findOne({ invoice: "adjustments", _id: req.body.statusId });
 
 	let [adjustment, status] = await Promise.all([adjustmentQuery, statusQuery]);
 
@@ -357,56 +302,53 @@ exports.changeAdjustmentStatus = async (req, res) => {
 
 	if (!status) throw notFound("status", 422);
 
-	// this is fix thius error ------> ** Can't save() the same doc multiple times in parallel.
-	// because maybe the same product is in the details array more than one time with different variant
-	let updates = [];
+	let variants = [];
 
 	let errors = [];
 
 	for (let detail of adjustment.details) {
-		let product = updates.find((p) => p._id.toString() === detail.product._id.toString());
+		let sameVariant = variants.find((variant) => variant._id.toString() === detail.variant._id.toString());
 
-		let updatedProduct = product || detail.product;
+		let variant = sameVariant || detail.variant;
 
-		let variant = detail.product.getVariantById(detail.variant);
+		let instock = variant.getInstockByWarehouse(adjustment.warehouse._id);
 
-		let stockBefore = variant.getInstockByWarehouse(adjustment.warehouse._id);
+		instock = { before: instock, after: instock };
 
-		let stockAfter = stockBefore;
-
-		let quantity = detail.stock;
+		let quantity = detail.instockBySubUnit;
 
 		if (adjustment.status.effected) {
 			if (detail.isAddition) {
 				variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockAfter -= quantity;
+				instock.after -= quantity;
 			} else {
 				variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockAfter += quantity;
+				instock.after += quantity;
 			}
 		}
 
 		if (status.effected) {
 			if (detail.isAddition) {
 				variant.addToStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockAfter += quantity;
+				instock.after += quantity;
 			} else {
 				variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
-				stockAfter -= quantity;
+				instock.after -= quantity;
 			}
 		}
 
-		if (stockAfter < 0) {
+		if (instock.after < 0) {
 			errors.push({
 				product: { _id: detail.product._id, name: detail.product.name },
 				variant: { _id: variant._id, name: variant.name },
-				warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, stock: { before: stockBefore, after: stockAfter } },
+				warehouse: { _id: adjustment.warehouse._id, name: adjustment.warehouse.name, instock },
 				unit: { _id: detail.unit._id, name: detail.unit.name },
-				quantity,
+				quantity
 			});
+			continue;
 		}
 
-		if (!product) updates.push(updatedProduct);
+		if (!sameVariant) variants.push(variant);
 	}
 
 	if (errors.length > 0) throw createError({ type: "quantity", errors }, 422);
@@ -418,9 +360,7 @@ exports.changeAdjustmentStatus = async (req, res) => {
 	session.startTransaction();
 
 	try {
-		// MongoServerError: Transaction numbers are only allowed on a replica set member or mongos
-		// https://stackoverflow.com/questions/51461952/mongodb-v4-0-transaction-mongoerror-transaction-numbers-are-only-allowed-on-a
-		await Promise.all([adjustment.save({ session }), ...updates.map((p) => p.save({ session }))]);
+		await Promise.all([adjustment.save({ session }), ...variants.map((variant) => variant.save({ session }))]);
 
 		await session.commitTransaction();
 
@@ -435,9 +375,7 @@ exports.changeAdjustmentStatus = async (req, res) => {
 };
 
 exports.deleteAdjustment = async (req, res) => {
-	let { id } = req.params;
-
-	let adjustment = await Adjustment.findById(id, "status").populate("status", "effected");
+	let adjustment = await Adjustment.findById(req.params.id, "status").populate("status", "effected");
 
 	if (!adjustment) throw notFound();
 
@@ -449,77 +387,3 @@ exports.deleteAdjustment = async (req, res) => {
 
 	res.json({});
 };
-
-let throwIfNotValidDetail = (detail, products) => {
-	let { product, variant, subUnit, unit } = detail;
-
-	let e = (field, type = "notFound") => {
-		return createError({ field: `details.${field}`, type, product, variant }, 422);
-	};
-
-	product = products.find((p) => p._id.toString() === product.toString());
-
-	if (!product) throw e("product");
-
-	if (detail.unit) { // in update we get unit with detail so we don't need to set it again from product
-		unit = detail.unit._id || detail.unit;
-	} else {
-		unit = detail.unit = (product.unit._id || product.unit);
-	}
-
-	variant = product.getVariantById(detail.variant);
-
-	if (!variant) throw e("variant", "notFound");
-
-	let mainUnitId = unit.toString();
-
-	let subUnitId = subUnit._id && subUnit._id.toString();
-
-	if (!mainUnitId) throw e("unit", "notFound");
-
-	if (!subUnitId) throw e("subUnit", "notFound");
-
-	let subUnitDoNotMatchProductUnits = subUnitId !== mainUnitId && subUnit.base.toString() !== mainUnitId;
-
-	if (subUnitDoNotMatchProductUnits) throw e("subUnit", "notMatch");
-
-	return product;
-};
-
-// let getProductsByDetails = async (details) => {
-// 	/*
-// 		{ $or: [ { _id: detail.product, "variants._id": detail.variant } ] }
-// 	*/
-
-// 	let query = { $or: [] };
-
-// 	for (let detail of details) {
-// 		query.$or.push({ _id: detail.product, "variants._id": detail.variant, availableForAdjustment: true });
-// 	}
-
-// 	let variantsIds = details.map((detail) => detail.variant);
-
-// 	let products = await Product.find(query, { _id: 1, variants: { $elemMatch: { _id: { $in: variantsIds } } } })
-// 		.populate({
-// 			path: "unit",
-// 			select: { _id: 1, value: 1, operator: 1 },
-// 		})
-// 		.populate({
-// 			path: "adjustmentUnit",
-// 			select: { _id: 1, value: 1, operator: 1 },
-// 		});
-
-// 	return products;
-// };
-
-// exports.getProductsByDetails = getProductsByDetails;
-
-// let getUnitsByDetails = (details, select = "") => {
-// 	/*
-// 		{ $or: [ { _id: detail.unit } ] }
-// 	*/
-
-// 	let $or = details.map((detail) => ({ _id: detail.unit }));
-
-// 	return Unit.find({ $or }, select);
-// };

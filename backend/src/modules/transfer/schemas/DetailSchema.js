@@ -15,7 +15,7 @@ const detailSchema = new Schema({
 
 	discountMethod: { type: String, default: "percent", lowercase: true, trim: true, enum: ["percent", "fixed"] },
 
-	variant: { type: Schema.Types.ObjectId, required: true },
+	variant: { type: Schema.Types.ObjectId, ref: "Variant", required: true },
 
 	product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
 
@@ -28,48 +28,28 @@ const detailSchema = new Schema({
 
 class Detail {
 	calculateTotal() {
-		this.total = this.quantity * this.amountAfterDiscountAndTax;
+		let isExclusive = this.taxMethod == "exclusive";
+
+		let taxAmount = !this.tax || !isExclusive ? 0 : this.amountAfterDiscount * (this.tax / 100);
+
+		this.total = this.quantity * (this.amountAfterDiscount + taxAmount);
 
 		return this;
 	}
 
-	/* 
-		! This is only for exclusive tax
-		! This is only for exclusive tax
-		? That's not true for inclusive tax and it's not even clear what it should be
-		? it just returns the tax amount to be added to the net amount if the tax is exclusive
-		* to get the tax amount for inclusive tax, we need to divide (the amount - discount) by (1 + tax / 100), but 
-		* that's unnecessary because we already have the amount and we want to get the tax amount to be added to the net amount
-	*/
-	get taxAmount() {
-		let isExclusive = this.taxMethod == "exclusive";
-
-		if (!this.tax || !isExclusive) return 0;
-
-		return this.amountAfterDiscount * (this.tax / 100);
-	}
-
-	get discountAmount() {
+	get amountAfterDiscount() {
 		let isFixed = this.discountMethod == "fixed";
 
-		if (isFixed) return this.discount;
+		let discountAmount = isFixed ? this.discount : this.discount * (this.amount / 100);
 
-		return this.discount * (this.amount / 100);
-	}
-
-	get amountAfterDiscount() {
-		return this.amount - this.discountAmount;
-	}
-
-	get amountAfterDiscountAndTax() {
-		return this.amountAfterDiscount + this.taxAmount;
+		return this.amount - discountAmount;
 	}
 
 	/* 
-		!* Before accessing the stock, we need to populate the subUnit field first
-		@return stock depends on the amountUnit of the product and the subUnit of the detail
+		* Before accessing the stock, we need to populate the subUnit field first
+		@return stock depends on the amountUnit (e.g. purchaseUnit, saleUnit) of the product and the subUnit of the detail
 	*/
-	get stock() {
+	get instockBySubUnit() {
 		let isMultiple = this.subUnit.operator === "*";
 
 		return isMultiple ? this.quantity * +this.subUnit.value : this.quantity / +this.subUnit.value;

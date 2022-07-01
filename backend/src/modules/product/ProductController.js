@@ -58,31 +58,7 @@ exports.getEdit = async (req, res) => {
 	res.json({ doc: product });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => cost
-		unit ====> to get subunits in front end for select box
-		subUnit => purchaseUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for purchase
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getPurchaseOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
 	let products = await Product.aggregate([
 		{ $match: { deletedAt: null, availableForPurchase: true } },
 		{
@@ -91,11 +67,11 @@ let getPurchaseOptions = async (req, res) => {
 				as: "variants",
 				let: { productId: "$_id", productImage: "$image" },
 				pipeline: [
-					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$availableForPurchase", true] }] } } },
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForPurchase", true] }] } } },
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
@@ -123,77 +99,26 @@ let getPurchaseOptions = async (req, res) => {
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => price
-		unit ====> to get subunits in front end for select box
-		subUnit => saleUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for sale and quantity stock greater then 0
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getSaleOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		$filter: {
-			input: "$variants",
-			as: "variant",
-			cond: {
-				$and: [
-					{ $eq: ["$$variant.availableForSale", true] },
-					{ $gte: [{ $indexOfArray: ["$$variant.stock.warehouse", warehouseId] }, 0] },
-				],
-			},
-		},
-	};
-
-	/*
-	 * Map on filtered variants to get stock element from stock array also image the same case
-	 */
-	let variantsWithSingleStockThatMatchesWarehouse = {
-		$map: {
-			input: filterAvailableVariantsThatMatchesWarehouse,
-			as: "filteredVariant",
-			in: {
-				_id: "$$filteredVariant._id",
-				name: "$$filteredVariant.name",
-				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-			},
-		},
-	};
-
-	let filteredVariantsThatHaveValidQuantity = {
-		$filter: {
-			input: variantsWithSingleStockThatMatchesWarehouse,
-			as: "variant",
-			cond: { $gt: ["$$variant.stock.quantity", 0] },
-		},
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null, availableForSale: true } },
 		{
-			$match: {
-				deletedAt: null,
-				availableForSale: true,
-				"variants.availableForSale": true,
-				"variants.stock.warehouse": warehouseId,
-				"variants.stock.quantity": { $gt: 0 },
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForSale", true] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -207,99 +132,34 @@ let getSaleOptions = async (req, res) => {
 				subUnit: "$saleUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: filteredVariantsThatHaveValidQuantity,
-						as: "filteredVariant",
-						in: {
-							_id: "$$filteredVariant._id",
-							name: "$$filteredVariant.name",
-							image: { $ifNull: ["$$filteredVariant.image.name", "$image"] },
-							stock: "$$filteredVariant.stock.quantity",
-						},
-					},
-				},
+				variants: 1,
 			},
-		},
-		{
-			$match: { $expr: { $gt: [{ $size: "$variants" }, 0] } },
-		},
+		}
 	]);
 
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => cost
-		unit ====> to get subunits in front end for select box
-		subUnit => purchaseUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for purchase return
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getPurchaseReturnOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		$filter: {
-			input: "$variants",
-			as: "variant",
-			cond: {
-				$and: [
-					{ $eq: ["$$variant.availableForPurchaseReturn", true] },
-					{ $gte: [{ $indexOfArray: ["$$variant.stock.warehouse", warehouseId] }, 0] },
-				],
-			},
-		},
-	};
-
-	/*
-	 * Map on filtered variants to get stock element from stock array also image the same case
-	 */
-	let variantsWithSingleStockThatMatchesWarehouse = {
-		$map: {
-			input: filterAvailableVariantsThatMatchesWarehouse,
-			as: "filteredVariant",
-			in: {
-				_id: "$$filteredVariant._id",
-				name: "$$filteredVariant.name",
-				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-			},
-		},
-	};
-
-	let filteredVariantsThatHaveValidQuantity = {
-		$filter: {
-			input: variantsWithSingleStockThatMatchesWarehouse,
-			as: "variant",
-			cond: { $gt: ["$$variant.stock.quantity", 0] },
-		},
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null, availableForPurchaseReturn: true } },
 		{
-			$match: {
-				deletedAt: null,
-				availableForPurchaseReturn: true,
-				"variants.availableForPurchaseReturn": true,
-				"variants.stock.warehouse": warehouseId,
-				"variants.stock.quantity": { $gt: 0 },
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForPurchaseReturn", true] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -313,75 +173,34 @@ let getPurchaseReturnOptions = async (req, res) => {
 				subUnit: "$purchaseUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: filteredVariantsThatHaveValidQuantity,
-						as: "filteredVariant",
-						in: {
-							_id: "$$filteredVariant._id",
-							name: "$$filteredVariant.name",
-							image: { $ifNull: ["$$filteredVariant.image.name", "$image"] },
-							stock: "$$filteredVariant.stock.quantity",
-						},
-					},
-				},
+				variants: 1,
 			},
-		},
-		{
-			$match: { $expr: { $gt: [{ $size: "$variants" }, 0] } },
-		},
+		}
 	]);
 
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => price
-		unit ====> to get subunits in front end for select box
-		subUnit => saleUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for sale return
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getSaleReturnOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		input: "$variants",
-		as: "variant",
-		cond: {
-			$and: [{ $eq: ["$$variant.availableForSaleReturn", true] }],
-		},
-	};
-
-	let filteredVariant = {
-		_id: "$$filteredVariant._id",
-		name: "$$filteredVariant.name",
-		image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-		stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null, availableForSaleReturn: true } },
 		{
-			$match: {
-				deletedAt: null,
-				availableForSaleReturn: true,
-				"variants.availableForSaleReturn": true,
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForSaleReturn", true] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -395,24 +214,7 @@ let getSaleReturnOptions = async (req, res) => {
 				subUnit: "$saleUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: {
-							$map: {
-								input: { $filter: filterAvailableVariantsThatMatchesWarehouse },
-								as: "filteredVariant",
-								in: filteredVariant,
-							},
-						},
-						as: "variant",
-						in: {
-							_id: "$$variant._id",
-							name: "$$variant.name",
-							image: { $ifNull: ["$$variant.image.name", "$image"] },
-							stock: { $ifNull: ["$$variant.stock.quantity", 0] },
-						},
-					},
-				},
+				variants: 1
 			},
 		},
 	]);
@@ -420,70 +222,26 @@ let getSaleReturnOptions = async (req, res) => {
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => cost
-		unit ====> to get subunits in front end for select box
-		subUnit => purchaseUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for purchase return
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getTransferOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		$filter: {
-			input: "$variants",
-			as: "variant",
-			cond: { $gte: [{ $indexOfArray: ["$$variant.stock.warehouse", warehouseId] }, 0] },
-		},
-	};
-
-	/*
-	 * Map on filtered variants to get stock element from stock array also image the same case
-	 */
-	let variantsWithSingleStockThatMatchesWarehouse = {
-		$map: {
-			input: filterAvailableVariantsThatMatchesWarehouse,
-			as: "filteredVariant",
-			in: {
-				_id: "$$filteredVariant._id",
-				name: "$$filteredVariant.name",
-				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-			},
-		},
-	};
-
-	let filteredVariantsThatHaveValidQuantity = {
-		$filter: {
-			input: variantsWithSingleStockThatMatchesWarehouse,
-			as: "variant",
-			cond: { $gt: ["$$variant.stock.quantity", 0] },
-		},
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null } },
 		{
-			$match: {
-				deletedAt: null,
-				"variants.stock.warehouse": warehouseId,
-				"variants.stock.quantity": { $gt: 0 },
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $gt: ["$stocks.instock", 0] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -497,56 +255,34 @@ let getTransferOptions = async (req, res) => {
 				subUnit: "$purchaseUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: filteredVariantsThatHaveValidQuantity,
-						as: "filteredVariant",
-						in: {
-							_id: "$$filteredVariant._id",
-							name: "$$filteredVariant.name",
-							image: { $ifNull: ["$$filteredVariant.image.name", "$image"] },
-							stock: "$$filteredVariant.stock.quantity",
-						},
-					},
-				},
+				variants: 1,
 			},
-		},
-		{
-			$match: { $expr: { $gt: [{ $size: "$variants" }, 0] } },
-		},
+		}
 	]);
 
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => cost
-		unit ====> to get subunits in front end for select box
-		subUnit => purchaseUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for purchase
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getAdjustmentOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null } },
 		{
-			$match: { deletedAt: null },
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -557,29 +293,7 @@ let getAdjustmentOptions = async (req, res) => {
 				image: 1,
 				unit: 1,
 				subUnit: "$purchaseUnit",
-				variants: {
-					$map: {
-						input: {
-							$map: {
-								input: "$variants",
-								as: "variantWithStock",
-								in: {
-									_id: "$$variantWithStock._id",
-									name: "$$variantWithStock.name",
-									image: { $arrayElemAt: [{ $filter: { input: "$$variantWithStock.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-									stock: { $arrayElemAt: [{ $filter: { input: "$$variantWithStock.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] },
-								},
-							},
-						},
-						as: "variant",
-						in: {
-							_id: "$$variant._id",
-							name: "$$variant.name",
-							image: { $ifNull: ["$$variant.image.name", "$image"] },
-							stock: { $ifNull: ["$$variant.stock.quantity", 0] },
-						},
-					},
-				},
+				variants: 1
 			},
 		},
 	]);
@@ -587,62 +301,26 @@ let getAdjustmentOptions = async (req, res) => {
 	return res.json({ options: products });
 };
 
-/* 
-	{
-		name
-		code
-		image
-		amount => cost
-		unit ====> to get subunits in front end for select box
-		subUnit => purchaseUnit
-		tax
-		taxMethod
-		variants: [
-			{ // gets only variants has available for purchase
-				_id,
-				name,
-				image => variant default Image or productImage
-				stock: Number
-			}
-		]
-	}
-*/
 let getQuotationOptions = async (req, res) => {
-	let { warehouse } = req.query;
-
-	let warehouseId = mongoose.Types.ObjectId(warehouse);
-
-	let filterAvailableVariantsThatMatchesWarehouse = {
-		$filter: {
-			input: "$variants",
-			as: "variant",
-			cond: { $eq: ["$$variant.availableForSale", true] },
-		},
-	};
-
-	/*
-	 * Map on filtered variants to get stock element from stock array also image the same case
-	 */
-	let filteredVariant = {
-		$map: {
-			input: filterAvailableVariantsThatMatchesWarehouse,
-			as: "filteredVariant",
-			in: {
-				_id: "$$filteredVariant._id",
-				name: "$$filteredVariant.name",
-				image: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] },
-				stock: { $arrayElemAt: [{ $filter: { input: "$$filteredVariant.stock", as: "stock", cond: { $eq: ["$$stock.warehouse", warehouseId] } } }, 0] }
-			},
-		},
-	};
-
 	let products = await Product.aggregate([
+		{ $match: { deletedAt: null, availableForSale: true } },
 		{
-			$match: {
-				deletedAt: null,
-				availableForSale: true,
-				"variants.availableForSale": true,
-			},
+			$lookup: {
+				from: "variants",
+				as: "variants",
+				let: { productId: "$_id", productImage: "$image" },
+				pipeline: [
+					{ $match: { $expr: { $and: [{ $eq: ["$product", "$$productId"] }, { $eq: ["$deletedAt", null] }, { $eq: ["$availableForSale", true] }] } } },
+					{
+						$project: {
+							name: 1,
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] } } }, 0] },
+							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
+						},
+					},
+					{ $project: { name: 1, instock: { $ifNull: ["$stock.instock", 0] }, image: { $ifNull: ["$image.name", "$$productImage"] } } }
+				]
+			}
 		},
 		{
 			$project: {
@@ -656,18 +334,7 @@ let getQuotationOptions = async (req, res) => {
 				subUnit: "$saleUnit",
 				tax: 1,
 				taxMethod: 1,
-				variants: {
-					$map: {
-						input: filteredVariant,
-						as: "variant",
-						in: {
-							_id: "$$variant._id",
-							name: "$$variant.name",
-							image: { $ifNull: ["$$variant.image.name", "$image"] },
-							stock: { $ifNull: ["$$variant.stock.quantity", 0] }
-						},
-					},
-				},
+				variants: 1,
 			},
 		}
 	]);

@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const detailSchema = new Schema({
 	quantity: { type: Number, required: true },
 
-	variant: { type: Schema.Types.ObjectId, required: true },
+	variant: { type: Schema.Types.ObjectId, ref: "Variant", required: true },
 
 	product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
 
@@ -18,10 +18,10 @@ const detailSchema = new Schema({
 
 class Detail {
 	/* 
-		* Before accessing the stock, we need to populate the subUnit field first
-		@return stock depends on the subUnit of the product and the subUnit of the detail
+		* Before accessing the instockBySubUnit, we need to populate the subUnit field first
+		@return instock depends on the subUnit of the product and the subUnit of the detail
 	*/
-	get stock() {
+	get instockBySubUnit() {
 		let isMultiple = this.subUnit.operator === "*";
 
 		return isMultiple ? this.quantity * +this.subUnit.value : this.quantity / +this.subUnit.value;
