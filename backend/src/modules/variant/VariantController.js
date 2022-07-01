@@ -9,22 +9,22 @@ const { notFound } = require("../../errors/ErrorHandler");
 exports.variants = async (req, res) => {
 	let { product } = req.query;
 
-	let variants = await Variant.find({ product }, "name stocks images updatedAt createdAt updatedBy createdBy");
+	let variants = await Variant.find({ product }, "name stocks images updatedAt createdAt updatedBy createdBy availableForSale availableForSaleReturn availableForPurchase availableForPurchaseReturn");
 
-	variants = variants.map((variant) => {
-		let stocks = variant.instock;
-
-		return {
-			_id: variant._id,
-			name: variant.name,
-			stocks,
-			images: variant.images,
-			createdAt: variant.createdAt,
-			createdBy: variant.createdBy,
-			updatedAt: variant.isUpdated ? variant.updatedAt : undefined,
-			updatedBy: variant.isUpdated ? variant.updatedBy : undefined
-		}
-	});
+	variants = variants.map((variant) => ({
+		_id: variant._id,
+		name: variant.name,
+		instock: variant.instock,
+		availableForSale: variant.availableForSale,
+		availableForSaleReturn: variant.availableForSaleReturn,
+		availableForPurchase: variant.availableForPurchase,
+		availableForPurchaseReturn: variant.availableForPurchaseReturn,
+		images: variant.images,
+		createdAt: variant.createdAt,
+		createdBy: variant.createdBy,
+		updatedAt: variant.isUpdated ? variant.updatedAt : undefined,
+		updatedBy: variant.isUpdated ? variant.updatedBy : undefined
+	}));
 
 	res.json({ variants });
 };
