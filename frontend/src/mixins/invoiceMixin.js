@@ -252,15 +252,36 @@ export default (storeNamespace, amountType) => {
 					showMessage({ message: this.$t(message) });
 				} catch (err) {
 					if (err.status == 422 && err.type == "quantity") {
-						this.quantityErrors = err.errors;
-
-						this.$bvModal.show("quantityErrors");
+						this.handleQuantityError(err.errors);
 					} else {
 						this.$store.commit(`${storeNamespace}/setError`, err);
 					}
 				} finally {
 					this.isBusy = false;
 				}
+			},
+
+			handleQuantityError(errors) {
+				this.quantityErrors = errors.map(error => {
+					let e = {
+						product: error.product,
+						variant: error.variant,
+						warehouse: error.warehouse,
+						quantity: error.quantity
+					};
+
+					if (error.unit && error.unit._id) {
+						e.unit = error.unit;
+					} else {
+						let unit = this.unitsOptions.find(u => u._id == error.unit);
+
+						if (unit) e.unit = unit;
+					}
+
+					return e;
+				})
+
+				this.$bvModal.show("quantityErrors");
 			},
 
 			handleCancel() {
