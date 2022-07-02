@@ -53,13 +53,15 @@
 							<EditIcon />
 						</router-link>
 
-						<a @click="moveToTrash(row.item)" class="text-danger">
+						<a @click="toTrash(row.item)" class="text-danger">
 							<TrashIcon />
 						</a>
 					</div>
 				</template>
 			</b-table>
 		</div>
+
+		<DeleteModal ref="deleteModal" field="Product" @ok="moveToTrash" />
 
 		<TableFooterControls :controls="tableControls" />
 	</main-content>

@@ -36,12 +36,14 @@
 						<EditIcon />
 					</a>
 
-					<a @click="moveToTrash(row.item)" class="text-danger ml-3">
+					<a @click="toTrash(row.item)" class="text-danger ml-3">
 						<TrashIcon />
 					</a>
 				</template>
 			</b-table>
 		</div>
+
+		<DeleteModal ref="deleteModal" field="Currency" @ok="moveToTrash" />
 
 		<TableFooterControls :controls="tableControls" />
 	</main-content>

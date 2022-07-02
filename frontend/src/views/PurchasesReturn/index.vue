@@ -125,7 +125,7 @@
 
 		<Payments :namespace="namespace" @print="printPayment" />
 
-		<DeleteModal ref="deleteModal" field="PurchaseReturn" @ok="moveToTrash" />
+		<DeleteModal ref="deleteModal" field="Purchase Return" @ok="moveToTrash" />
 
 		<div class="d-none d-print-block">
 			<PurchaseReturn v-if="printsControl.item" />
