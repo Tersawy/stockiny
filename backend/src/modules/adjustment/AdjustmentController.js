@@ -142,7 +142,7 @@ exports.getEditAdjustment = async (req, res) => {
 
 	let details = adjustment.details.map(detail => ({
 		product: detail.product._id,
-		variantId: detail.variant,
+		variantId: detail.variant._id,
 		code: detail.product.code,
 		name: detail.product.name,
 		variantName: detail.variant.name,
