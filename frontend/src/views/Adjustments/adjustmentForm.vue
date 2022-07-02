@@ -583,15 +583,36 @@ export default {
 				showMessage({ message: this.$t(message) });
 			} catch (error) {
 				if (error.status == 422 && error.type == "quantity") {
-					this.quantityErrors = error.errors;
-
-					this.$bvModal.show("quantityErrors");
+					this.handleQuantityError(error.errors);
 				} else {
 					this.$store.commit("Adjustments/setError", error);
 				}
 			} finally {
 				this.isBusy = false;
 			}
+		},
+
+		handleQuantityError(errors) {
+			this.quantityErrors = errors.map((error) => {
+				let e = {
+					product: error.product,
+					variant: error.variant,
+					warehouse: error.warehouse,
+					quantity: error.quantity
+				};
+
+				if (error.unit && error.unit._id) {
+					e.unit = error.unit;
+				} else {
+					let unit = this.unitsOptions.find((u) => u._id == error.unit);
+
+					if (unit) e.unit = unit;
+				}
+
+				return e;
+			});
+
+			this.$bvModal.show("quantityErrors");
 		},
 
 		handleCancel() {
