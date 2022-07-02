@@ -112,7 +112,7 @@ let getSaleOptions = async (req, res) => {
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse), { $gt: ["$$stock.instock", 0] }] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $and: [{ $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] }, { $gt: ["$$stock.instock", 0] }] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
@@ -239,7 +239,7 @@ let getTransferOptions = async (req, res) => {
 					{
 						$project: {
 							name: 1,
-							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse), { $gt: ["$stock.instock", 0] }] } } }, 0] },
+							stock: { $arrayElemAt: [{ $filter: { input: "$stocks", as: "stock", cond: { $and: [{ $eq: ["$$stock.warehouse", mongoose.Types.ObjectId(req.query.warehouse)] }, { $gt: ["$$stock.instock", 0] }] } } }, 0] },
 							image: { $arrayElemAt: [{ $filter: { input: "$images", as: "image", cond: { $eq: ["$$image.default", true] } } }, 0] }
 						},
 					},
