@@ -133,7 +133,7 @@ exports.getSaleReturn = async (req, res) => {
 exports.getEditSaleReturn = async (req, res) => {
 	let select = "date warehouse customer shipping tax discount discountMethod status reference details notes";
 
-	let saleReturn = await SaleReturn.findById(req.params.id, select).populate("details.product", "price code name image").populate("details.product", "name images stocks").populate("details.subUnit", "value operator");
+	let saleReturn = await SaleReturn.findById(req.params.id, select).populate("details.product", "price code name image").populate("details.variant", "name images stocks").populate("details.subUnit", "value operator");
 
 	if (!saleReturn) throw notFound();
 
