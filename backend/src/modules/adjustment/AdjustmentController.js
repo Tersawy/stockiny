@@ -83,8 +83,6 @@ exports.createAdjustment = async (req, res) => {
 				continue;
 			}
 
-			detail.variant.subtractFromStock({ warehouse: adjustment.warehouse._id, quantity });
-
 			variants.push(detail.variant);
 		}
 	}
