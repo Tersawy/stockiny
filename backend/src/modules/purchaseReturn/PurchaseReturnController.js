@@ -233,7 +233,7 @@ exports.updatePurchaseReturn = async (req, res) => {
 			stocks.push({
 				product: { _id: detail.product._id, name: detail.product.name },
 				variant: { _id: detail.variant._id, name: detail.variant.name },
-				warehouse: { _id: purchaseReturn.warehouse._id, name: purchaseReturn.warehouse.name, instock: { before: instock, after: quantity - instock } },
+				warehouse: { _id: purchaseReturn.warehouse._id, name: purchaseReturn.warehouse.name, instock: { before: instock, after: instock - quantity } },
 				unit: detail.unit,
 				quantity
 			})
@@ -262,15 +262,13 @@ exports.updatePurchaseReturn = async (req, res) => {
 				stock = {
 					product: { _id: detail.product._id, name: detail.product.name },
 					variant: { _id: detail.variant._id, name: detail.variant.name },
-					warehouse: { _id: oldPurchaseReturn.warehouse._id, name: oldPurchaseReturn.warehouse.name, instock: { before: instock, after: instock } },
+					warehouse: { _id: oldPurchaseReturn.warehouse._id, name: oldPurchaseReturn.warehouse.name, instock: { before: instock, after: instock + quantity } },
 					unit: { _id: detail.unit._id, name: detail.unit.name },
 					quantity
 				};
 
 				stocks.push(stock)
 			}
-
-			stock.warehouse.instock.after += quantity;
 
 			variant.addToStock({ warehouse: oldPurchaseReturn.warehouse._id, quantity });
 

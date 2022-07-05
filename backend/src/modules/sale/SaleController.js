@@ -232,7 +232,7 @@ exports.updateSale = async (req, res) => {
 			stocks.push({
 				product: { _id: detail.product._id, name: detail.product.name },
 				variant: { _id: detail.variant._id, name: detail.variant.name },
-				warehouse: { _id: sale.warehouse._id, name: sale.warehouse.name, instock: { before: instock, after: quantity - instock } },
+				warehouse: { _id: sale.warehouse._id, name: sale.warehouse.name, instock: { before: instock, after: instock - quantity } },
 				unit: detail.unit,
 				quantity
 			})
