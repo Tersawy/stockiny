@@ -51,7 +51,7 @@ exports.getEdit = async (req, res) => {
 	const { id } = req.params;
 
 	let select =
-		"name category brand barcodeType code price cost tax taxMethod minimumStock unit purchaseUnit saleUnit notes availableForSale availableForPurchase";
+		"name category brand barcodeType code price cost tax taxMethod minimumStock unit purchaseUnit saleUnit notes availableForSale availableForPurchase availableForSaleReturn availableForPurchaseReturn";
 
 	let product = await Product.findById(id, select);
 
