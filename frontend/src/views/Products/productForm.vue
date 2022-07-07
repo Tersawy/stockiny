@@ -118,7 +118,7 @@
 					<!-- Product Controls -->
 					<b-col :class="{ 'mt-4': !isUpdate }">
 						<b-card header="Product Controls">
-							<p>Is Available For </p>
+							<p>Is Available For</p>
 							<b-row cols="1" cols-sm="2" cols-md="4" cols-lg="2">
 								<b-col class="mb-3 mb-md-0 mb-lg-3">
 									<b-form-checkbox v-model="product.availableForSale" switch class="mr-3 text-nowrap">Sale ? </b-form-checkbox>
@@ -268,15 +268,12 @@ export default {
 	},
 
 	watch: {
-		"product.unit": {
-			handler(newValue, oldValue) {
-				// This Check is fix add the first value in edit form
-				if (oldValue) {
-					this.product.purchaseUnit = null;
-					this.product.saleUnit = null;
-				}
-			},
-			deep: true
+		"product.unit"(_newValue, oldValue) {
+			// This Check is fix add the first value in edit form
+			if (oldValue) {
+				this.product.purchaseUnit = null;
+				this.product.saleUnit = null;
+			}
 		}
 	},
 
