@@ -164,7 +164,7 @@ exports.getEditSaleReturn = async (req, res) => {
 exports.updateSaleReturn = async (req, res) => {
 	let oldSaleReturnQuery = SaleReturn.findById(req.params.id).populate("status warehouse details.variant details.product details.subUnit details.unit");
 
-	let saleReturn = new Purchase().fill(req.body).addDetails(req.body.details);
+	let saleReturn = new SaleReturn().fill(req.body).addDetails(req.body.details);
 
 	let [oldSaleReturn] = await Promise.all([oldSaleReturnQuery, saleReturn.populate("customer status warehouse details.variant details.product details.subUnit")]);
 
