@@ -166,7 +166,7 @@ exports.getEditTransfer = async (req, res) => {
 		code: detail.product.code,
 		variantName: detail.variant.name,
 		image: detail.variant.defaultImage || detail.product.image,
-		instock: detail.variant.getInstockByWarehouse(transfer.warehouse)
+		instock: detail.variant.getInstockByWarehouse(transfer.fromWarehouse)
 	}));
 
 	res.json({ doc: { ...transfer.toJSON(), details } });
