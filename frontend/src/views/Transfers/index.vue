@@ -148,24 +148,24 @@
 						</b-th>
 						<b-td variant="danger" class="font-weight-bold text-center text-nowrap">{{ error.fromWarehouse.name }}</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.fromwarehouse.instock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.fromwarehouse.instock.before | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.fromWarehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.fromWarehouse.instock.before | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.fromwarehouse.instock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.fromwarehouse.instock.after | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.fromWarehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.fromWarehouse.instock.after | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td variant="success" class="font-weight-bold text-center text-nowrap">{{ error.toWarehouse.name }}</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.towarehouse.instock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.towarehouse.instock.before | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.toWarehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.toWarehouse.instock.before | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td class="text-center">
-							<b-badge :variant="`outline-${error.towarehouse.instock.after < 0 ? 'danger' : 'success'}`">
-								{{ error.towarehouse.instock.after | floating }} {{ error.unit.name }}
+							<b-badge :variant="`outline-${error.toWarehouse.instock.after < 0 ? 'danger' : 'success'}`">
+								{{ error.toWarehouse.instock.after | floating }} {{ error.unit.name }}
 							</b-badge>
 						</b-td>
 						<b-td class="text-center">
