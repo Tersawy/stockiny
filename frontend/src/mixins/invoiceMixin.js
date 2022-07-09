@@ -6,8 +6,6 @@ const DiscountInput = () => import("@/components/inputs/DiscountInput");
 
 const InvoiceStatusInput = () => import("@/components/inputs/InvoiceStatusInput");
 
-const InvoiceDetailsTable = () => import("@/components/InvoiceDetailsTable");
-
 const InvoiceTotal = () => import("@/components/InvoiceTotal");
 
 const DefaultInput = () => import("@/components/inputs/DefaultInput");
@@ -33,7 +31,6 @@ import { showMessage } from "@/components/utils";
 export default (storeNamespace, amountType) => {
 	return {
 		components: {
-			InvoiceDetailsTable,
 			InvoiceTotal,
 			InvoiceAutoComplete,
 			InvoiceStatusInput,
@@ -139,20 +136,17 @@ export default (storeNamespace, amountType) => {
 
 				await sleep(300);
 
-				this.oldInvoice.details.forEach((product) => this.$refs.invoiceDetailsTable.addDetail(product));
+				this.oldInvoice.details.forEach((product) => this.addDetail(product));
 			}
 		},
 
 		watch: {
-			"invoice.warehouse": {
-				handler(v) {
-					if (v) {
-						this.invoice.details = [];
+			"invoice.warehouse"(v) {
+				if (v) {
+					this.invoice.details = [];
 
-						this.getProductOptions({ warehouse: v });
-					}
-				},
-				deep: true
+					this.getProductOptions({ warehouse: v });
+				}
 			}
 		},
 
@@ -195,11 +189,6 @@ export default (storeNamespace, amountType) => {
 				if (!this.isUpdate) {
 					this.invoice.status = effectedOption._id;
 				}
-			},
-
-			// ? emmited from auto InvoiceAutoComplete to add product option to invoice details
-			addToDetail(product) {
-				this.$refs.invoiceDetailsTable.addDetail(product);
 			},
 
 			async handleSave() {
@@ -273,7 +262,7 @@ export default (storeNamespace, amountType) => {
 					if (error.unit && error.unit._id) {
 						e.unit = error.unit;
 					} else {
-						let unit = this.unitsOptions.find(u => u._id == error.unit);
+						let unit = this.unitsOptions.find((u) => u._id == error.unit);
 
 						if (unit) e.unit = unit;
 					}
@@ -290,56 +279,5 @@ export default (storeNamespace, amountType) => {
 				this.$router.push({ name: storeNamespace });
 			}
 		}
-
-		// net(product) {
-		// 	let { unitCost, unitPrice, tax, taxMethod, discount = 0, discountMethod = "fixed", quantity = 1 } = product;
-
-		// 	let netCost, netPrice, taxCost, taxPrice, discountCost, discountPrice, totalCost, totalPrice, subtotalCost, subtotalPrice;
-
-		// 	discountCost = discountMethod == "fixed" ? discount : discount * (unitCost / 100);
-		// 	discountPrice = discountMethod == "fixed" ? discount : discount * (unitPrice / 100);
-
-		// 	let costExcludingDiscount = unitCost - discountCost,
-		// 		priceExcludingDiscount = unitPrice - discountPrice;
-
-		// 	if (taxMethod == "inclusive") {
-		// 		let taxDivide = 1 + tax / 100;
-
-		// 		netCost = costExcludingDiscount / taxDivide;
-
-		// 		netPrice = priceExcludingDiscount / taxDivide;
-
-		// 		taxCost = costExcludingDiscount - netCost;
-
-		// 		taxPrice = priceExcludingDiscount - netPrice;
-		// 	} else {
-		// 		netCost = costExcludingDiscount;
-
-		// 		netPrice = priceExcludingDiscount;
-
-		// 		taxCost = tax * (costExcludingDiscount / 100);
-
-		// 		taxPrice = tax * (priceExcludingDiscount / 100);
-		// 	}
-
-		// 	totalCost = netCost + taxCost;
-		// 	totalPrice = netPrice + taxPrice;
-
-		// 	subtotalCost = quantity * totalCost;
-		// 	subtotalPrice = quantity * totalPrice;
-
-		// 	return {
-		// 		cost: netCost,
-		// 		price: netPrice,
-		// 		taxCost,
-		// 		taxPrice,
-		// 		discountCost,
-		// 		discountPrice,
-		// 		totalCost,
-		// 		totalPrice,
-		// 		subtotalCost,
-		// 		subtotalPrice
-		// 	};
-		// },
 	};
 };

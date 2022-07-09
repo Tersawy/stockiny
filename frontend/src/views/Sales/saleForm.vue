@@ -54,18 +54,20 @@
 				<b-col cols="12" class="mt-4" order-lg="2">
 					<!-- -------------Product Search------------- -->
 					<b-card header="Sale Details">
-						<invoice-auto-complete :invoice="invoice" :product-options="productOptions" @add-to-detail="addToDetail" />
+						<invoice-auto-complete :options="productOptions" :selected="invoice.details" :on-select="addDetail" />
 						<input-error :vuelidate-field="$v.invoice.details" field="details" namespace="Sales" />
 
 						<!-- -------------Products Table------------- -->
 						<invoice-details-table
-							ref="invoiceDetailsTable"
-							:product-options="productOptions"
 							class="mt-4"
-							:check-quantity="true"
-							:invoice="invoice"
-							amount-type="Price"
 							namespace="Sales"
+							:details="invoice.details"
+							:fields="detailsFields"
+							@editDetail="editDetail"
+							@removeDetail="removeDetail"
+							@quantityChanged="quantityChanged"
+							@decrementQuantity="decrementQuantity"
+							@incrementQuantity="incrementQuantity"
 						/>
 					</b-card>
 				</b-col>
@@ -142,16 +144,20 @@
 				</b-tbody>
 			</b-table-simple>
 		</default-modal>
+
+		<InvoiceDetailForm unitLabel="Sale Unit" namespace="Sales" amountType="Price" :detail.sync="detail" @submit="updateDetail" />
 	</main-content>
 </template>
 
 <script>
 import { getDate } from "@/helpers";
 
-import { invoiceMixin } from "@/mixins";
+import { invoiceMixin, invoiceDetailsMixin } from "@/mixins";
+
+let detailsMixin = invoiceDetailsMixin({ storeNameSpace: "Sales", checkQuantity: true, amountType: "Price" });
 
 export default {
-	mixins: [invoiceMixin("Sales", "Price")],
+	mixins: [invoiceMixin("Sales", "Price"), detailsMixin],
 
 	data() {
 		let isEdit = this.$route.params.id;
@@ -175,7 +181,7 @@ export default {
 			this.invoice.status = this.quotation.status._id || this.quotation.status;
 
 			setTimeout(() => {
-				this.quotation.details.forEach((product) => this.$refs.invoiceDetailsTable.addDetail(product));
+				this.quotation.details.forEach((product) => this.addDetail(product));
 			}, 300);
 		}
 	},

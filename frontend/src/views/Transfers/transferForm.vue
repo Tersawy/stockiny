@@ -54,19 +54,20 @@
 				<b-col cols="12" class="mt-4" order-lg="2">
 					<!-- -------------Product Search------------- -->
 					<b-card header="Transfer Details">
-						<invoice-auto-complete :invoice="invoice" :product-options="productOptions" @add-to-detail="addToDetail" />
+						<invoice-auto-complete :options="productOptions" :selected="invoice.details" :on-select="addDetail" />
 						<input-error :vuelidate-field="$v.invoice.details" field="details" namespace="Transfers" />
 
 						<!-- -------------Products Table------------- -->
 						<invoice-details-table
-							ref="invoiceDetailsTable"
-							:product-options="productOptions"
 							class="mt-4"
-							:check-quantity="true"
-							:invoice="invoice"
-							amount-type="Cost"
 							namespace="Transfers"
-							unitLabel="Transfer By Unit"
+							:details="invoice.details"
+							:fields="detailsFields"
+							@editDetail="editDetail"
+							@removeDetail="removeDetail"
+							@quantityChanged="quantityChanged"
+							@decrementQuantity="decrementQuantity"
+							@incrementQuantity="incrementQuantity"
 						/>
 					</b-card>
 				</b-col>
@@ -159,13 +160,15 @@
 				</b-tbody>
 			</b-table-simple>
 		</default-modal>
+
+		<InvoiceDetailForm unitLabel="Transfer By Unit" namespace="Transfers" amountType="Cost" :detail.sync="detail" @submit="updateDetail" />
 	</main-content>
 </template>
 
 <script>
 import { getDate } from "@/helpers";
 
-import { invoiceMixin } from "@/mixins";
+import { invoiceMixin, invoiceDetailsMixin } from "@/mixins";
 
 import { validationMixin } from "vuelidate";
 
@@ -173,8 +176,10 @@ import { required, numeric, minLength, maxLength, minValue } from "vuelidate/lib
 
 import { showMessage } from "@/components/utils";
 
+let detailsMixin = invoiceDetailsMixin({ storeNameSpace: "Transfers", checkQuantity: true, amountType: "Cost" });
+
 export default {
-	mixins: [invoiceMixin("Transfers", "Cost"), validationMixin],
+	mixins: [invoiceMixin("Transfers", "Cost"), detailsMixin, validationMixin],
 
 	data() {
 		let isEdit = this.$route.params.id;
@@ -281,7 +286,7 @@ export default {
 				});
 
 				setTimeout(() => {
-					this.oldInvoice.details.forEach((product) => this.$refs.invoiceDetailsTable.addDetail(product));
+					this.oldInvoice.details.forEach((product) => this.addDetail(product));
 				}, 300);
 			}
 		},

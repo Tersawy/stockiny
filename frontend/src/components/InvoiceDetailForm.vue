@@ -1,5 +1,5 @@
 <template>
-	<default-modal id="productDetailModal" @ok="handleSave" @hidden="$emit('reset-modal')" :showStayOpenBtn="false" :modal-props="{ size: 'md' }">
+	<default-modal id="detailFormModal" @ok="handleSave" @hidden="$emit('reset-modal')" :showStayOpenBtn="false" :modal-props="{ size: 'md' }">
 		<b-form @submit.prevent="handleSave" v-if="detail">
 			<!-- -------------Detail Unit Amount------------- -->
 			<default-input
@@ -83,9 +83,9 @@ export default {
 				return;
 			}
 
-			this.$emit("done", this.detail);
+			this.$emit("submit");
 
-			this.$bvModal.hide("productDetailModal");
+			this.$bvModal.hide("detailFormModal");
 		}
 	}
 };

@@ -3,7 +3,7 @@
 	<div style="padding: 0 2px">
 		<b-table
 			:fields="fields"
-			:items="invoice.details"
+			:items="details"
 			show-empty
 			emptyText="There are no details to show"
 			class="mb-0 invoice-details-table"
@@ -17,8 +17,10 @@
 			</template>
 
 			<template #cell(actions)="row">
-				<a @click="detail = { ...row.item }" class="text-success" v-b-modal.productDetailModal><EditIcon /></a>
-				<a @click="removeProduct(row)" class="text-danger ml-3"><TrashIcon /></a>
+				<slot name="actions" :v-bind="row">
+					<a @click="editDetail(row)" class="text-success"><EditIcon /></a>
+					<a @click="removeDetail(row)" class="text-danger ml-3"><TrashIcon /></a>
+				</slot>
 			</template>
 
 			<template #cell(image)="row">
@@ -38,7 +40,7 @@
 			<template #cell(netUnitAmount)="row"> $ {{ row.item.netUnitAmount | floating }} </template>
 
 			<template #cell(instockBySubUnit)="row">
-				<b-badge :variant="row.item.stockVariant"> {{ row.value | floating }} {{ subUnit(row.item).shortName }} </b-badge>
+				<b-badge :variant="row.item.stockVariant"> {{ row.value | floating }} {{ row.item.subUnitShorName }} </b-badge>
 			</template>
 
 			<template #cell(quantity)="row">
@@ -70,21 +72,10 @@
 				$ <span class="text-primary font-weight-600"> {{ row.item.subtotalUnitAmount | floating }} </span>
 			</template>
 		</b-table>
-
-		<InvoiceDetailForm
-			:unitLabel="unitLabel"
-			:namespace="namespace"
-			:amountType="amountType"
-			:detail="detail"
-			@done="updateDetail"
-			@reset-modal="() => (detail = null)"
-		/>
 	</div>
 </template>
 
 <script>
-import InvoiceDetailForm from "@/components/InvoiceDetailForm";
-
 import EditIcon from "@/components/icons/edit";
 
 import TrashIcon from "@/components/icons/trash";
@@ -95,295 +86,34 @@ import InputError from "@/components/InputError.vue";
 
 export default {
 	props: {
-		invoice: { type: Object },
+		details: { type: Array },
 
-		amountType: { type: String },
+		fields: { type: Array },
 
-		namespace: { type: String },
-
-		checkQuantity: { type: Boolean },
-
-		productOptions: { type: Array },
-
-		unitLabel: { type: String }
+		namespace: { type: String }
 	},
 
-	components: { InvoiceDetailForm, EditIcon, TrashIcon, GalleryIcon, InputError },
-
-	data() {
-		return {
-			detail: null,
-
-			fields: [
-				{ key: "image", label: "Image" },
-				{ key: "name", label: "Name" },
-				{ key: "netUnitAmount", label: `Net Unit ${this.amountType}` },
-				{ key: "instockBySubUnit", label: "Instock" },
-				{ key: "quantity", label: "Quantity" },
-				{ key: "discountUnitAmount", label: "Discount" },
-				{ key: "netUnitTax", label: "Tax" },
-				{ key: "subtotalUnitAmount", label: `Subtotal ${this.amountType}` },
-				{ key: "actions", label: "Actions" }
-			]
-		};
-	},
-
-	watch: {
-		//? this updates product cost or price in productDetailForm when subUnit changed
-		"detail.subUnit": {
-			// ? check if last value not null this because when open the productDetailForm last value already null
-			handler(newValue, oldValue) {
-				//? This subUnit has been changed so we need to reset product amount input in productDetailForm
-				if (oldValue && newValue) {
-					let productOption = this.productOptions.find((opt) => opt.product == this.detail.product);
-
-					/*
-						mainAmount this becuase in update maybe the product that match this detail not found in productOptions and
-					 	the reason is that the product has been deleted, disabled or don't have instockBySubUnit
-					 */
-					this.detail.amount = productOption ? productOption.amount : this.detail.mainAmount;
-
-					this.detail.subUnitAmount = this.subUnitAmount(this.detail);
-				}
-			},
-			deep: true
-		},
-		"detail.subUnitAmount": {
-			handler(value) {
-				if (value) {
-					//? this mean the product amount input from productDetailForm will effect directly in detail amount
-					if (this.detail.subUnit == this.detail.unit) {
-						this.detail.amount = +value;
-					} else {
-						let unit = this.subUnit(this.detail);
-
-						let isMultiple = unit.operator === "*";
-
-						this.detail.amount = !isMultiple ? +value * +unit.value : +value / +unit.value;
-					}
-				}
-			},
-			deep: true
-		}
-	},
+	components: { EditIcon, TrashIcon, GalleryIcon, InputError },
 
 	methods: {
-		updateDetail(detail) {
-			let details = [...this.invoice.details];
-
-			this.invoice.details = [];
-
-			details = details.map((oldDetail) => {
-				if (oldDetail.product == detail.product && oldDetail.variantId == detail.variantId) {
-					oldDetail = this.net(detail);
-					for (let key in detail) {
-						oldDetail[key] = detail[key];
-					}
-				}
-				return oldDetail;
-			});
-
-			this.$nextTick(() => {
-				this.invoice.details = details;
-			});
+		editDetail(row) {
+			this.$emit("editDetail", row.item);
 		},
 
-		addDetail(product) {
-			if (!this.invoice.warehouse && !this.invoice.fromWarehouse) return alert("Please choose the warehouse first");
-
-			if (typeof product.quantity === "undefined") {
-				product.quantity = this.instockBySubUnit(product) < 1 && product.instock > 0 ? this.instockBySubUnit(product) : 1;
-			}
-
-			let detail = this.net(product);
-
-			detail.decrementBtn = "primary";
-			detail.incrementBtn = "primary";
-			detail.stockVariant = "outline-success";
-
-			this.invoice.details.push(detail);
+		removeDetail(row) {
+			this.$emit("removeDetail", row.index);
 		},
 
-		mainUnit(product) {
-			return this.$store.state.Units.options.find((unit) => product.unit == unit._id);
-		},
-
-		subUnit(product) {
-			let mainUnit = this.mainUnit(product);
-
-			let subUnit = mainUnit.subUnits.find((unit) => unit._id == product.subUnit);
-
-			return subUnit;
-		},
-
-		subUnitAmount(product) {
-			let unit = this.subUnit(product);
-
-			// this amount depended on main unit and it is come from api;
-			let amount = +product.amount;
-
-			let isMultiple = unit.operator === "*";
-
-			let subUnitAmount = isMultiple ? +amount * +unit.value : +amount / +unit.value;
-
-			return +subUnitAmount;
-		},
-
-		discountUnitAmount(product) {
-			let isFixed = product.discountMethod == "fixed";
-
-			product.discount = +product.discount || 0;
-
-			if (isFixed) return product.discount;
-
-			let subUnitAmount = this.subUnitAmount(product);
-
-			return product.discount * (subUnitAmount / 100);
-		},
-
-		netUnitAmount(product) {
-			let amountExcludingDiscount = this.subUnitAmount(product) - this.discountUnitAmount(product);
-
-			let isExclusive = product.taxMethod == "exclusive";
-
-			if (isExclusive) return amountExcludingDiscount;
-
-			product.tax = +product.tax || 0;
-
-			let taxDivide = 1 + product.tax / 100;
-
-			return amountExcludingDiscount / taxDivide;
-		},
-
-		netUnitTax(product) {
-			let amountExcludingDiscount = this.subUnitAmount(product) - this.discountUnitAmount(product);
-
-			let isExclusive = product.taxMethod == "exclusive";
-
-			if (isExclusive) {
-				return (+product.tax || 0) * (amountExcludingDiscount / 100);
-			}
-
-			return amountExcludingDiscount - this.netUnitAmount(product);
-		},
-
-		totalUnitAmount(product) {
-			return this.netUnitAmount(product) + this.netUnitTax(product);
-		},
-
-		subtotalUnitAmount(product) {
-			return this.totalUnitAmount(product) * product.quantity;
-		},
-
-		instockBySubUnit(product) {
-			// this instock depended on main unit and it is come from api;
-			let instockBySubUnit = +product.instock;
-
-			if (!instockBySubUnit) return 0;
-
-			let subUnit = this.subUnit(product);
-
-			//? reverse operator if sub unit is not main unit to get right instock value
-			let isMultiple = subUnit.operator === "*" && subUnit._id == product.unit;
-
-			instockBySubUnit = isMultiple ? instockBySubUnit * +subUnit.value : instockBySubUnit / +subUnit.value;
-
-			return instockBySubUnit;
-		},
-
-		net(product) {
-			product.subUnitAmount = this.subUnitAmount(product);
-			product.netUnitAmount = this.netUnitAmount(product);
-			product.netUnitTax = this.netUnitTax(product);
-			product.discountUnitAmount = this.discountUnitAmount(product);
-			product.totalUnitAmount = this.totalUnitAmount(product);
-			product.subtotalUnitAmount = this.subtotalUnitAmount(product);
-			product.instockBySubUnit = this.instockBySubUnit(product);
-
-			return product;
-		},
-
-		incrementQuantity(row) {
-			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
-
-			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity)) {
-				if (this.checkQuantity) {
-					if (row.item.quantity >= row.item.instockBySubUnit) {
-						if (row.item.timeout) clearTimeout(row.item.timeout);
-						row.item.stockVariant = "outline-danger";
-						row.item.incrementBtn = "danger";
-						row.item.timeout = setTimeout(() => {
-							row.item.stockVariant = "outline-success";
-							row.item.incrementBtn = "primary";
-							this.updateDetail(row.item);
-						}, 300);
-					} else if (row.item.quantity + 1 > row.item.instockBySubUnit) {
-						row.item.quantity = row.item.instockBySubUnit;
-						row.value = row.item.instockBySubUnit;
-					} else {
-						row.item.quantity += 1;
-						row.value += 1;
-					}
-				} else {
-					row.item.quantity += 1;
-					row.value += 1;
-				}
-			} else {
-				row.item.quantity = row.item.instockBySubUnit || 1;
-				row.value = row.item.instockBySubUnit || 1;
-			}
-
-			this.updateDetail(row.item);
+		quantityChanged(row, $event) {
+			this.$emit("quantityChanged", row, $event);
 		},
 
 		decrementQuantity(row) {
-			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
-
-			if (/^\d+$|^\d+\.\d+$|^\.\d+$/.test(row.item.quantity) && row.item.quantity - 1 > 0) {
-				row.item.quantity -= 1;
-				row.value -= 1;
-			} else {
-				if (row.item.quantity == 1 || row.item.quantity == row.item.instockBySubUnit) {
-					if (row.item.timeout) clearTimeout(row.item.timeout);
-
-					row.item.decrementBtn = "danger";
-
-					row.item.timeout = setTimeout(() => {
-						row.item.decrementBtn = "primary";
-
-						this.updateDetail(row.item);
-					}, 300);
-				} else {
-					row.item.quantity = row.item.instockBySubUnit || 1;
-					row.value = row.item.instockBySubUnit || 1;
-				}
-			}
-
-			this.updateDetail(row.item);
+			this.$emit("decrementQuantity", row);
 		},
 
-		quantityChanged(row, value) {
-			this.$store.commit(`${this.namespace}/resetErrorByField`, `details[${row.index}].quantity`);
-
-			let regex = /^\d+$|^\d+\.\d+$|^\.\d+$/;
-
-			let detail = JSON.parse(JSON.stringify(row.item));
-
-			detail.quantity = parseFloat(value);
-			row.value = parseFloat(value);
-
-			let isValid = regex.test(detail.quantity);
-
-			if (!isValid || (this.checkQuantity && detail.instockBySubUnit < detail.quantity)) {
-				detail.quantity = detail.instockBySubUnit || 1;
-				row.value = detail.instockBySubUnit || 1;
-			}
-
-			this.updateDetail(detail);
-		},
-
-		removeProduct(row) {
-			this.invoice.details = this.invoice.details.filter((_p, i) => i != row.index);
+		incrementQuantity(row) {
+			this.$emit("incrementQuantity", row);
 		},
 
 		selectTarget(e) {

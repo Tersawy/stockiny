@@ -39,7 +39,7 @@
 				<b-col cols="12" class="mt-4" order-lg="2">
 					<!-- -------------Product Search------------- -->
 					<b-card header="Adjustment Details">
-						<invoice-auto-complete :invoice="adjustment" :product-options="productOptions" @add-to-detail="addToDetail" :is-busy="autoCompleteIsBusy" />
+						<invoice-auto-complete :options="productOptions" :selected="adjustment.details" :on-select="addToDetail" :is-busy="autoCompleteIsBusy" />
 						<input-error :vuelidate-field="$v.adjustment.details" field="details" namespace="Adjustments" />
 
 						<!-- This padding fix tr th border -->

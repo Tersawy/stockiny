@@ -1,6 +1,6 @@
 <template>
 	<b-overlay :show="isBusy" spinner-small spinner-variant="primary">
-		<Autocomplete :search="autoSearch" placeholder="Search in Products by code or name" @submit="selectProduct" ref="autocomplete">
+		<Autocomplete :search="autoSearch" placeholder="Search in Products by code or name" @submit="submit" ref="autocomplete">
 			<template #result="{ result, props }">
 				<li v-bind="props" class="d-flex">
 					<b-avatar v-if="result.image" :src="`${BASE_URL}/images/products/${result.product}/${result.image}`"></b-avatar>
@@ -24,11 +24,13 @@ import "@trevoreyre/autocomplete-vue/dist/style.css";
 
 export default {
 	props: {
-		invoice: { type: Object, required: true },
+		options: { type: Array, required: true },
 
-		productOptions: { type: Array, required: true },
+		isBusy: { type: Boolean, required: false },
 
-		isBusy: { type: Boolean, required: false }
+		onSelect: { type: Function, required: true },
+
+		selected: { type: Array, required: true }
 	},
 
 	components: { Autocomplete, GalleryIcon },
@@ -39,8 +41,8 @@ export default {
 
 			let unselected = [];
 
-			for (let option of this.productOptions) {
-				let isSelected = this.invoice.details.find(({ product, variantId }) => product == option.product && variantId == option.variantId);
+			for (let option of this.options) {
+				let isSelected = this.selected.find(({ product, variantId }) => product == option.product && variantId == option.variantId);
 
 				if (isSelected) continue;
 
@@ -54,12 +56,12 @@ export default {
 			return unselected;
 		},
 
-		async selectProduct(product) {
+		async submit(product) {
 			this.$refs.autocomplete.value = "";
 
 			if (!product) return;
 
-			this.$emit("add-to-detail", product);
+			await this.onSelect(product);
 		}
 	}
 };

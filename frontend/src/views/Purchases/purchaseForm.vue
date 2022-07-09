@@ -54,18 +54,20 @@
 				<b-col cols="12" class="mt-4" order-lg="2">
 					<!-- -------------Product Search------------- -->
 					<b-card header="Purchase Details">
-						<invoice-auto-complete :invoice="invoice" :product-options="productOptions" @add-to-detail="addToDetail" />
+						<invoice-auto-complete :options="productOptions" :selected="invoice.details" :on-select="addDetail" />
 						<input-error :vuelidate-field="$v.invoice.details" field="details" namespace="Purchases" />
 
 						<!-- -------------Products Table------------- -->
 						<invoice-details-table
-							ref="invoiceDetailsTable"
-							:product-options="productOptions"
 							class="mt-4"
-							:check-quantity="false"
-							:invoice="invoice"
-							amount-type="Cost"
 							namespace="Purchases"
+							:details="invoice.details"
+							:fields="detailsFields"
+							@editDetail="editDetail"
+							@removeDetail="removeDetail"
+							@quantityChanged="quantityChanged"
+							@decrementQuantity="decrementQuantity"
+							@incrementQuantity="incrementQuantity"
 						/>
 					</b-card>
 				</b-col>
@@ -142,14 +144,18 @@
 				</b-tbody>
 			</b-table-simple>
 		</default-modal>
+
+		<InvoiceDetailForm unitLabel="Purchase Unit" namespace="Purchases" amountType="Cost" :detail.sync="detail" @submit="updateDetail" />
 	</main-content>
 </template>
 
 <script>
-import { invoiceMixin } from "@/mixins";
+import { invoiceMixin, invoiceDetailsMixin } from "@/mixins";
+
+let detailsMixin = invoiceDetailsMixin({ storeNameSpace: "Purchases", checkQuantity: false, amountType: "Cost" });
 
 export default {
-	mixins: [invoiceMixin("Purchases", "Cost")],
+	mixins: [invoiceMixin("Purchases", "Cost"), detailsMixin],
 
 	data() {
 		let isEdit = this.$route.params.id;
