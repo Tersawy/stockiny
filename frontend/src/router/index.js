@@ -309,6 +309,12 @@ const routes = [
 		name: "RoleEdit",
 		component: () => /* webpackChunkName: "RoleEdit" */ import("@/views/Roles/roleForm"),
 		meta: { auth: true, permissions: ["edit:roles"] }
+	},
+	{
+		path: "/settings",
+		name: "Settings",
+		component: () => /* webpackChunkName: "Settings" */ import("@/views/Settings/index"),
+		meta: { auth: true, permissions: [] }
 	}
 ];
 
